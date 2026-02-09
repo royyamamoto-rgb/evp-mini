@@ -75,6 +75,56 @@
 </head>
 <body>
 
+  <!-- Landing page button logic — runs early, zero dependencies -->
+  <script>
+    function evpEnterApp() {
+      document.getElementById('landingPage').style.display = 'none';
+      document.getElementById('appWrapper').classList.add('authenticated');
+    }
+    function evpStartFree() {
+      sessionStorage.setItem('evpFreeAccess', '1');
+      evpEnterApp();
+    }
+    function evpBuyPro() {
+      window.open('https://lumina888.gumroad.com/l/pptpp', '_blank');
+    }
+    async function evpActivateCode() {
+      var input = document.getElementById('proCodeInput');
+      var error = document.getElementById('proCodeError');
+      var btn = document.getElementById('proCodeSubmit');
+      var code = (input.value || '').trim();
+      if (!code) { error.textContent = 'Please enter a license key.'; return; }
+      btn.textContent = 'Verifying...'; btn.disabled = true; error.textContent = '';
+      try {
+        if (window.proGateInstance) {
+          var result = await window.proGateInstance.activate(code);
+          if (result.success) { evpEnterApp(); return; }
+          error.textContent = result.error;
+        } else {
+          // Fallback: check offline codes directly
+          var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','evpmini2024'];
+          if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
+            try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,activatedAt:Date.now()})); } catch(e){}
+            evpEnterApp(); return;
+          }
+          error.textContent = 'Invalid license key.';
+        }
+      } catch(e) { error.textContent = 'Verification failed. Try again.'; }
+      btn.textContent = 'Activate'; btn.disabled = false;
+      input.value = ''; input.focus();
+    }
+    // Auto-enter if returning user
+    if (sessionStorage.getItem('evpFreeAccess') === '1') {
+      document.addEventListener('DOMContentLoaded', evpEnterApp);
+    }
+    try {
+      var stored = localStorage.getItem('evpProStatus');
+      if (stored && JSON.parse(stored).pro === true) {
+        document.addEventListener('DOMContentLoaded', evpEnterApp);
+      }
+    } catch(e) {}
+  </script>
+
   <!-- ═══════════════════════════════════════════════════════════════
        LANDING PAGE — Professional conversion-focused entry
        ═══════════════════════════════════════════════════════════════ -->
@@ -128,8 +178,8 @@
 
       <!-- CTA Buttons -->
       <div class="landing-ctas">
-        <button class="cta-btn cta-free" id="ctaFree">Start Free Investigation</button>
-        <button class="cta-btn cta-pro" id="ctaPro">
+        <button class="cta-btn cta-free" id="ctaFree" onclick="evpStartFree()">Start Free Investigation</button>
+        <button class="cta-btn cta-pro" id="ctaPro" onclick="evpBuyPro()">
           Unlock Pro &mdash; $4.99
           <span class="cta-sub">All features. Lifetime access.</span>
         </button>
@@ -140,7 +190,7 @@
         <div class="pro-code-label">Have a license key from your purchase?</div>
         <div class="pro-code-row">
           <input type="text" id="proCodeInput" placeholder="Enter license key" autocomplete="off">
-          <button id="proCodeSubmit">Activate</button>
+          <button id="proCodeSubmit" onclick="evpActivateCode()">Activate</button>
         </div>
         <div class="pro-code-error" id="proCodeError"></div>
       </div>
