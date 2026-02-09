@@ -9,10 +9,12 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>EVP-MINI | Paranormal Investigation</title>
+  <meta name="description" content="Professional paranormal investigation tool with EVP capture, spirit box, thermal imaging, EMF detection, and AI analysis.">
+  <title>EVP-MINI | Professional Paranormal Investigation</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
-  <link rel="stylesheet" href="css/styles.css?v=5">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/styles.css?v=6">
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -28,34 +30,134 @@
 </head>
 <body>
 
-  <!-- Password Gate -->
-  <div class="password-gate" id="passwordGate">
-    <h1>EVP-MINI</h1>
-    <div class="subtitle">Paranormal Investigation Tool</div>
-    <input type="password" id="passwordInput" placeholder="Enter access code" autocomplete="off">
-    <button id="passwordSubmit">Enter</button>
-    <div class="error" id="passwordError"></div>
+  <!-- ═══════════════════════════════════════════════════════════════
+       LANDING PAGE — Professional conversion-focused entry
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="landing-page" id="landingPage">
+    <!-- Animated background orbs -->
+    <div class="landing-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+
+    <div class="landing-content">
+      <!-- Hero -->
+      <div class="landing-hero">
+        <div class="landing-logo">EVP-MINI</div>
+        <div class="landing-tagline">Professional Paranormal Investigation System</div>
+        <div class="landing-version">v2.0</div>
+      </div>
+
+      <!-- Feature Cards -->
+      <div class="landing-features">
+        <div class="feature-card">
+          <div class="feature-icon">&#x1F3A4;</div>
+          <div class="feature-name">EVP Capture</div>
+          <div class="feature-desc">Real-time audio analysis with AI-powered A/B/C classification</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#x1F4E1;</div>
+          <div class="feature-name">Spirit Box</div>
+          <div class="feature-desc">FM sweep simulation with fragment detection &amp; noise modes</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#x1F441;</div>
+          <div class="feature-name">Visual Scan</div>
+          <div class="feature-desc">7 camera filters: night vision, thermal, edge detect, motion trails</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">&#x26A1;</div>
+          <div class="feature-name">EMF &amp; Sensors</div>
+          <div class="feature-desc">Magnetometer, accelerometer, gyroscope &amp; infrasound detection</div>
+        </div>
+      </div>
+
+      <!-- CTA Buttons -->
+      <div class="landing-ctas">
+        <button class="cta-btn cta-free" id="ctaFree">Start Free Investigation</button>
+        <button class="cta-btn cta-pro" id="ctaPro">
+          Unlock Pro &mdash; $9.99
+          <span class="cta-sub">All features. Lifetime access.</span>
+        </button>
+      </div>
+
+      <!-- Pro Code Entry -->
+      <div class="pro-code-section">
+        <div class="pro-code-label">Have a Pro activation code?</div>
+        <div class="pro-code-row">
+          <input type="text" id="proCodeInput" placeholder="Enter code" autocomplete="off">
+          <button id="proCodeSubmit">Activate</button>
+        </div>
+        <div class="pro-code-error" id="proCodeError"></div>
+      </div>
+
+      <!-- Tier Comparison -->
+      <div class="tier-compare">
+        <div class="tier-card tier-free-card">
+          <div class="tier-name">Free</div>
+          <div class="tier-price">$0</div>
+          <ul class="tier-list">
+            <li class="yes">EVP Scan mode</li>
+            <li class="yes">30-second sessions</li>
+            <li class="yes">Basic audio analysis</li>
+            <li class="no">Spirit Box</li>
+            <li class="no">Visual filters</li>
+            <li class="no">Full Spectrum</li>
+            <li class="no">Investigation tools</li>
+            <li class="no">History, map &amp; export</li>
+          </ul>
+        </div>
+        <div class="tier-card tier-pro-card">
+          <div class="tier-badge">BEST VALUE</div>
+          <div class="tier-name">Pro</div>
+          <div class="tier-price">$9.99</div>
+          <ul class="tier-list">
+            <li class="yes">All 4 scan modes</li>
+            <li class="yes">Unlimited sessions</li>
+            <li class="yes">Full audio analysis</li>
+            <li class="yes">Spirit Box + noise modes</li>
+            <li class="yes">7 visual filters</li>
+            <li class="yes">Full Spectrum mode</li>
+            <li class="yes">Geiger, Dowsing, Words</li>
+            <li class="yes">History, map &amp; export</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="landing-footer">
+        Real device sensors. Real audio analysis. Science-grounded methodology.
+      </div>
+    </div>
   </div>
 
-  <!-- App Wrapper -->
+  <!-- ═══════════════════════════════════════════════════════════════
+       APP WRAPPER — Main application
+       ═══════════════════════════════════════════════════════════════ -->
   <div class="app-wrapper" id="appWrapper">
+
+    <!-- Upgrade Banner (free users) -->
+    <div class="upgrade-banner" id="upgradeBanner">
+      <span class="upgrade-text">Free tier &mdash; EVP Scan only, 30s max</span>
+      <button class="upgrade-btn" id="btnUpgrade">Upgrade to Pro</button>
+    </div>
 
     <!-- Header -->
     <div class="app-header">
       <h1>EVP-MINI</h1>
       <span class="mode-badge" id="modeBadge">EVP SCAN</span>
+      <span class="pro-badge" id="proBadge" style="display:none">PRO</span>
       <span class="evp-count" id="evpCount">EVP: 0</span>
       <div class="header-controls">
         <button id="btnTorch" title="Flashlight">Torch</button>
         <button id="btnFlipCamera" title="Flip Camera">Flip</button>
         <button id="btnScreenshot" title="Screenshot">Shot</button>
         <button id="btnRecord" title="Record">REC</button>
-        <button id="btnHistory" title="History">History</button>
       </div>
     </div>
 
     <!-- Main Container -->
-    <div class="main-container">
+    <div class="main-container" id="mainContainer">
 
       <!-- Left Panel: Live View -->
       <div class="video-panel">
@@ -79,9 +181,9 @@
         <!-- Mode Selector -->
         <div class="mode-selector">
           <button class="mode-btn active" data-mode="evp">EVP Scan</button>
-          <button class="mode-btn" data-mode="spiritbox">Spirit Box</button>
-          <button class="mode-btn" data-mode="visual">Visual</button>
-          <button class="mode-btn" data-mode="fullspectrum">Full Spectrum</button>
+          <button class="mode-btn" data-mode="spiritbox">Spirit Box<span class="lock-icon" data-lock="spiritbox"></span></button>
+          <button class="mode-btn" data-mode="visual">Visual<span class="lock-icon" data-lock="visual"></span></button>
+          <button class="mode-btn" data-mode="fullspectrum">Full Spectrum<span class="lock-icon" data-lock="fullspectrum"></span></button>
         </div>
 
         <!-- Visual Mode Selector -->
@@ -96,10 +198,10 @@
         </div>
 
         <!-- Tools Row -->
-        <div class="tools-row">
-          <button class="tool-btn" id="btnGeiger">Geiger</button>
-          <button class="tool-btn" id="btnDowsing">Dowsing Rods</button>
-          <button class="tool-btn" id="btnWords">Word Detect</button>
+        <div class="tools-row" id="toolsRow">
+          <button class="tool-btn" id="btnGeiger">Geiger<span class="lock-icon" data-lock="tools"></span></button>
+          <button class="tool-btn" id="btnDowsing">Dowsing Rods<span class="lock-icon" data-lock="tools"></span></button>
+          <button class="tool-btn" id="btnWords">Word Detect<span class="lock-icon" data-lock="tools"></span></button>
         </div>
 
         <!-- Duration Selector -->
@@ -305,10 +407,11 @@
         <div class="disclaimer">
           This app uses real device sensors and audio analysis but cannot verify paranormal phenomena.
           Audio anomalies may be caused by environmental noise, electronic interference, or auditory pareidolia
-          (Nees & Phillips, 2015). Results should be interpreted with scientific skepticism.
+          (Nees &amp; Phillips, 2015). Results should be interpreted with scientific skepticism.
         </div>
 
         <div class="report-actions">
+          <button id="btnShare">Share Evidence</button>
           <button id="btnNewScan">New Investigation</button>
           <button class="btn-export" id="btnExport">Export Evidence</button>
         </div>
@@ -316,62 +419,135 @@
 
     </div>
 
-    <!-- History Panel (overlay) -->
-    <div class="history-panel" id="historyPanel">
-      <div class="history-header">
+    <!-- ── Map Panel (overlay) ──────────────────────────────────── -->
+    <div class="overlay-panel" id="mapPanel">
+      <div class="overlay-header">
+        <h2>Investigation Map</h2>
+        <button class="overlay-close" id="btnCloseMap">Close</button>
+      </div>
+      <div class="map-info" id="mapInfo">Loading investigations...</div>
+      <div id="mapContainer" class="map-container"></div>
+    </div>
+
+    <!-- ── Gear Shop Panel (overlay) ────────────────────────────── -->
+    <div class="overlay-panel" id="gearPanel">
+      <div class="overlay-header">
+        <h2>Investigation Gear</h2>
+        <button class="overlay-close" id="btnCloseGear">Close</button>
+      </div>
+      <div class="gear-intro">Recommended equipment for professional paranormal investigations</div>
+      <div class="gear-grid" id="gearGrid"></div>
+      <div class="gear-disclaimer">
+        Affiliate links &mdash; we may earn a small commission on purchases at no extra cost to you.
+      </div>
+    </div>
+
+    <!-- ── History Panel (overlay) ──────────────────────────────── -->
+    <div class="overlay-panel" id="historyPanel">
+      <div class="overlay-header">
         <h2>Investigation History</h2>
-        <button class="history-close" id="btnCloseHistory">Close</button>
+        <button class="overlay-close" id="btnCloseHistory">Close</button>
       </div>
       <div class="history-storage" id="historyStorage"></div>
       <div class="history-list" id="historyList"></div>
     </div>
 
+    <!-- ── Bottom Navigation ────────────────────────────────────── -->
+    <div class="bottom-nav" id="bottomNav">
+      <button class="nav-btn active" data-nav="investigate">
+        <span class="nav-icon">&#x1F50D;</span>
+        <span class="nav-label">Investigate</span>
+      </button>
+      <button class="nav-btn" data-nav="map">
+        <span class="nav-icon">&#x1F5FA;</span>
+        <span class="nav-label">Map</span>
+      </button>
+      <button class="nav-btn" data-nav="gear">
+        <span class="nav-icon">&#x1F6D2;</span>
+        <span class="nav-label">Gear</span>
+      </button>
+      <button class="nav-btn" data-nav="history">
+        <span class="nav-icon">&#x1F4CB;</span>
+        <span class="nav-label">History</span>
+      </button>
+    </div>
+
+    <!-- ── Install Banner ───────────────────────────────────────── -->
+    <div class="install-banner" id="installBanner">
+      <span class="install-text">Add EVP-MINI to your home screen</span>
+      <button class="install-btn" id="btnInstall">Install</button>
+      <button class="install-dismiss" id="btnDismissInstall">&#x2715;</button>
+    </div>
+
   </div>
 
-  <!-- Scripts -->
-  <script src="js/evp-audio-engine.js?v=5"></script>
-  <script src="js/visual-anomaly-engine.js?v=5"></script>
-  <script src="js/emf-sensor-engine.js?v=5"></script>
-  <script src="js/spirit-box-engine.js?v=5"></script>
-  <script src="js/evp-classifier.js?v=5"></script>
-  <script src="js/session-recorder.js?v=5"></script>
-  <script src="js/evidence-report.js?v=5"></script>
-  <script src="js/session-vault.js?v=5"></script>
-  <script src="js/geiger-counter.js?v=5"></script>
-  <script src="js/dowsing-rods.js?v=5"></script>
-  <script src="js/word-detector.js?v=5"></script>
-  <script src="js/app.js?v=5"></script>
+  <!-- ═══════════════════════════════════════════════════════════════
+       SCRIPTS
+       ═══════════════════════════════════════════════════════════════ -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/pro-gate.js?v=6"></script>
+  <script src="js/evp-audio-engine.js?v=6"></script>
+  <script src="js/visual-anomaly-engine.js?v=6"></script>
+  <script src="js/emf-sensor-engine.js?v=6"></script>
+  <script src="js/spirit-box-engine.js?v=6"></script>
+  <script src="js/evp-classifier.js?v=6"></script>
+  <script src="js/session-recorder.js?v=6"></script>
+  <script src="js/evidence-report.js?v=6"></script>
+  <script src="js/session-vault.js?v=6"></script>
+  <script src="js/geiger-counter.js?v=6"></script>
+  <script src="js/dowsing-rods.js?v=6"></script>
+  <script src="js/word-detector.js?v=6"></script>
+  <script src="js/investigation-map.js?v=6"></script>
+  <script src="js/app.js?v=6"></script>
 
-  <!-- Password Gate Logic -->
+  <!-- Landing Page Logic -->
   <script>
     (function() {
-      const SITE_PASSWORD = 'evpmini2024';
-      const gate = document.getElementById('passwordGate');
-      const wrapper = document.getElementById('appWrapper');
-      const input = document.getElementById('passwordInput');
-      const submit = document.getElementById('passwordSubmit');
-      const error = document.getElementById('passwordError');
+      var proGate = new ProGate();
+      window.proGateInstance = proGate;
 
-      if (sessionStorage.getItem('evpAuth') === 'true') {
-        gate.classList.add('hidden');
+      var landing = document.getElementById('landingPage');
+      var wrapper = document.getElementById('appWrapper');
+
+      // Check if already authenticated
+      if (proGate.isPro || sessionStorage.getItem('evpFreeAccess') === '1') {
+        landing.classList.add('hidden');
         wrapper.classList.add('authenticated');
       }
 
-      function tryAuth() {
-        if (input.value === SITE_PASSWORD) {
-          sessionStorage.setItem('evpAuth', 'true');
-          gate.classList.add('hidden');
-          wrapper.classList.add('authenticated');
+      function enterApp() {
+        landing.classList.add('hidden');
+        wrapper.classList.add('authenticated');
+      }
+
+      // Start Free
+      document.getElementById('ctaFree').addEventListener('click', function() {
+        sessionStorage.setItem('evpFreeAccess', '1');
+        enterApp();
+      });
+
+      // Buy Pro — opens Gumroad in new tab
+      // REPLACE this URL with your actual Gumroad product link
+      document.getElementById('ctaPro').addEventListener('click', function() {
+        window.open('https://gumroad.com/l/evp-mini-pro', '_blank');
+      });
+
+      // Activate Pro Code
+      document.getElementById('proCodeSubmit').addEventListener('click', function() {
+        var input = document.getElementById('proCodeInput');
+        var error = document.getElementById('proCodeError');
+        var result = proGate.activate(input.value);
+        if (result.success) {
+          enterApp();
         } else {
-          error.textContent = 'Invalid access code';
+          error.textContent = result.error;
           input.value = '';
           input.focus();
         }
-      }
+      });
 
-      submit.addEventListener('click', tryAuth);
-      input.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') tryAuth();
+      document.getElementById('proCodeInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') document.getElementById('proCodeSubmit').click();
       });
     })();
   </script>

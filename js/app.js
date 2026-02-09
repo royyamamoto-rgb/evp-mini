@@ -1,7 +1,7 @@
 /**
- * EVP-MINI — Main Application Controller v5
- * Integrates: audio, visual, sensors, spirit box, classifier, recorder,
- * report, session vault, geiger counter, dowsing rods, word detector
+ * EVP-MINI — Main Application Controller v6
+ * Commercial edition with Pro gate, gear shop, investigation map,
+ * share evidence, PWA install, and bottom navigation
  */
 
 // ─── DOM Elements ───────────────────────────────────────────────────────────────
@@ -17,9 +17,9 @@ const btnFlipCamera = document.getElementById('btnFlipCamera');
 const btnRecord = document.getElementById('btnRecord');
 const btnTorch = document.getElementById('btnTorch');
 const btnScreenshot = document.getElementById('btnScreenshot');
-const btnHistory = document.getElementById('btnHistory');
 const btnNewScan = document.getElementById('btnNewScan');
 const btnExport = document.getElementById('btnExport');
+const btnShare = document.getElementById('btnShare');
 const btnPlayForward = document.getElementById('btnPlayForward');
 const btnPlayReverse = document.getElementById('btnPlayReverse');
 const btnStopPlayback = document.getElementById('btnStopPlayback');
@@ -28,6 +28,11 @@ const btnGeiger = document.getElementById('btnGeiger');
 const btnDowsing = document.getElementById('btnDowsing');
 const btnWords = document.getElementById('btnWords');
 const btnCloseHistory = document.getElementById('btnCloseHistory');
+const btnCloseMap = document.getElementById('btnCloseMap');
+const btnCloseGear = document.getElementById('btnCloseGear');
+const btnUpgrade = document.getElementById('btnUpgrade');
+const btnInstall = document.getElementById('btnInstall');
+const btnDismissInstall = document.getElementById('btnDismissInstall');
 
 const statusBar = document.getElementById('statusBar');
 const timerDisplay = document.getElementById('timerDisplay');
@@ -37,6 +42,8 @@ const evpCountEl = document.getElementById('evpCount');
 const scanLine = document.getElementById('scanLine');
 const screenFlash = document.getElementById('screenFlash');
 const gpsText = document.getElementById('gpsText');
+const proBadge = document.getElementById('proBadge');
+const upgradeBanner = document.getElementById('upgradeBanner');
 
 const spectrogramSection = document.getElementById('spectrogramSection');
 const spectrogramCanvas = document.getElementById('spectrogramCanvas');
@@ -66,6 +73,12 @@ const geigerRate = document.getElementById('geigerRate');
 const historyPanel = document.getElementById('historyPanel');
 const historyList = document.getElementById('historyList');
 const historyStorage = document.getElementById('historyStorage');
+const mapPanel = document.getElementById('mapPanel');
+const mapInfo = document.getElementById('mapInfo');
+const gearPanel = document.getElementById('gearPanel');
+const gearGrid = document.getElementById('gearGrid');
+const mainContainer = document.getElementById('mainContainer');
+const installBanner = document.getElementById('installBanner');
 
 // Audio meter elements
 const audioLevelFill = document.getElementById('audioLevelFill');
@@ -116,6 +129,7 @@ let evpTotalCount = 0;
 let geigerEnabled = false;
 let dowsingActive = false;
 let wordDetectEnabled = true;
+let deferredInstallPrompt = null;
 
 // Performance throttling
 let lastAudioUITime = 0;
@@ -142,20 +156,79 @@ const sessionVault = new SessionVault();
 const geigerCounter = new GeigerCounter();
 const dowsingRods = new DowsingRods();
 const wordDetector = new WordDetector();
+const investigationMap = new InvestigationMap();
+
+// ─── Pro Gate Reference ─────────────────────────────────────────────────────────
+function getProGate() { return window.proGateInstance || null; }
+function isPro() { const pg = getProGate(); return pg ? pg.isPro : false; }
+
+// ─── Gear Shop Data ─────────────────────────────────────────────────────────────
+// Replace ASIN placeholders with real Amazon product ASINs
+// Replace YOUR-TAG with your Amazon Associates affiliate tag
+const GEAR_ITEMS = [
+  { emoji: '\u26A1', name: 'K-II EMF Meter', desc: 'Industry-standard electromagnetic field detector used by professional ghost hunters worldwide.', price: '$24.99', url: 'https://www.amazon.com/dp/B07X6FV2QC?tag=YOUR-TAG' },
+  { emoji: '\uD83D\uDCFB', name: 'Spirit Box SB7', desc: 'Adjustable FM sweep radio for real-time spirit communication. Forward & reverse sweep modes.', price: '$69.99', url: 'https://www.amazon.com/dp/B01N6LIC0C?tag=YOUR-TAG' },
+  { emoji: '\uD83C\uDFA4', name: 'Digital Voice Recorder', desc: 'High-sensitivity voice recorder optimized for EVP capture sessions in quiet environments.', price: '$39.99', url: 'https://www.amazon.com/dp/B09TWT1LGR?tag=YOUR-TAG' },
+  { emoji: '\uD83D\uDCF7', name: 'Full Spectrum Camera', desc: 'Modified camera capturing UV, visible, and infrared light simultaneously.', price: '$189.99', url: 'https://www.amazon.com/dp/B0BQX8Y4TM?tag=YOUR-TAG' },
+  { emoji: '\uD83C\uDF21', name: 'FLIR Thermal Camera', desc: 'Smartphone thermal imaging attachment. Detect cold spots and temperature anomalies.', price: '$199.99', url: 'https://www.amazon.com/dp/B0BX46DQHY?tag=YOUR-TAG' },
+  { emoji: '\uD83D\uDD26', name: 'Infrared Thermometer', desc: 'Non-contact temperature gun for rapid cold spot detection during investigations.', price: '$19.99', url: 'https://www.amazon.com/dp/B00LX7XXMW?tag=YOUR-TAG' },
+  { emoji: '\uD83D\uDEF8', name: 'REM Pod', desc: 'Radiating electromagnetic pod that alerts when the EM field is disturbed near it.', price: '$99.99', url: 'https://www.amazon.com/dp/B07WJFGX8K?tag=YOUR-TAG' },
+  { emoji: '\uD83E\uDDF0', name: 'Complete Investigation Kit', desc: 'Starter ghost hunting kit with EMF meter, flashlight, thermometer, and carrying case.', price: '$149.99', url: 'https://www.amazon.com/dp/B0BLFWWG4T?tag=YOUR-TAG' }
+];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 function setStatus(msg, type) {
-  if (statusBar) {
-    statusBar.textContent = msg;
-    statusBar.className = 'status-bar' + (type ? ' ' + type : '');
-  }
+  if (statusBar) { statusBar.textContent = msg; statusBar.className = 'status-bar' + (type ? ' ' + type : ''); }
 }
 
 function formatTimer(ms) {
   const totalSec = Math.floor(ms / 1000);
-  const m = Math.floor(totalSec / 60);
-  const s = totalSec % 60;
-  return m + ':' + s.toString().padStart(2, '0');
+  return Math.floor(totalSec / 60) + ':' + (totalSec % 60).toString().padStart(2, '0');
+}
+
+// ─── Pro Gate UI ────────────────────────────────────────────────────────────────
+function applyProRestrictions() {
+  const pro = isPro();
+
+  // Upgrade banner
+  if (upgradeBanner) upgradeBanner.classList.toggle('visible', !pro);
+
+  // Pro badge
+  if (proBadge) proBadge.style.display = pro ? 'inline-block' : 'none';
+
+  // Lock icons on restricted features
+  document.querySelectorAll('.lock-icon').forEach(el => {
+    el.classList.toggle('unlocked', pro);
+  });
+
+  // Mode buttons
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    const mode = btn.dataset.mode;
+    if (mode !== 'evp') btn.classList.toggle('locked', !pro);
+  });
+
+  // Duration buttons — free users limited to 30s
+  if (!pro) {
+    document.querySelectorAll('.duration-btn').forEach(btn => {
+      const dur = btn.dataset.duration;
+      if (dur === 'continuous' || parseInt(dur) > 30) {
+        btn.classList.add('locked');
+        btn.style.opacity = '0.4';
+      }
+    });
+    // Force 30s
+    scanDuration = '30';
+    document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+    const btn30 = document.querySelector('.duration-btn[data-duration="30"]');
+    if (btn30) btn30.classList.add('active');
+  }
+}
+
+function showUpgradePrompt(feature) {
+  // Replace with your Gumroad product URL
+  if (confirm('Upgrade to Pro to unlock ' + feature + '!\n\nPro includes all 4 scan modes, unlimited sessions, investigation tools, history, map, and export.\n\nPrice: $9.99 (lifetime)\n\nOpen purchase page?')) {
+    window.open('https://gumroad.com/l/evp-mini-pro', '_blank');
+  }
 }
 
 // ─── Camera ─────────────────────────────────────────────────────────────────────
@@ -273,18 +346,14 @@ function setAnomalyBorder(active) {
 function showWordDetection(detection) {
   if (!wordDisplay || !wordLog) return;
   wordDisplay.textContent = detection.word;
-  wordDisplay.classList.remove('detected');
-  void wordDisplay.offsetWidth;
+  wordDisplay.classList.remove('detected'); void wordDisplay.offsetWidth;
   wordDisplay.classList.add('detected');
-
   const elapsed = Date.now() - scanStartTime;
   const entry = document.createElement('div');
   entry.className = 'word-log-entry';
   entry.innerHTML = '<span class="wl-time">' + formatTimer(elapsed) + '</span><span class="wl-word">' + detection.word + '</span><span class="wl-conf">' + detection.confidence + '%</span>';
   wordLog.insertBefore(entry, wordLog.firstChild);
   while (wordLog.children.length > 30) wordLog.removeChild(wordLog.lastChild);
-
-  // Haptic for word detection
   if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
 }
 
@@ -295,9 +364,8 @@ async function updateGPS() {
     if (loc.available) {
       gpsText.textContent = loc.latitude.toFixed(5) + ', ' + loc.longitude.toFixed(5);
       gpsText.classList.add('located');
-      // Try to geocode
       const name = await sessionVault.reverseGeocode(loc.latitude, loc.longitude);
-      if (name && gpsText) { gpsText.textContent = name; }
+      if (name && gpsText) gpsText.textContent = name;
     } else {
       gpsText.textContent = 'Location unavailable';
     }
@@ -306,28 +374,129 @@ async function updateGPS() {
 
 // ─── History Panel ──────────────────────────────────────────────────────────────
 async function showHistory() {
+  if (!isPro()) { showUpgradePrompt('Investigation History'); return; }
   if (!historyPanel) return;
   historyPanel.classList.add('visible');
-
   const sessions = await sessionVault.getAllSessions();
   if (historyList) historyList.innerHTML = sessionVault.renderHistoryList(sessions);
-
   const storage = await sessionVault.getStorageEstimate();
   if (historyStorage) historyStorage.textContent = 'Sessions: ' + sessions.length + ' | Storage: ' + storage.usedMB + ' MB used';
-
-  // Attach delete handlers
   document.querySelectorAll('.vault-delete-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const id = parseInt(e.target.dataset.deleteId);
       await sessionVault.deleteSession(id);
-      showHistory(); // Refresh
+      showHistory();
     });
   });
+}
+
+// ─── Map Panel ──────────────────────────────────────────────────────────────────
+async function showMap() {
+  if (!isPro()) { showUpgradePrompt('Investigation Map'); return; }
+  if (!mapPanel) return;
+  mapPanel.classList.add('visible');
+  const mapReady = investigationMap.init('mapContainer');
+  if (!mapReady && !investigationMap.ready) {
+    if (mapInfo) mapInfo.textContent = 'Map unavailable — Leaflet.js failed to load';
+    return;
+  }
+  investigationMap.refresh();
+  const sessions = await sessionVault.getAllSessions();
+  investigationMap.plot(sessions);
+  const located = sessions.filter(s => s.location && s.location.available).length;
+  if (mapInfo) mapInfo.textContent = located + ' investigation' + (located !== 1 ? 's' : '') + ' with GPS data';
+}
+
+// ─── Gear Shop Panel ────────────────────────────────────────────────────────────
+function renderGearShop() {
+  if (!gearGrid) return;
+  let html = '';
+  for (const item of GEAR_ITEMS) {
+    html += '<div class="gear-card">';
+    html += '<div class="gear-emoji">' + item.emoji + '</div>';
+    html += '<div class="gear-name">' + item.name + '</div>';
+    html += '<div class="gear-desc">' + item.desc + '</div>';
+    html += '<div class="gear-price">' + item.price + '</div>';
+    html += '<a href="' + item.url + '" target="_blank" rel="noopener" class="gear-buy">View on Amazon</a>';
+    html += '</div>';
+  }
+  gearGrid.innerHTML = html;
+}
+
+function showGear() {
+  if (!gearPanel) return;
+  gearPanel.classList.add('visible');
+  renderGearShop();
+}
+
+// ─── Share Evidence ─────────────────────────────────────────────────────────────
+async function shareEvidence() {
+  const summary = evidenceReport.getSummary();
+  const shareData = {
+    title: 'EVP-MINI Investigation Report',
+    text: summary + '\n\nCaptured with EVP-MINI — Professional Paranormal Investigation',
+    url: window.location.href
+  };
+
+  if (navigator.share) {
+    try { await navigator.share(shareData); } catch (e) { /* user cancelled */ }
+  } else {
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareData.text + '\n' + shareData.url);
+      setStatus('Report copied to clipboard!', 'complete');
+      setTimeout(() => setStatus('Investigation complete — Evidence saved', 'complete'), 2000);
+    } catch (e) {
+      setStatus('Share not available on this browser', '');
+    }
+  }
+}
+
+// ─── PWA Install Prompt ─────────────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (installBanner && !sessionStorage.getItem('installDismissed')) {
+    installBanner.classList.add('visible');
+  }
+});
+
+// ─── Bottom Navigation ──────────────────────────────────────────────────────────
+function closeAllOverlays() {
+  [historyPanel, mapPanel, gearPanel].forEach(p => { if (p) p.classList.remove('visible'); });
+}
+
+function setActiveNav(navName) {
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.nav === navName);
+  });
+}
+
+function navigateTo(navName) {
+  closeAllOverlays();
+  setActiveNav(navName);
+
+  if (navName === 'investigate') {
+    if (mainContainer) mainContainer.style.display = '';
+  } else if (navName === 'map') {
+    showMap();
+  } else if (navName === 'gear') {
+    showGear();
+  } else if (navName === 'history') {
+    showHistory();
+  }
 }
 
 // ─── Scan Lifecycle ─────────────────────────────────────────────────────────────
 async function startScan() {
   if (running) return;
+
+  // Pro gate check for mode
+  if (!isPro() && scanMode !== 'evp') {
+    showUpgradePrompt(scanMode + ' mode');
+    return;
+  }
+
   running = true;
   frameCount = 0;
   evpTotalCount = 0;
@@ -338,7 +507,6 @@ async function startScan() {
     sensorsInitialized = true;
   }
 
-  // Clear engines
   evpAudioEngine.clearAll(); visualAnomalyEngine.clearAll(); emfSensorEngine.clearAll();
   spiritBoxEngine.clearAll(); evpClassifier.clearAll(); evidenceReport.clearAll();
   wordDetector.clearAll();
@@ -351,25 +519,23 @@ async function startScan() {
   if (isRecording && stream) sessionRecorder.startRecording(stream);
 
   showPanelsForMode();
-
-  // GPS
   updateGPS();
 
-  // Timer
   scanStartTime = Date.now();
   if (timerDisplay) { timerDisplay.textContent = '0:00'; timerDisplay.classList.add('visible'); }
 
-  // Scan line
   if (scanLine && videoContainer) {
     videoContainer.style.setProperty('--scan-h', videoContainer.offsetHeight + 'px');
     scanLine.classList.add('active');
   }
 
-  // Dowsing rods
   if (dowsingActive && dowsingCanvas) {
     dowsingRods.init(dowsingCanvas);
     dowsingRods.start();
   }
+
+  // Free tier: enforce max duration
+  const maxDur = isPro() ? Infinity : 30;
 
   scanTimerInterval = setInterval(() => {
     const elapsed = Date.now() - scanStartTime;
@@ -377,6 +543,8 @@ async function startScan() {
     if (scanDuration !== 'continuous') {
       if (elapsed >= parseInt(scanDuration) * 1000) completeScan();
     }
+    // Free tier time limit
+    if (!isPro() && elapsed >= maxDur * 1000) completeScan();
   }, 250);
 
   if (btnStart) btnStart.disabled = true;
@@ -385,7 +553,6 @@ async function startScan() {
   setStatus('Scanning... Analyzing environment', 'scanning');
   if (evpAlert) evpAlert.classList.remove('visible');
 
-  // Reset throttling
   lastAudioUITime = lastSensorUITime = lastIndicatorTime = lastVisualTime = lastWaveformTime = lastWordTime = lastGeigerUITime = 0;
   prevIndicatorHTML = '';
   overlayCleared = !(scanMode === 'visual' || scanMode === 'fullspectrum');
@@ -407,7 +574,6 @@ async function completeScan() {
   spiritBoxEngine.stop();
   sessionRecorder.stopRecording();
 
-  // Generate report
   const audioReport = evpAudioEngine.fullAnalysis();
   const spiritBoxReport = spiritBoxEngine.fullAnalysis();
   const visualReport = visualAnomalyEngine.fullAnalysis();
@@ -417,7 +583,6 @@ async function completeScan() {
   evidenceReport.analyze(audioReport, spiritBoxReport, visualReport, sensorReport, evpReport, recordingData);
   renderReport();
 
-  // Save to vault
   const elapsed = Date.now() - scanStartTime;
   try {
     await sessionVault.saveSession({
@@ -456,7 +621,6 @@ function processFrame() {
   frameCount++;
   const now = performance.now();
 
-  // Audio
   if (audioInitialized) {
     evpAudioEngine.processAudioFrame();
     cachedAssess = evpAudioEngine.getQuickAssess();
@@ -464,7 +628,6 @@ function processFrame() {
     if (now - lastAudioUITime > 50) { drawSpectrogram(); updateAudioUI(cachedAssess); lastAudioUITime = now; }
     if (now - lastWaveformTime > 66) { drawWaveform(); lastWaveformTime = now; }
 
-    // EVP classification
     if (scanMode === 'evp' || scanMode === 'spiritbox' || scanMode === 'fullspectrum') {
       const noiseFloor = evpAudioEngine.getNoiseFloor();
       const classification = evpClassifier.processFrame(cachedAssess, noiseFloor);
@@ -478,13 +641,10 @@ function processFrame() {
       }
     }
 
-    // Word detection at ~10fps
     if (wordDetectEnabled && now - lastWordTime > 100) {
       const formants = evpAudioEngine.getFormantAnalysis();
       const wordResult = wordDetector.processFrame(formants, cachedAssess);
       if (wordResult) showWordDetection(wordResult);
-
-      // Also check for segment end
       if (cachedAssess && !cachedAssess.isAnomaly && cachedAssess.rmsPercent < 5) {
         const forced = wordDetector.forceCheck();
         if (forced) showWordDetection(forced);
@@ -492,7 +652,6 @@ function processFrame() {
       lastWordTime = now;
     }
 
-    // Geiger counter
     if (geigerEnabled) {
       const emfState = emfSensorEngine.getEMFAnomaly();
       const vibState = emfSensorEngine.getVibrationAnalysis();
@@ -518,10 +677,8 @@ function processFrame() {
     }
   }
 
-  // Spirit box
   if (scanMode === 'spiritbox' || scanMode === 'fullspectrum') spiritBoxEngine.processFrame();
 
-  // Visual
   const isVisualMode = scanMode === 'visual' || scanMode === 'fullspectrum';
   if (isVisualMode) {
     if (now - lastVisualTime > 50) {
@@ -535,10 +692,8 @@ function processFrame() {
     if (frameCount % 6 === 0) visualAnomalyEngine.processFrame(video);
   }
 
-  // Sensors
   emfSensorEngine.processFrame();
 
-  // Dowsing rods
   if (dowsingActive) {
     const sState = emfSensorEngine.getSensorState();
     dowsingRods.update({
@@ -554,7 +709,6 @@ function processFrame() {
     });
   }
 
-  // Sensor UI at 10fps
   if (now - lastSensorUITime > 100) {
     updateSensorUI();
     if (scanMode === 'spiritbox' || scanMode === 'fullspectrum') updateSpiritBoxUI();
@@ -562,7 +716,6 @@ function processFrame() {
     lastSensorUITime = now;
   }
 
-  // Indicators at 5fps
   if (now - lastIndicatorTime > 200) {
     updateLiveIndicators();
     if (cachedAssess && cachedAssess.isAnomaly) setAnomalyBorder(true);
@@ -683,7 +836,6 @@ function updateLiveIndicators() {
   const vib = emfSensorEngine.getVibrationAnalysis();
   if (vib.fearFreqAlert) chips.push('<span class="indicator-chip infrasound">FEAR FREQ 18.98Hz</span>');
   else if (vib.infrasoundDetected) chips.push('<span class="indicator-chip infrasound">INFRASOUND ' + vib.dominantFreqHz.toFixed(1) + 'Hz</span>');
-  // Word detection indicator
   const lastWord = wordDetector.getLastDetection();
   if (lastWord && performance.now() - lastWord.time < 5000) chips.push('<span class="indicator-chip voice">WORD: ' + lastWord.word + '</span>');
   const html = chips.join('');
@@ -697,7 +849,7 @@ function showPanelsForMode() {
   if (waveformSection) waveformSection.classList.add('visible');
   if (sensorPanel) sensorPanel.classList.add('visible');
   if (evpLog) evpLog.classList.add('visible');
-  if (wordDetectPanel && wordDetectEnabled) wordDetectPanel.classList.add('visible');
+  if (wordDetectPanel && wordDetectEnabled && isPro()) wordDetectPanel.classList.add('visible');
   if (spiritBoxPanel) spiritBoxPanel.classList.toggle('visible', scanMode === 'spiritbox' || scanMode === 'fullspectrum');
   if (visualInfoPanel) visualInfoPanel.classList.toggle('visible', scanMode === 'visual' || scanMode === 'fullspectrum');
   if (visualModeSelector) visualModeSelector.style.display = (scanMode === 'visual' || scanMode === 'fullspectrum') ? 'flex' : 'none';
@@ -712,8 +864,34 @@ if (btnStart) btnStart.addEventListener('click', startScan);
 if (btnStop) btnStop.addEventListener('click', stopScan);
 if (btnTorch) btnTorch.addEventListener('click', toggleTorch);
 if (btnScreenshot) btnScreenshot.addEventListener('click', takeScreenshot);
-if (btnHistory) btnHistory.addEventListener('click', showHistory);
-if (btnCloseHistory) btnCloseHistory.addEventListener('click', () => { if (historyPanel) historyPanel.classList.remove('visible'); });
+if (btnShare) btnShare.addEventListener('click', shareEvidence);
+
+// Overlay close buttons
+if (btnCloseHistory) btnCloseHistory.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
+if (btnCloseMap) btnCloseMap.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
+if (btnCloseGear) btnCloseGear.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
+
+// Upgrade button
+if (btnUpgrade) btnUpgrade.addEventListener('click', () => showUpgradePrompt('all features'));
+
+// Install banner
+if (btnInstall) btnInstall.addEventListener('click', async () => {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+  }
+  if (installBanner) installBanner.classList.remove('visible');
+});
+if (btnDismissInstall) btnDismissInstall.addEventListener('click', () => {
+  if (installBanner) installBanner.classList.remove('visible');
+  sessionStorage.setItem('installDismissed', '1');
+});
+
+// Bottom navigation
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => navigateTo(btn.dataset.nav));
+});
 
 if (btnNewScan) btnNewScan.addEventListener('click', () => {
   if (resultsPanel) resultsPanel.classList.remove('visible');
@@ -726,43 +904,49 @@ if (btnFlipCamera) btnFlipCamera.addEventListener('click', async () => { facingM
 
 if (btnRecord) btnRecord.addEventListener('click', () => { isRecording = !isRecording; btnRecord.classList.toggle('rec-on', isRecording); btnRecord.textContent = isRecording ? 'REC ON' : 'REC'; });
 
-// Geiger toggle
+// Tool toggles — check pro for tools
 if (btnGeiger) btnGeiger.addEventListener('click', () => {
+  if (!isPro()) { showUpgradePrompt('Geiger Counter'); return; }
   geigerEnabled = !geigerEnabled;
   geigerCounter.setEnabled(geigerEnabled);
   btnGeiger.classList.toggle('active', geigerEnabled);
   if (geigerRate) geigerRate.textContent = geigerEnabled ? '0.5/s' : 'OFF';
 });
 
-// Dowsing toggle
 if (btnDowsing) btnDowsing.addEventListener('click', () => {
+  if (!isPro()) { showUpgradePrompt('Dowsing Rods'); return; }
   dowsingActive = !dowsingActive;
   btnDowsing.classList.toggle('active', dowsingActive);
   if (dowsingActive && running && dowsingCanvas) { dowsingRods.init(dowsingCanvas); dowsingRods.start(); }
   else { dowsingRods.stop(); }
 });
 
-// Word detect toggle
 if (btnWords) btnWords.addEventListener('click', () => {
+  if (!isPro()) { showUpgradePrompt('Word Detection'); return; }
   wordDetectEnabled = !wordDetectEnabled;
   btnWords.classList.toggle('active', wordDetectEnabled);
   if (wordDetectPanel) wordDetectPanel.classList.toggle('visible', wordDetectEnabled && running);
 });
-// Start with word detect on
-if (btnWords) btnWords.classList.add('active');
 
-// Mode selector
+// Mode selector with pro gate
 document.querySelectorAll('.mode-btn').forEach(btn => {
   btn.addEventListener('click', () => {
+    const mode = btn.dataset.mode;
+    if (!isPro() && mode !== 'evp') { showUpgradePrompt(mode + ' mode'); return; }
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active'); scanMode = btn.dataset.mode;
+    btn.classList.add('active'); scanMode = mode;
     if (modeBadge) { const labels = { evp: 'EVP SCAN', spiritbox: 'SPIRIT BOX', visual: 'VISUAL', fullspectrum: 'FULL SPECTRUM' }; modeBadge.textContent = labels[scanMode] || scanMode.toUpperCase(); }
     if (visualModeSelector) visualModeSelector.style.display = (scanMode === 'visual' || scanMode === 'fullspectrum') ? 'flex' : 'none';
   });
 });
 
 document.querySelectorAll('.duration-btn').forEach(btn => {
-  btn.addEventListener('click', () => { document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); scanDuration = btn.dataset.duration; });
+  btn.addEventListener('click', () => {
+    const dur = btn.dataset.duration;
+    if (!isPro() && (dur === 'continuous' || parseInt(dur) > 30)) { showUpgradePrompt('unlimited session duration'); return; }
+    document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); scanDuration = dur;
+  });
 });
 
 document.querySelectorAll('.visual-btn').forEach(btn => {
@@ -787,11 +971,11 @@ if (btnStopPlayback) btnStopPlayback.addEventListener('click', () => sessionReco
 if (btnDownload) btnDownload.addEventListener('click', () => sessionRecorder.downloadRecording());
 
 if (btnExport) btnExport.addEventListener('click', () => {
+  if (!isPro()) { showUpgradePrompt('Evidence Export'); return; }
   const summary = evidenceReport.getSummary();
   const timeline = evidenceReport.getTimelineEvents();
   let text = 'EVP-MINI INVESTIGATION REPORT\n================================\n\n';
   text += 'Generated: ' + new Date().toISOString() + '\nSummary: ' + summary + '\n\n';
-  // Word detections
   const words = wordDetector.getDetections();
   if (words.length > 0) { text += 'WORD DETECTIONS:\n'; words.forEach(w => { text += '  ' + w.word + ' (' + w.confidence + '% confidence)\n'; }); text += '\n'; }
   text += 'TIMELINE:\n';
@@ -811,10 +995,13 @@ document.addEventListener('touchstart', () => { if (evpAudioEngine.audioContext 
 async function init() {
   setStatus('Initializing EVP-MINI...', '');
   await sessionVault.init();
+  applyProRestrictions();
   const success = await startCamera();
   if (!success) setStatus('Failed to access camera/microphone. Check permissions.', 'error');
-  // Acquire GPS in background
   updateGPS();
+
+  // Pre-render gear shop
+  renderGearShop();
 }
 
 if (document.getElementById('appWrapper')?.classList.contains('authenticated')) {
