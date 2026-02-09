@@ -61,12 +61,22 @@ body { background: #0a0a14; color: #e0e0e0; font-family: system-ui, -apple-syste
   font-size: 0.9rem; color: #9e9ec0; margin-top: 8px;
   letter-spacing: 1px; line-height: 1.5;
 }
+.landing-icon {
+  border-radius: 20px; margin-bottom: 12px;
+  box-shadow: 0 0 30px rgba(0, 229, 255, 0.2), 0 0 60px rgba(124, 77, 255, 0.15);
+}
 .landing-version {
   display: inline-block; margin-top: 8px; padding: 3px 12px;
   border-radius: 12px; font-size: 0.65rem; font-weight: 700;
   background: rgba(124, 77, 255, 0.2); color: #7c4dff;
   letter-spacing: 1px;
 }
+.landing-stats {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin-top: 10px; font-size: 0.7rem; color: #9e9ec0;
+}
+.stat-item { white-space: nowrap; }
+.stat-dot { color: #4a4a6a; }
 
 /* Feature Cards */
 .landing-features {
@@ -163,6 +173,38 @@ a.cta-pro.gumroad-button:hover {
 .tier-list li.yes::before { content: '\2713'; position: absolute; left: 0; color: #00e676; font-weight: 700; }
 .tier-list li.no::before { content: '\2717'; position: absolute; left: 0; color: #4a4a6a; }
 .tier-list li.no { color: #4a4a6a; }
+
+/* How It Works */
+.how-it-works { margin-bottom: 24px; }
+.hiw-title {
+  font-size: 0.8rem; font-weight: 700; color: #7c4dff;
+  text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px;
+}
+.hiw-steps { display: flex; flex-direction: column; gap: 8px; }
+.hiw-step {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 10px;
+  background: rgba(18, 18, 42, 0.6); border: 1px solid #1e1e3a;
+  text-align: left;
+}
+.hiw-num {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #7c4dff, #00e5ff);
+  color: #fff; font-size: 0.75rem; font-weight: 800;
+}
+.hiw-text { font-size: 0.75rem; color: #c0c0d0; line-height: 1.4; }
+
+/* Reviews */
+.reviews-section { margin-bottom: 24px; }
+.review {
+  padding: 14px; margin-bottom: 8px; border-radius: 10px;
+  background: rgba(18, 18, 42, 0.6); border: 1px solid #1e1e3a;
+  text-align: left;
+}
+.review-stars { font-size: 0.85rem; color: #ffea00; margin-bottom: 6px; letter-spacing: 2px; }
+.review-text { font-size: 0.75rem; color: #c0c0d0; line-height: 1.5; font-style: italic; margin-bottom: 6px; }
+.review-author { font-size: 0.65rem; color: #7c4dff; font-weight: 600; }
 
 .landing-footer {
   font-size: 0.7rem; color: #4a4a6a; line-height: 1.5;

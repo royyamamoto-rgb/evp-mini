@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a1e"/>
+      <stop offset="100%" stop-color="#12122a"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c4dff"/>
+      <stop offset="100%" stop-color="#00e5ff"/>
+    </linearGradient>
+    <radialGradient id="orb1" cx="20%" cy="30%">
+      <stop offset="0%" stop-color="#7c4dff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#7c4dff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb2" cx="80%" cy="70%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb3" cx="60%" cy="20%">
+      <stop offset="0%" stop-color="#ff1744" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#ff1744" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur1"><feGaussianBlur stdDeviation="40"/></filter>
+    <filter id="blur2"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Ambient orbs -->
+  <circle cx="200" cy="150" r="200" fill="url(#orb1)" filter="url(#blur1)"/>
+  <circle cx="1000" cy="480" r="180" fill="url(#orb2)" filter="url(#blur1)"/>
+  <circle cx="700" cy="100" r="150" fill="url(#orb3)" filter="url(#blur1)"/>
+
+  <!-- Waveform bars (left side decorative) -->
+  <g fill="url(#glow)" opacity="0.3">
+    <rect x="60" y="260" width="6" height="110" rx="3"/>
+    <rect x="80" y="230" width="6" height="170" rx="3"/>
+    <rect x="100" y="200" width="6" height="230" rx="3"/>
+    <rect x="120" y="240" width="6" height="150" rx="3"/>
+    <rect x="140" y="270" width="6" height="90" rx="3"/>
+  </g>
+
+  <!-- Right side waveform -->
+  <g fill="url(#glow)" opacity="0.3">
+    <rect x="1060" y="270" width="6" height="90" rx="3"/>
+    <rect x="1080" y="240" width="6" height="150" rx="3"/>
+    <rect x="1100" y="200" width="6" height="230" rx="3"/>
+    <rect x="1120" y="230" width="6" height="170" rx="3"/>
+    <rect x="1140" y="260" width="6" height="110" rx="3"/>
+  </g>
+
+  <!-- Center icon (mini version) -->
+  <g transform="translate(440, 80) scale(0.42)">
+    <g fill="url(#glow)">
+      <rect x="172" y="226" width="8" height="60" rx="4" opacity="0.6"/>
+      <rect x="192" y="206" width="8" height="100" rx="4" opacity="0.7"/>
+      <rect x="212" y="186" width="8" height="140" rx="4" opacity="0.8"/>
+      <rect x="232" y="166" width="10" height="180" rx="5" opacity="0.9"/>
+      <rect x="254" y="146" width="12" height="220" rx="6"/>
+      <rect x="278" y="166" width="10" height="180" rx="5" opacity="0.9"/>
+      <rect x="300" y="186" width="8" height="140" rx="4" opacity="0.8"/>
+      <rect x="320" y="206" width="8" height="100" rx="4" opacity="0.7"/>
+      <rect x="340" y="226" width="8" height="60" rx="4" opacity="0.6"/>
+    </g>
+    <g fill="url(#glow)" filter="url(#blur2)" opacity="0.4">
+      <rect x="232" y="166" width="10" height="180" rx="5"/>
+      <rect x="254" y="146" width="12" height="220" rx="6"/>
+      <rect x="278" y="166" width="10" height="180" rx="5"/>
+    </g>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="320" text-anchor="middle" font-family="system-ui, -apple-system, Helvetica, sans-serif" font-size="72" font-weight="800" letter-spacing="6" fill="url(#glow)">EVP-MINI</text>
+
+  <!-- Subtitle -->
+  <text x="600" y="370" text-anchor="middle" font-family="system-ui, -apple-system, Helvetica, sans-serif" font-size="24" font-weight="500" letter-spacing="3" fill="#9e9ec0">Professional Paranormal Investigation</text>
+
+  <!-- Feature pills -->
+  <g font-family="system-ui, -apple-system, Helvetica, sans-serif" font-size="16" font-weight="600">
+    <rect x="200" y="420" width="140" height="36" rx="18" fill="rgba(124,77,255,0.2)" stroke="#7c4dff" stroke-width="1"/>
+    <text x="270" y="443" text-anchor="middle" fill="#7c4dff">EVP Capture</text>
+
+    <rect x="360" y="420" width="130" height="36" rx="18" fill="rgba(0,229,255,0.2)" stroke="#00e5ff" stroke-width="1"/>
+    <text x="425" y="443" text-anchor="middle" fill="#00e5ff">Spirit Box</text>
+
+    <rect x="510" y="420" width="170" height="36" rx="18" fill="rgba(0,230,118,0.2)" stroke="#00e676" stroke-width="1"/>
+    <text x="595" y="443" text-anchor="middle" fill="#00e676">Thermal Vision</text>
+
+    <rect x="700" y="420" width="150" height="36" rx="18" fill="rgba(255,23,68,0.2)" stroke="#ff1744" stroke-width="1"/>
+    <text x="775" y="443" text-anchor="middle" fill="#ff1744">EMF Detector</text>
+
+    <rect x="870" y="420" width="140" height="36" rx="18" fill="rgba(255,234,0,0.2)" stroke="#ffea00" stroke-width="1"/>
+    <text x="940" y="443" text-anchor="middle" fill="#ffea00">AI Analysis</text>
+  </g>
+
+  <!-- CTA -->
+  <rect x="440" y="500" width="320" height="50" rx="25" fill="url(#glow)"/>
+  <text x="600" y="531" text-anchor="middle" font-family="system-ui, -apple-system, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#fff">Free to Start  |  Pro $4.99</text>
+
+  <!-- URL -->
+  <text x="600" y="600" text-anchor="middle" font-family="system-ui, -apple-system, Helvetica, sans-serif" font-size="16" fill="#4a4a6a">evp-mini.pages.dev</text>
+</svg>

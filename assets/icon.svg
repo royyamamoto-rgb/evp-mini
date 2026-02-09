@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0a1e"/>
+      <stop offset="100%" stop-color="#12122a"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c4dff"/>
+      <stop offset="100%" stop-color="#00e5ff"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="50%" stop-color="#7c4dff"/>
+      <stop offset="100%" stop-color="#00e5ff"/>
+    </linearGradient>
+    <radialGradient id="orb1" cx="35%" cy="30%">
+      <stop offset="0%" stop-color="#7c4dff" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#7c4dff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb2" cx="70%" cy="70%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur1">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <filter id="blur2">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+
+  <!-- Ambient glow orbs -->
+  <circle cx="160" cy="140" r="120" fill="url(#orb1)" filter="url(#blur1)"/>
+  <circle cx="370" cy="380" r="100" fill="url(#orb2)" filter="url(#blur1)"/>
+
+  <!-- Ghost silhouette (subtle, translucent) -->
+  <path d="M256 120 C200 120 155 170 155 230 L155 340 C155 345 160 348 164 345 L180 330 C185 326 192 330 192 336 L192 350 C192 355 197 358 201 355 L217 340 C222 336 229 340 229 346 L229 356 C229 361 234 364 238 361 L248 352 C253 348 260 352 260 358 L260 362 C260 367 265 370 269 367 L279 358 C284 354 291 358 291 364 L291 356 C291 361 296 364 300 361 L316 346 C321 342 328 346 328 352 L328 340 C328 345 333 348 337 345 L353 330 C358 326 365 330 365 336 L365 230 C365 170 320 120 264 120 Z" fill="rgba(124,77,255,0.12)"/>
+
+  <!-- Sound wave / EVP waveform (center piece) -->
+  <!-- Outer wave arcs -->
+  <g stroke="url(#wave)" fill="none" stroke-linecap="round" opacity="0.5">
+    <path d="M130 256 Q160 180 190 256 Q220 332 250 256" stroke-width="3"/>
+    <path d="M262 256 Q292 160 322 256 Q352 352 382 256" stroke-width="3"/>
+  </g>
+
+  <!-- Main waveform bars -->
+  <g fill="url(#glow)">
+    <rect x="172" y="226" width="8" height="60" rx="4" opacity="0.6"/>
+    <rect x="192" y="206" width="8" height="100" rx="4" opacity="0.7"/>
+    <rect x="212" y="186" width="8" height="140" rx="4" opacity="0.8"/>
+    <rect x="232" y="166" width="10" height="180" rx="5" opacity="0.9"/>
+    <rect x="254" y="146" width="12" height="220" rx="6"/>
+    <rect x="278" y="166" width="10" height="180" rx="5" opacity="0.9"/>
+    <rect x="300" y="186" width="8" height="140" rx="4" opacity="0.8"/>
+    <rect x="320" y="206" width="8" height="100" rx="4" opacity="0.7"/>
+    <rect x="340" y="226" width="8" height="60" rx="4" opacity="0.6"/>
+  </g>
+
+  <!-- Glow effect behind center bars -->
+  <g fill="url(#glow)" filter="url(#blur2)" opacity="0.4">
+    <rect x="232" y="166" width="10" height="180" rx="5"/>
+    <rect x="254" y="146" width="12" height="220" rx="6"/>
+    <rect x="278" y="166" width="10" height="180" rx="5"/>
+  </g>
+
+  <!-- Small signal dots (like detected anomalies) -->
+  <circle cx="160" cy="256" r="4" fill="#ff1744" opacity="0.8"/>
+  <circle cx="160" cy="256" r="8" fill="none" stroke="#ff1744" stroke-width="1" opacity="0.4"/>
+  <circle cx="365" cy="240" r="3" fill="#00e676" opacity="0.8"/>
+  <circle cx="365" cy="240" r="6" fill="none" stroke="#00e676" stroke-width="1" opacity="0.4"/>
+
+  <!-- EVP text -->
+  <text x="256" y="430" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="800" letter-spacing="8" fill="url(#glow)">EVP</text>
+  <text x="256" y="460" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" letter-spacing="4" fill="#9e9ec0">MINI</text>
+</svg>
