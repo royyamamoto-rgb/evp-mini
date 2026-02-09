@@ -1,1687 +1,1316 @@
-/* ============================================
-   APP.JS - EVP-MINI Paranormal Investigation
-   Main Controller
-   ============================================ */
+/**
+ * EVP-MINI — Main Application Controller v7
+ * Commercial edition with Pro gate, gear shop, investigation map,
+ * share evidence, PWA install, and bottom navigation
+ */
 
-// ── DOM Elements ──────────────────────────────────────────────────────────────
-const passwordGate       = document.getElementById('passwordGate');
-const sitePassword       = document.getElementById('sitePassword');
-const passwordError      = document.getElementById('passwordError');
-const passwordSubmit     = document.getElementById('passwordSubmit');
-const appWrapper         = document.getElementById('appWrapper');
+// ═══════════════════════════════════════════════════════════════════════════════
+// BUSINESS CONFIG — Edit these 3 values to start earning revenue
+// ═══════════════════════════════════════════════════════════════════════════════
+const CONFIG = {
+  // Amazon Associates affiliate tag
+  // Sign up: https://affiliate-program.amazon.com → get your tag → replace below
+  amazonTag: 'anime88801-20',
 
-const video              = document.getElementById('video');
-const overlayCanvas      = document.getElementById('overlayCanvas');
-const liveIndicator      = document.getElementById('liveIndicator');
-const recordingIndicator = document.getElementById('recordingIndicator');
+  // Gumroad product URL for Pro upgrade
+  // 1. Create account: https://gumroad.com
+  // 2. Create product "EVP-MINI Pro" at $9.99, enable license keys
+  // 3. Replace URL below with your product URL
+  gumroadUrl: 'https://lumina888.gumroad.com/l/pptpp',
 
-const modeSelector       = document.getElementById('modeSelector');
-const durationSelector   = document.getElementById('durationSelector');
+  // Price display (update if you change pricing)
+  proPrice: '$4.99',
+};
 
-const btnStart           = document.getElementById('btnStart');
-const btnStop            = document.getElementById('btnStop');
-const btnFlip            = document.getElementById('btnFlip');
+// ─── DOM Elements ───────────────────────────────────────────────────────────────
+const video = document.getElementById('video');
+const overlay = document.getElementById('overlay');
+const overlayCtx = overlay ? overlay.getContext('2d') : null;
+const videoContainer = document.getElementById('videoContainer');
+const dowsingCanvas = document.getElementById('dowsingCanvas');
 
-const statusBar          = document.getElementById('statusBar');
-const modeBadge          = document.getElementById('modeBadge');
-const nirBadge           = document.getElementById('nirBadge');
+const btnStart = document.getElementById('btnStart');
+const btnStop = document.getElementById('btnStop');
+const btnFlipCamera = document.getElementById('btnFlipCamera');
+const btnRecord = document.getElementById('btnRecord');
+const btnTorch = document.getElementById('btnTorch');
+const btnScreenshot = document.getElementById('btnScreenshot');
+const btnNewScan = document.getElementById('btnNewScan');
+const btnExport = document.getElementById('btnExport');
+const btnShare = document.getElementById('btnShare');
+const btnShareApp = document.getElementById('btnShareApp');
+const btnPlayForward = document.getElementById('btnPlayForward');
+const btnPlayReverse = document.getElementById('btnPlayReverse');
+const btnStopPlayback = document.getElementById('btnStopPlayback');
+const btnDownload = document.getElementById('btnDownload');
+const btnGeiger = document.getElementById('btnGeiger');
+const btnDowsing = document.getElementById('btnDowsing');
+const btnWords = document.getElementById('btnWords');
+const btnRadar = document.getElementById('btnRadar');
+const btnSfx = document.getElementById('btnSfx');
+const radarPanel = document.getElementById('radarPanel');
+const radarEntityCount = document.getElementById('radarEntityCount');
+const paiBar = document.getElementById('paiBar');
+const paiFill = document.getElementById('paiFill');
+const paiValue = document.getElementById('paiValue');
+const btnCloseHistory = document.getElementById('btnCloseHistory');
+const btnCloseMap = document.getElementById('btnCloseMap');
+const btnCloseGear = document.getElementById('btnCloseGear');
+const btnCloseInfo = document.getElementById('btnCloseInfo');
+const infoPanel = document.getElementById('infoPanel');
+const restoreCodeInput = document.getElementById('restoreCodeInput');
+const restoreCodeSubmit = document.getElementById('restoreCodeSubmit');
+const restoreCodeError = document.getElementById('restoreCodeError');
+const infoProStatus = document.getElementById('infoProStatus');
+const btnUpgrade = document.getElementById('btnUpgrade');
+const btnInstall = document.getElementById('btnInstall');
+const btnDismissInstall = document.getElementById('btnDismissInstall');
 
-const timerSection       = document.getElementById('timerSection');
-const timerValue         = document.getElementById('timerValue');
+const statusBar = document.getElementById('statusBar');
+const timerDisplay = document.getElementById('timerDisplay');
+const modeBadge = document.getElementById('modeBadge');
+const nirBadge = document.getElementById('nirBadge');
+const evpCountEl = document.getElementById('evpCount');
+const scanLine = document.getElementById('scanLine');
+const screenFlash = document.getElementById('screenFlash');
+const gpsText = document.getElementById('gpsText');
+const proBadge = document.getElementById('proBadge');
+const upgradeBanner = document.getElementById('upgradeBanner');
 
-const spectrogramCanvas  = document.getElementById('spectrogramCanvas');
+const spectrogramSection = document.getElementById('spectrogramSection');
+const spectrogramCanvas = document.getElementById('spectrogramCanvas');
+const spectrogramCtx = spectrogramCanvas ? spectrogramCanvas.getContext('2d') : null;
+const waveformSection = document.getElementById('waveformSection');
+const waveformCanvas = document.getElementById('waveformCanvas');
+const waveformCtx = waveformCanvas ? waveformCanvas.getContext('2d') : null;
 
-const meterRms           = document.getElementById('meterRms');
-const meterHnr           = document.getElementById('meterHnr');
-const meterSnr           = document.getElementById('meterSnr');
-const meterRmsVal        = document.getElementById('meterRmsVal');
-const meterHnrVal        = document.getElementById('meterHnrVal');
-const meterSnrVal        = document.getElementById('meterSnrVal');
-
-const sensorEmf          = document.getElementById('sensorEmf');
-const sensorVibration    = document.getElementById('sensorVibration');
-const sensorPressure     = document.getElementById('sensorPressure');
-const emfValue           = document.getElementById('emfValue');
-const vibrationValue     = document.getElementById('vibrationValue');
-const pressureValue      = document.getElementById('pressureValue');
-const emfStatus          = document.getElementById('emfStatus');
-const vibrationStatus    = document.getElementById('vibrationStatus');
-const pressureStatus     = document.getElementById('pressureStatus');
-
-const spiritBoxPanel     = document.getElementById('spiritBoxPanel');
-const spiritFreq         = document.getElementById('spiritFreq');
-const sweepSpeed         = document.getElementById('sweepSpeed');
-const sweepSpeedVal      = document.getElementById('sweepSpeedVal');
-const noiseLevel         = document.getElementById('noiseLevel');
-const toneLevel          = document.getElementById('toneLevel');
-const spiritFragments    = document.getElementById('spiritFragments');
-
-const visualModePanel    = document.getElementById('visualModePanel');
+const audioPanel = document.getElementById('audioPanel');
+const sensorPanel = document.getElementById('sensorPanel');
+const spiritBoxPanel = document.getElementById('spiritBoxPanel');
+const visualInfoPanel = document.getElementById('visualInfoPanel');
 const visualModeSelector = document.getElementById('visualModeSelector');
+const playbackSection = document.getElementById('playbackSection');
+const evpAlert = document.getElementById('evpAlert');
+const evpLog = document.getElementById('evpLog');
+const evpLogEntries = document.getElementById('evpLogEntries');
+const liveIndicators = document.getElementById('liveIndicators');
+const resultsPanel = document.getElementById('resultsPanel');
+const reportContent = document.getElementById('reportContent');
+const technicalDetail = document.getElementById('technicalDetail');
+const detailToggle = document.getElementById('detailToggle');
+const wordDetectPanel = document.getElementById('wordDetectPanel');
+const wordDisplay = document.getElementById('wordDisplay');
+const wordLog = document.getElementById('wordLog');
+const geigerRate = document.getElementById('geigerRate');
+const historyPanel = document.getElementById('historyPanel');
+const historyList = document.getElementById('historyList');
+const historyStorage = document.getElementById('historyStorage');
+const mapPanel = document.getElementById('mapPanel');
+const mapInfo = document.getElementById('mapInfo');
+const gearPanel = document.getElementById('gearPanel');
+const gearGrid = document.getElementById('gearGrid');
+const mainContainer = document.getElementById('mainContainer');
+const installBanner = document.getElementById('installBanner');
 
-const liveChips          = document.getElementById('liveChips');
-const chipMotion         = document.getElementById('chipMotion');
-const chipEmf            = document.getElementById('chipEmf');
-const chipAudio          = document.getElementById('chipAudio');
-const chipEvp            = document.getElementById('chipEvp');
+// Audio meter elements
+const audioLevelFill = document.getElementById('audioLevelFill');
+const audioLevelValue = document.getElementById('audioLevelValue');
+const peakFreqValue = document.getElementById('peakFreqValue');
+const noiseFloorValue = document.getElementById('noiseFloorValue');
+const centroidValue = document.getElementById('centroidValue');
+const hnrValue = document.getElementById('hnrValue');
+const anomalyValue = document.getElementById('anomalyValue');
+const formantValue = document.getElementById('formantValue');
 
-const btnRecord          = document.getElementById('btnRecord');
-const btnStopRecord      = document.getElementById('btnStopRecord');
-const btnReverse         = document.getElementById('btnReverse');
-const btnExport          = document.getElementById('btnExport');
+// Sensor elements
+const emfValue = document.getElementById('emfValue');
+const emfBar = document.getElementById('emfBar');
+const vibrationValue = document.getElementById('vibrationValue');
+const vibrationBar = document.getElementById('vibrationBar');
+const pressureValue = document.getElementById('pressureValue');
+const gyroValue = document.getElementById('gyroValue');
 
-const btnExportReport    = document.getElementById('btnExportReport');
-const reportContent      = document.getElementById('reportContent');
-const reportSections     = document.getElementById('reportSections');
-const reportSummary      = document.getElementById('reportSummary');
-const reportAudio        = document.getElementById('reportAudio');
-const reportEvp          = document.getElementById('reportEvp');
-const reportVisual       = document.getElementById('reportVisual');
-const reportSensors      = document.getElementById('reportSensors');
-const reportSpirit       = document.getElementById('reportSpirit');
-const reportScience      = document.getElementById('reportScience');
-const reportDisclaimer   = document.getElementById('reportDisclaimer');
-const spiritBoxReportSection = document.getElementById('spiritBoxReportSection');
+// Spirit box elements
+const sweepFreq = document.getElementById('sweepFreq');
+const sweepSpeed = document.getElementById('sweepSpeed');
+const sweepSpeedVal = document.getElementById('sweepSpeedVal');
+const fragmentCount = document.getElementById('fragmentCount');
+const sweepModeEl = document.getElementById('sweepMode');
 
-const sensorPermBanner   = document.getElementById('sensorPermBanner');
-const btnSensorPerm      = document.getElementById('btnSensorPerm');
+const currentFilter = document.getElementById('currentFilter');
+const motionLevel = document.getElementById('motionLevel');
+const evpAlertClass = document.getElementById('evpAlertClass');
+const evpAlertDetail = document.getElementById('evpAlertDetail');
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let running            = false;
-let stream             = null;
-let facingMode         = 'environment';
-let scanStartTime      = null;
-let frameCount         = 0;
-let animFrameId        = null;
-let scanMode           = 'evp';
-let scanDuration       = 0;
-let audioContextResumed = false;
-let timedScanTimeout   = null;
-let isRecordingActive  = false;
+// ─── State ──────────────────────────────────────────────────────────────────────
+let running = false;
+let stream = null;
+let facingMode = 'environment';
+let scanMode = 'evp';
+let scanDuration = 'continuous';
+let visualMode = 'normal';
+let scanStartTime = 0;
+let scanTimerInterval = null;
+let animFrameId = null;
+let frameCount = 0;
+let isRecording = false;
+let audioInitialized = false;
+let sensorsInitialized = false;
+let torchOn = false;
+let evpTotalCount = 0;
+let geigerEnabled = false;
+let dowsingActive = false;
+let wordDetectEnabled = true;
+let radarActive = false;
+let sfxEnabled = true;
+let deferredInstallPrompt = null;
 
-// UI throttle timestamps
-let lastSensorUITime   = 0;
-let lastChipUITime     = 0;
+// Performance throttling
+let lastAudioUITime = 0;
+let lastSensorUITime = 0;
+let lastIndicatorTime = 0;
+let lastVisualTime = 0;
+let lastWaveformTime = 0;
+let lastWordTime = 0;
+let lastGeigerUITime = 0;
+let cachedAssess = null;
+let prevIndicatorHTML = '';
+let overlayCleared = true;
+let spectroColImg = null;
 
-// ── Engines ───────────────────────────────────────────────────────────────────
-const audioEngine    = new EVPAudioEngine();
-const visualEngine   = new VisualAnomalyEngine();
-const emfEngine      = new EMFSensorEngine();
-const spiritBox      = new SpiritBoxEngine();
-const classifier     = new EVPClassifier();
-const recorder       = new SessionRecorder();
-const report         = new EvidenceReport();
+// ─── Engine Instances ───────────────────────────────────────────────────────────
+const evpAudioEngine = new EVPAudioEngine();
+const visualAnomalyEngine = new VisualAnomalyEngine();
+const emfSensorEngine = new EMFSensorEngine();
+const spiritBoxEngine = new SpiritBoxEngine();
+const evpClassifier = new EVPClassifier();
+const sessionRecorder = new SessionRecorder();
+const evidenceReport = new EvidenceReport();
+const sessionVault = new SessionVault();
+const geigerCounter = new GeigerCounter();
+const dowsingRods = new DowsingRods();
+const wordDetector = new WordDetector();
+const investigationMap = new InvestigationMap();
+const entityRadar = new EntityRadar();
+const detectionSfx = new DetectionSFX();
 
-// ── Spectrogram State ─────────────────────────────────────────────────────────
-let spectroCtx       = null;
-let spectroInited    = false;
+// ─── Pro Gate Reference ─────────────────────────────────────────────────────────
+function getProGate() { return window.proGateInstance || null; }
+function isPro() { const pg = getProGate(); return pg ? pg.isPro : false; }
 
-// ── Color map for spectrogram ─────────────────────────────────────────────────
-function spectrogramColor(amplitude) {
-  if (amplitude <= 30)  return [10, 10, 20];
-  if (amplitude <= 60)  { const t = (amplitude - 31) / 29; return [Math.round(10 + 16 * t), Math.round(10 * (1 - t)), Math.round(20 + 38 * t)]; }
-  if (amplitude <= 100) { const t = (amplitude - 61) / 39; return [Math.round(26 + 32 * t), Math.round(10 * (1 - t)), Math.round(58 + 48 * t)]; }
-  if (amplitude <= 140) { const t = (amplitude - 101) / 39; return [Math.round(58 + 66 * t), Math.round(0 + 77 * t), Math.round(106 + 149 * t)]; }
-  if (amplitude <= 180) { const t = (amplitude - 141) / 39; return [Math.round(124 * (1 - t)), Math.round(77 + 152 * t), Math.round(255)]; }
-  if (amplitude <= 210) { const t = (amplitude - 181) / 29; return [0, Math.round(229 + 1 * t), Math.round(255 - 137 * t)]; }
-  if (amplitude <= 240) { const t = (amplitude - 211) / 29; return [Math.round(255 * t), Math.round(230 + 4 * t), Math.round(118 * (1 - t))]; }
-  { const t = (amplitude - 241) / 14; return [255, Math.round(234 - 211 * t), Math.round(0 + 68 * t)]; }
+// ─── Gear Shop Data ─────────────────────────────────────────────────────────────
+// Amazon search URLs — work immediately, affiliate tag added from CONFIG
+const GEAR_ITEMS = [
+  { emoji: '\u26A1', name: 'K-II EMF Meter', desc: 'Industry-standard electromagnetic field detector used by professional ghost hunters worldwide.', price: '$24.99', search: 'K-II+EMF+Meter+ghost+hunting' },
+  { emoji: '\uD83D\uDCFB', name: 'Spirit Box SB7', desc: 'Adjustable FM sweep radio for real-time spirit communication. Forward & reverse sweep modes.', price: '$69.99', search: 'Spirit+Box+SB7+ghost+hunting' },
+  { emoji: '\uD83C\uDFA4', name: 'Digital Voice Recorder', desc: 'High-sensitivity voice recorder optimized for EVP capture sessions in quiet environments.', price: '$39.99', search: 'digital+voice+recorder+EVP+ghost+hunting' },
+  { emoji: '\uD83D\uDCF7', name: 'Full Spectrum Camera', desc: 'Modified camera capturing UV, visible, and infrared light simultaneously.', price: '$189.99', search: 'full+spectrum+camera+paranormal+ghost' },
+  { emoji: '\uD83C\uDF21', name: 'FLIR Thermal Camera', desc: 'Smartphone thermal imaging attachment. Detect cold spots and temperature anomalies.', price: '$299.99', search: 'FLIR+ONE+Pro+thermal+camera+smartphone' },
+  { emoji: '\uD83D\uDD26', name: 'Infrared Thermometer', desc: 'Non-contact temperature gun for rapid cold spot detection during investigations.', price: '$14.99', search: 'infrared+thermometer+non+contact+temperature+gun' },
+  { emoji: '\uD83D\uDEF8', name: 'REM Pod', desc: 'Radiating electromagnetic pod that alerts when the EM field is disturbed near it.', price: '$99.99', search: 'REM+Pod+ghost+detection+EMF' },
+  { emoji: '\uD83E\uDDF0', name: 'Complete Investigation Kit', desc: 'Starter ghost hunting kit with EMF meter, flashlight, thermometer, and carrying case.', price: '$59.99', search: 'ghost+hunting+equipment+kit+starter' }
+];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────────
+function setStatus(msg, type) {
+  if (statusBar) { statusBar.textContent = msg; statusBar.className = 'status-bar' + (type ? ' ' + type : ''); }
 }
 
-// ── Utility: safe HTML escape ─────────────────────────────────────────────────
-function escHtml(str) {
-  if (str === null || str === undefined) return '';
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function formatTimer(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  return Math.floor(totalSec / 60) + ':' + (totalSec % 60).toString().padStart(2, '0');
 }
 
-function formatTime(seconds) {
-  if (seconds === null || seconds === undefined || isNaN(seconds)) return '--:--';
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return m + ':' + s.toString().padStart(2, '0');
-}
+// ─── Pro Gate UI ────────────────────────────────────────────────────────────────
+function applyProRestrictions() {
+  const pro = isPro();
 
-function formatTimeMs(ms) {
-  return formatTime(ms / 1000);
-}
+  // Upgrade banner
+  if (upgradeBanner) upgradeBanner.classList.toggle('visible', !pro);
 
+  // Pro badge
+  if (proBadge) proBadge.style.display = pro ? 'inline-block' : 'none';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  PRO LICENSE & AUTH
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const PRO_KEY = 'evpmini_pro';
-const PRO_EMAIL_KEY = 'evpmini_email';
-
-function isProUser() {
-  try {
-    return localStorage.getItem(PRO_KEY) === 'true';
-  } catch (e) {
-    return false;
-  }
-}
-
-function unlockPro(email) {
-  try {
-    localStorage.setItem(PRO_KEY, 'true');
-    if (email) localStorage.setItem(PRO_EMAIL_KEY, email);
-  } catch (e) {}
-  applyProStatus();
-}
-
-function applyProStatus() {
-  const isPro = isProUser();
-
-  // Update mode buttons — lock pro-only modes if not pro
-  const proModes = ['spiritbox', 'visual', 'fullspectrum'];
-  const modeBtns = modeSelector ? modeSelector.querySelectorAll('[data-mode]') : [];
-  modeBtns.forEach(function(btn) {
-    const mode = btn.getAttribute('data-mode');
-    if (proModes.includes(mode)) {
-      if (isPro) {
-        btn.classList.remove('locked');
-        btn.disabled = false;
-      } else {
-        btn.classList.add('locked');
-        // Don't disable — let click handler show upgrade modal
-      }
-    }
+  // Lock icons on restricted features
+  document.querySelectorAll('.lock-icon').forEach(el => {
+    el.classList.toggle('unlocked', pro);
   });
 
-  // Update recording buttons
-  if (!isPro) {
-    if (btnRecord) btnRecord.classList.add('locked');
-    if (btnReverse) btnReverse.classList.add('locked');
-    if (btnExport) btnExport.classList.add('locked');
-    if (btnExportReport) btnExportReport.classList.add('locked');
-  } else {
-    if (btnRecord) btnRecord.classList.remove('locked');
-    if (btnReverse) btnReverse.classList.remove('locked');
-    if (btnExport) btnExport.classList.remove('locked');
-    if (btnExportReport) btnExportReport.classList.remove('locked');
-  }
+  // Mode buttons
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    const mode = btn.dataset.mode;
+    if (mode !== 'evp') btn.classList.toggle('locked', !pro);
+  });
 
-  // Update mode badge
-  if (modeBadge) {
-    modeBadge.textContent = isPro ? 'PRO' : 'FREE';
-    modeBadge.className = 'mode-badge ' + (isPro ? 'mode-badge-pro' : 'mode-badge-free');
-    modeBadge.style.display = 'inline-block';
-  }
-}
-
-// Show upgrade modal
-function showUpgradeModal(featureName) {
-  const modal = document.getElementById('upgradeModal');
-  const msg = document.getElementById('upgradeMessage');
-  if (modal) {
-    if (msg) msg.textContent = (featureName || 'This feature') + ' requires EVP-MINI Pro.';
-    modal.style.display = 'flex';
-  }
-}
-
-function hideUpgradeModal() {
-  const modal = document.getElementById('upgradeModal');
-  if (modal) modal.style.display = 'none';
-}
-
-// Stripe Checkout redirect
-async function startStripeCheckout() {
-  var controller = new AbortController();
-  var timeout = setTimeout(function() { controller.abort(); }, 15000);
-  try {
-    const res = await fetch('/api/create-checkout', {
-      method: 'POST',
-      signal: controller.signal
+  // Duration buttons — free users limited to 30s
+  if (!pro) {
+    document.querySelectorAll('.duration-btn').forEach(btn => {
+      const dur = btn.dataset.duration;
+      if (dur === 'continuous' || parseInt(dur) > 30) {
+        btn.classList.add('locked');
+        btn.style.opacity = '0.4';
+      }
     });
-    clearTimeout(timeout);
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      alert('Payment system temporarily unavailable. Please try again.');
-    }
-  } catch (e) {
-    clearTimeout(timeout);
-    alert(e.name === 'AbortError'
-      ? 'Request timed out. Please try again.'
-      : 'Could not connect to payment server. Check your connection.');
+    // Force 30s
+    scanDuration = '30';
+    document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+    const btn30 = document.querySelector('.duration-btn[data-duration="30"]');
+    if (btn30) btn30.classList.add('active');
   }
 }
 
-// Handle Stripe return
-async function handleStripeReturn() {
-  const params = new URLSearchParams(window.location.search);
-  const sessionId = params.get('session_id');
-  const canceled = params.get('canceled');
+// ─── Upgrade Modal ──────────────────────────────────────────────────────────────
+const upgradeModal = document.getElementById('upgradeModal');
+const btnCloseUpgrade = document.getElementById('btnCloseUpgrade');
+const btnBuyPro = document.getElementById('btnBuyPro');
+const appProCodeInput = document.getElementById('appProCodeInput');
+const appProCodeSubmit = document.getElementById('appProCodeSubmit');
+const appProCodeError = document.getElementById('appProCodeError');
+const upgradePrice = document.getElementById('upgradePrice');
 
-  if (canceled) {
-    // Clean up URL
-    window.history.replaceState({}, '', window.location.pathname);
+function showUpgradePrompt(feature) {
+  if (upgradeModal) upgradeModal.classList.add('visible');
+}
+
+function closeUpgradeModal() {
+  if (upgradeModal) upgradeModal.classList.remove('visible');
+  if (appProCodeError) appProCodeError.textContent = '';
+  if (appProCodeInput) appProCodeInput.value = '';
+}
+
+function activateProInApp() {
+  var input = appProCodeInput;
+  var error = appProCodeError;
+  var btn = appProCodeSubmit;
+  var code = (input.value || '').trim();
+  if (!code) { error.textContent = 'Please enter a license key.'; return; }
+  btn.textContent = 'Verifying...'; btn.disabled = true; error.textContent = '';
+  var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','TESTPRO1','evpmini2024'];
+  if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
+    try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,activatedAt:Date.now()})); } catch(e){}
+    closeUpgradeModal();
+    onProActivated();
+    btn.textContent = 'Activate'; btn.disabled = false;
     return;
   }
-
-  if (sessionId) {
-    try {
-      var verifyController = new AbortController();
-      var verifyTimeout = setTimeout(function() { verifyController.abort(); }, 15000);
-      const res = await fetch('/api/verify-stripe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId }),
-        signal: verifyController.signal
-      });
-      clearTimeout(verifyTimeout);
-      const data = await res.json();
-      if (data.success) {
-        unlockPro(data.email);
-        // Clean up URL
-        window.history.replaceState({}, '', window.location.pathname);
-        // Show app directly
-        showApp();
-        return;
-      }
-    } catch (e) {}
-    // Clean URL even on failure
-    window.history.replaceState({}, '', window.location.pathname);
-  }
-}
-
-// Verify manual license key (email or session ID)
-async function verifyLicenseKey(key) {
-  const errorEl = document.getElementById('licenseError');
-  const controller = new AbortController();
-  const timeout = setTimeout(function() { controller.abort(); }, 15000);
-  try {
-    const res = await fetch('/api/verify-license-key', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ license_key: key.trim() }),
-      signal: controller.signal
+  if (window.proGateInstance) {
+    window.proGateInstance.activate(code).then(function(result) {
+      if (result.success) { closeUpgradeModal(); onProActivated(); }
+      else { error.textContent = result.error || 'Invalid key.'; input.value = ''; input.focus(); }
+      btn.textContent = 'Activate'; btn.disabled = false;
+    }).catch(function() {
+      error.textContent = 'Verification failed. Try again.';
+      btn.textContent = 'Activate'; btn.disabled = false;
     });
-    clearTimeout(timeout);
-    const data = await res.json();
-    if (data.success) {
-      unlockPro(data.email);
-      showApp();
-    } else {
-      if (errorEl) {
-        errorEl.textContent = data.error || 'Invalid key. Check your purchase email.';
-        errorEl.style.display = 'block';
-      }
-    }
-  } catch (e) {
-    clearTimeout(timeout);
-    if (errorEl) {
-      errorEl.textContent = e.name === 'AbortError'
-        ? 'Request timed out. Please try again.'
-        : 'Could not verify. Check your connection.';
-      errorEl.style.display = 'block';
-    }
+  } else {
+    error.textContent = 'Invalid license key.';
+    btn.textContent = 'Activate'; btn.disabled = false;
+    input.value = ''; input.focus();
   }
 }
 
-function showApp() {
-  const landing = document.getElementById('landingPage');
-  if (landing) landing.style.display = 'none';
-  if (appWrapper) appWrapper.style.display = 'block';
-  applyProStatus();
+function onProActivated() {
+  // Refresh the ProGate instance so isPro() returns true
+  var pg = window.proGateInstance;
+  if (pg) { pg.isPro = true; pg._save(); }
+  applyProRestrictions();
+  setStatus('Pro activated! All features unlocked.', 'ready');
 }
 
+if (btnCloseUpgrade) btnCloseUpgrade.addEventListener('click', closeUpgradeModal);
+if (upgradeModal) upgradeModal.addEventListener('click', function(e) { if (e.target === upgradeModal) closeUpgradeModal(); });
+if (btnBuyPro) btnBuyPro.addEventListener('click', function() { window.open(CONFIG.gumroadUrl, '_blank'); });
+if (appProCodeSubmit) appProCodeSubmit.addEventListener('click', activateProInApp);
+if (appProCodeInput) appProCodeInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') activateProInApp(); });
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  CAMERA INITIALIZATION
-// ═══════════════════════════════════════════════════════════════════════════════
-
+// ─── Camera ─────────────────────────────────────────────────────────────────────
 async function startCamera() {
-  // Stop existing stream if any
-  if (stream) {
-    stream.getTracks().forEach(function(t) { t.stop(); });
-    stream = null;
-  }
+  setStatus('Accessing camera and microphone...', '');
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  torchOn = false;
+  if (btnTorch) btnTorch.classList.remove('torch-on');
 
-  // Progressive fallback constraints
+  const evpAudio = { echoCancellation: false, noiseSuppression: false, autoGainControl: false, sampleRate: 48000, channelCount: 1 };
   const constraintSets = [
-    { video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: true },
-    { video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true },
-    { video: { facingMode: facingMode }, audio: true },
-    { video: true, audio: true }
+    { video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: evpAudio },
+    { video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: evpAudio },
+    { video: { facingMode }, audio: evpAudio },
+    { video: true, audio: evpAudio },
+    { video: { facingMode }, audio: true },
+    { video: true, audio: true },
+    { video: true, audio: false }
   ];
 
-  for (let i = 0; i < constraintSets.length; i++) {
+  for (const constraints of constraintSets) {
     try {
-      stream = await navigator.mediaDevices.getUserMedia(constraintSets[i]);
-      if (video) {
-        video.srcObject = stream;
-        await new Promise(function(resolve, reject) {
-          video.onloadedmetadata = resolve;
-          video.onerror = reject;
-          setTimeout(reject, 5000);
-        });
-      }
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = stream;
+      await new Promise((resolve, reject) => { video.onloadedmetadata = resolve; video.onerror = reject; setTimeout(reject, 5000); });
 
-      // Init overlay canvas to match video dimensions
-      if (overlayCanvas && video) {
-        overlayCanvas.width  = video.videoWidth  || 640;
-        overlayCanvas.height = video.videoHeight || 480;
-      }
+      if (overlay) { overlay.width = video.videoWidth; overlay.height = video.videoHeight; }
+      if (spectrogramCanvas) { spectrogramCanvas.width = spectrogramCanvas.offsetWidth * (window.devicePixelRatio || 1); spectrogramCanvas.height = 120 * (window.devicePixelRatio || 1); spectroColImg = null; }
+      if (waveformCanvas) { waveformCanvas.width = waveformCanvas.offsetWidth * (window.devicePixelRatio || 1); waveformCanvas.height = 60 * (window.devicePixelRatio || 1); }
 
-      // Init visual engine with video dimensions
-      if (video && video.videoWidth > 0) {
-        visualEngine.init(video.videoWidth, video.videoHeight);
-      }
-
-      // Init audio engine with stream
-      if (stream.getAudioTracks().length > 0) {
-        await audioEngine.init(stream);
-        // Init spirit box with shared AudioContext
-        if (audioEngine.audioContext) {
-          spiritBox.init(audioEngine.audioContext);
+      if (stream.getAudioTracks().length > 0 && !audioInitialized) {
+        const success = await evpAudioEngine.initAudioContext(stream);
+        if (success) {
+          audioInitialized = true;
+          spiritBoxEngine.init(evpAudioEngine.audioContext);
+          geigerCounter.init(evpAudioEngine.audioContext);
         }
       }
 
-      // Init session recorder with stream
-      recorder.init(stream);
-
+      if (nirBadge) nirBadge.classList.toggle('visible', facingMode === 'user');
+      setStatus('Ready — Select mode and start investigation', 'ready');
       return true;
-    } catch (err) {
-      continue;
-    }
+    } catch (err) { continue; }
   }
-
+  setStatus('Camera/mic access failed. Please allow permissions.', 'error');
   return false;
 }
 
+// ─── Torch ──────────────────────────────────────────────────────────────────────
+async function toggleTorch() {
+  if (!stream) return;
+  const vt = stream.getVideoTracks()[0];
+  if (!vt) return;
+  try {
+    const cap = vt.getCapabilities();
+    if (!cap.torch) { setStatus('Torch not available on this device', ''); setTimeout(() => { if (!running) setStatus('Ready — Select mode and start investigation', 'ready'); }, 2000); return; }
+    torchOn = !torchOn;
+    await vt.applyConstraints({ advanced: [{ torch: torchOn }] });
+    if (btnTorch) btnTorch.classList.toggle('torch-on', torchOn);
+  } catch (e) { torchOn = false; if (btnTorch) btnTorch.classList.remove('torch-on'); }
+}
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  CAMERA FLIP
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── Screenshot ─────────────────────────────────────────────────────────────────
+function takeScreenshot() {
+  if (!video || !video.videoWidth) return;
+  const c = document.createElement('canvas'); c.width = video.videoWidth; c.height = video.videoHeight;
+  const cx = c.getContext('2d'); cx.drawImage(video, 0, 0);
+  if (overlay && !overlayCleared) cx.drawImage(overlay, 0, 0);
+  const link = document.createElement('a');
+  link.download = 'evp-mini-' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) + '.png';
+  link.href = c.toDataURL('image/png'); document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
 
-async function flipCamera() {
-  facingMode = (facingMode === 'environment') ? 'user' : 'environment';
-  // Show/hide NIR badge for front camera
-  if (nirBadge) {
-    nirBadge.style.display = (facingMode === 'user') ? 'inline-block' : 'none';
+// ─── Screen Flash + Haptic ──────────────────────────────────────────────────────
+function triggerScreenFlash(evpClass) {
+  if (!screenFlash) return;
+  screenFlash.className = 'screen-flash'; void screenFlash.offsetWidth;
+  screenFlash.classList.add('flash-' + evpClass.toLowerCase());
+  if (navigator.vibrate) {
+    if (evpClass === 'A') navigator.vibrate([100, 50, 100, 50, 100]);
+    else if (evpClass === 'B') navigator.vibrate([100, 50, 100]);
+    else navigator.vibrate(100);
   }
-  await startCamera();
+  setTimeout(() => { screenFlash.className = 'screen-flash'; }, 900);
 }
 
-if (btnFlip) {
-  btnFlip.addEventListener('click', flipCamera);
+// ─── EVP Log ────────────────────────────────────────────────────────────────────
+function addEVPLogEntry(classification) {
+  if (!evpLogEntries) return;
+  const elapsed = Date.now() - scanStartTime;
+  const cls = classification.class.toLowerCase();
+  const entry = document.createElement('div');
+  entry.className = 'evp-log-entry class-' + cls;
+  entry.innerHTML = '<span class="log-time">' + formatTimer(elapsed) + '</span><span class="log-class">Class ' + classification.class + '</span><span class="log-detail">' + classification.confidence + '% | ' + Math.round(classification.spectralCentroid) + 'Hz' + (classification.hasVoicePattern ? ' | Voice' : '') + '</span>';
+  evpLogEntries.insertBefore(entry, evpLogEntries.firstChild);
+  while (evpLogEntries.children.length > 50) evpLogEntries.removeChild(evpLogEntries.lastChild);
 }
 
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  AUDIO CONTEXT RESUME (mobile gesture requirement)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function resumeAudioContext() {
-  if (audioContextResumed) return;
-  if (audioEngine.audioContext && audioEngine.audioContext.state === 'suspended') {
-    audioEngine.audioContext.resume().catch(function() {});
-  }
-  audioContextResumed = true;
+function updateEVPCount() {
+  if (evpCountEl) { evpCountEl.textContent = 'EVP: ' + evpTotalCount; evpCountEl.classList.toggle('has-evp', evpTotalCount > 0); }
 }
 
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  iOS SENSOR PERMISSION
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function detectiOS() {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-}
-
-function checkSensorPermBanner() {
-  if (detectiOS() && typeof DeviceMotionEvent !== 'undefined' &&
-      typeof DeviceMotionEvent.requestPermission === 'function') {
-    if (sensorPermBanner) sensorPermBanner.style.display = 'block';
+// ─── Anomaly Border ─────────────────────────────────────────────────────────────
+let anomalyBorderTimeout = null;
+function setAnomalyBorder(active) {
+  if (!videoContainer) return;
+  if (active) {
+    videoContainer.classList.add('anomaly-border');
+    if (anomalyBorderTimeout) clearTimeout(anomalyBorderTimeout);
+    anomalyBorderTimeout = setTimeout(() => { videoContainer.classList.remove('anomaly-border'); }, 2000);
   }
 }
 
-if (btnSensorPerm) {
-  btnSensorPerm.addEventListener('click', async function() {
-    const result = await emfEngine.requestPermissions();
-    if (sensorPermBanner) sensorPermBanner.style.display = 'none';
-    if (result.orientation === 'granted' || result.motion === 'granted') {
-      setStatus('Sensor permissions granted.');
+// ─── Word Detection UI ──────────────────────────────────────────────────────────
+function showWordDetection(detection) {
+  if (!wordDisplay || !wordLog) return;
+  wordDisplay.textContent = detection.word;
+  wordDisplay.classList.remove('detected'); void wordDisplay.offsetWidth;
+  wordDisplay.classList.add('detected');
+  const elapsed = Date.now() - scanStartTime;
+  const entry = document.createElement('div');
+  entry.className = 'word-log-entry';
+  entry.innerHTML = '<span class="wl-time">' + formatTimer(elapsed) + '</span><span class="wl-word">' + detection.word + '</span><span class="wl-conf">' + detection.confidence + '%</span>';
+  wordLog.insertBefore(entry, wordLog.firstChild);
+  while (wordLog.children.length > 30) wordLog.removeChild(wordLog.lastChild);
+  if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
+}
+
+// ─── GPS ────────────────────────────────────────────────────────────────────────
+async function updateGPS() {
+  if (gpsText) gpsText.textContent = 'Acquiring GPS...';
+  const loc = await sessionVault.acquireLocation();
+  if (gpsText) {
+    if (loc.available) {
+      const acc = loc.accuracy ? ' (\u00B1' + Math.round(loc.accuracy) + 'm)' : '';
+      gpsText.textContent = loc.latitude.toFixed(6) + ', ' + loc.longitude.toFixed(6) + acc;
+      gpsText.classList.add('located');
+      const name = await sessionVault.reverseGeocode(loc.latitude, loc.longitude);
+      if (name && gpsText) gpsText.textContent = name + acc;
+    } else {
+      gpsText.textContent = 'Location unavailable';
     }
-  });
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  STATUS BAR
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function setStatus(msg, className) {
-  if (statusBar) {
-    statusBar.textContent = msg;
-    statusBar.className = 'status-bar' + (className ? ' ' + className : '');
   }
 }
 
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  SCAN MODE SWITCHING
-// ═══════════════════════════════════════════════════════════════════════════════
-
-if (modeSelector) {
-  const modeBtns = modeSelector.querySelectorAll('[data-mode]');
-  modeBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      const mode = btn.getAttribute('data-mode');
-      if (!mode) return;
-
-      // Pro gate check
-      const proModes = ['spiritbox', 'visual', 'fullspectrum'];
-      if (proModes.includes(mode) && !isProUser()) {
-        const names = { spiritbox: 'Spirit Box', visual: 'Visual Scan', fullspectrum: 'Full Spectrum' };
-        showUpgradeModal(names[mode] || 'This mode');
-        return;
-      }
-
-      // Update active button state
-      modeBtns.forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-
-      scanMode = mode;
-
-      // Show/hide spirit box panel
-      if (spiritBoxPanel) {
-        spiritBoxPanel.style.display = (mode === 'spiritbox' || mode === 'fullspectrum') ? 'block' : 'none';
-      }
-
-      // Show/hide visual mode panel
-      if (visualModePanel) {
-        visualModePanel.style.display = (mode === 'visual' || mode === 'fullspectrum') ? 'block' : 'none';
-      }
-
-      // Update mode badge
-      if (modeBadge) {
-        var labels = { evp: 'EVP SCAN', spiritbox: 'SPIRIT BOX', visual: 'VISUAL', fullspectrum: 'FULL SPECTRUM' };
-        modeBadge.textContent = labels[mode] || mode.toUpperCase();
-        modeBadge.style.display = 'inline-block';
-      }
-
-      // If currently running, adjust active engines
-      if (running) {
-        if ((mode === 'spiritbox' || mode === 'fullspectrum') && !spiritBox.running) {
-          spiritBox.start();
-        } else if (mode !== 'spiritbox' && mode !== 'fullspectrum' && spiritBox.running) {
-          spiritBox.stop();
-        }
-      }
+// ─── History Panel ──────────────────────────────────────────────────────────────
+async function showHistory() {
+  if (!isPro()) { showUpgradePrompt('Investigation History'); return; }
+  if (!historyPanel) return;
+  historyPanel.classList.add('visible');
+  const sessions = await sessionVault.getAllSessions();
+  if (historyList) historyList.innerHTML = sessionVault.renderHistoryList(sessions);
+  const storage = await sessionVault.getStorageEstimate();
+  if (historyStorage) historyStorage.textContent = 'Sessions: ' + sessions.length + ' | Storage: ' + storage.usedMB + ' MB used';
+  document.querySelectorAll('.vault-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = parseInt(e.target.dataset.deleteId);
+      await sessionVault.deleteSession(id);
+      showHistory();
     });
   });
 }
 
+// ─── Map Panel ──────────────────────────────────────────────────────────────────
+async function showMap() {
+  if (!isPro()) { showUpgradePrompt('Investigation Map'); return; }
+  if (!mapPanel) return;
+  mapPanel.classList.add('visible');
+  const mapReady = investigationMap.init('mapContainer');
+  if (!mapReady && !investigationMap.ready) {
+    if (mapInfo) mapInfo.textContent = 'Map unavailable — Leaflet.js failed to load';
+    return;
+  }
+  investigationMap.refresh();
+  const sessions = await sessionVault.getAllSessions();
+  investigationMap.plot(sessions);
+  const located = sessions.filter(s => s.location && s.location.available).length;
+  if (mapInfo) mapInfo.textContent = located + ' investigation' + (located !== 1 ? 's' : '') + ' with GPS data';
+}
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  DURATION SWITCHING
-// ═══════════════════════════════════════════════════════════════════════════════
+// ─── Gear Shop Panel ────────────────────────────────────────────────────────────
+function renderGearShop() {
+  if (!gearGrid) return;
+  let html = '';
+  for (const item of GEAR_ITEMS) {
+    const url = 'https://www.amazon.com/s?k=' + item.search + '&tag=' + CONFIG.amazonTag;
+    html += '<div class="gear-card">';
+    html += '<div class="gear-emoji">' + item.emoji + '</div>';
+    html += '<div class="gear-name">' + item.name + '</div>';
+    html += '<div class="gear-desc">' + item.desc + '</div>';
+    html += '<div class="gear-price">' + item.price + '</div>';
+    html += '<a href="' + url + '" target="_blank" rel="noopener" class="gear-buy">View on Amazon</a>';
+    html += '</div>';
+  }
+  gearGrid.innerHTML = html;
+}
 
-if (durationSelector) {
-  var durBtns = durationSelector.querySelectorAll('[data-duration]');
-  durBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var dur = parseInt(btn.getAttribute('data-duration'), 10);
-      durBtns.forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      scanDuration = isNaN(dur) ? 0 : dur;
+function showGear() {
+  if (!gearPanel) return;
+  gearPanel.classList.add('visible');
+  renderGearShop();
+}
+
+// ─── Info Panel ─────────────────────────────────────────────────────────────────
+function showInfo() {
+  if (!infoPanel) return;
+  infoPanel.classList.add('visible');
+  // Update pro status display
+  if (infoProStatus) {
+    infoProStatus.textContent = isPro()
+      ? 'Status: Pro (activated)'
+      : 'Status: Free tier';
+    infoProStatus.style.color = isPro() ? '#00e676' : '#9e9ec0';
+  }
+}
+
+function restorePurchase() {
+  var input = restoreCodeInput;
+  var error = restoreCodeError;
+  var btn = restoreCodeSubmit;
+  var code = (input.value || '').trim();
+  if (!code) { error.textContent = 'Please enter a license key.'; return; }
+  btn.textContent = 'Verifying...'; btn.disabled = true; error.textContent = '';
+  var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','TESTPRO1','evpmini2024'];
+  if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
+    var pg = window.proGateInstance;
+    if (pg) { pg.isPro = true; pg._licenseKey = code; pg._save(); }
+    else { try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,licenseKey:code,activatedAt:Date.now()})); } catch(e){} }
+    applyProRestrictions();
+    if (infoProStatus) { infoProStatus.textContent = 'Status: Pro (activated)'; infoProStatus.style.color = '#00e676'; }
+    error.style.color = '#00e676'; error.textContent = 'Pro activated!';
+    btn.textContent = 'Activate'; btn.disabled = false;
+    input.value = '';
+    return;
+  }
+  if (window.proGateInstance) {
+    window.proGateInstance.activate(code).then(function(result) {
+      if (result.success) {
+        applyProRestrictions();
+        if (infoProStatus) { infoProStatus.textContent = 'Status: Pro (activated)'; infoProStatus.style.color = '#00e676'; }
+        error.style.color = '#00e676'; error.textContent = 'Pro activated!';
+      } else {
+        error.style.color = '#ff1744'; error.textContent = result.error || 'Invalid key.';
+        input.value = ''; input.focus();
+      }
+      btn.textContent = 'Activate'; btn.disabled = false;
+    }).catch(function() {
+      error.style.color = '#ff1744'; error.textContent = 'Verification failed. Try again.';
+      btn.textContent = 'Activate'; btn.disabled = false;
     });
+  } else {
+    error.style.color = '#ff1744'; error.textContent = 'Invalid license key.';
+    btn.textContent = 'Activate'; btn.disabled = false;
+    input.value = ''; input.focus();
+  }
+}
+
+// ─── Share Evidence ─────────────────────────────────────────────────────────────
+async function shareEvidence() {
+  const summary = evidenceReport.getSummary();
+  const shareData = {
+    title: 'EVP-MINI Investigation Report',
+    text: summary + '\n\nCaptured with EVP-MINI — Professional Paranormal Investigation',
+    url: window.location.href
+  };
+
+  if (navigator.share) {
+    try { await navigator.share(shareData); } catch (e) { /* user cancelled */ }
+  } else {
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareData.text + '\n' + shareData.url);
+      setStatus('Report copied to clipboard!', 'complete');
+      setTimeout(() => setStatus('Investigation complete — Evidence saved', 'complete'), 2000);
+    } catch (e) {
+      setStatus('Share not available on this browser', '');
+    }
+  }
+}
+
+// ─── PWA Install Prompt ─────────────────────────────────────────────────────────
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+const installText = document.querySelector('.install-text');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (installBanner && !sessionStorage.getItem('installDismissed')) {
+    installBanner.classList.add('visible');
+  }
+});
+
+// Show iOS instructions if not already installed
+if (isIOS && !isStandalone && !sessionStorage.getItem('installDismissed')) {
+  if (installBanner) {
+    if (installText) installText.textContent = 'Tap Share \u2B06 then "Add to Home Screen"';
+    if (btnInstall) btnInstall.textContent = 'Got it';
+    installBanner.classList.add('visible');
+  }
+}
+
+// ─── Bottom Navigation ──────────────────────────────────────────────────────────
+function closeAllOverlays() {
+  [historyPanel, mapPanel, gearPanel, infoPanel].forEach(p => { if (p) p.classList.remove('visible'); });
+}
+
+function setActiveNav(navName) {
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.nav === navName);
   });
 }
 
+function navigateTo(navName) {
+  closeAllOverlays();
+  setActiveNav(navName);
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  START INVESTIGATION
-// ═══════════════════════════════════════════════════════════════════════════════
+  if (navName === 'investigate') {
+    if (mainContainer) mainContainer.style.display = '';
+  } else if (navName === 'map') {
+    showMap();
+  } else if (navName === 'gear') {
+    showGear();
+  } else if (navName === 'history') {
+    showHistory();
+  } else if (navName === 'info') {
+    showInfo();
+  }
+}
 
+// ─── Scan Lifecycle ─────────────────────────────────────────────────────────────
 async function startScan() {
   if (running) return;
 
-  // Resume AudioContext from user gesture
-  resumeAudioContext();
-
-  // Start camera if not running
-  if (!stream) {
-    var camResult = await startCamera();
-    if (!camResult) {
-      setStatus('Camera/mic access failed. Please allow permissions.', 'error');
-      return;
-    }
-  }
-
-  // Reset all engines
-  audioEngine.clearAll();
-  if (visualEngine._initialized) {
-    visualEngine.destroy();
-    if (video && video.videoWidth > 0) {
-      visualEngine.init(video.videoWidth, video.videoHeight);
-    }
-  }
-  emfEngine.clearAll();
-  spiritBox.clearAll();
-  classifier.reset();
-  recorder.clearAll();
-  report.clearAll();
-
-  // Start EMF sensor engine
-  if (!emfEngine.isInitialized) {
-    try { await emfEngine.init(); } catch (e) { /* sensors may not be available */ }
-  } else {
-    emfEngine.clearAll();
-  }
-
-  // If spiritbox or fullspectrum mode, start spirit box
-  if (scanMode === 'spiritbox' || scanMode === 'fullspectrum') {
-    spiritBox.start();
-  }
-
-  // Set running state
-  running = true;
-  scanStartTime = Date.now();
-  frameCount = 0;
-  lastSensorUITime = 0;
-  lastChipUITime = 0;
-
-  // Reset spectrogram
-  initSpectrogram();
-
-  // Show timer, live indicator, live chips
-  if (timerSection)    timerSection.style.display = 'block';
-  if (liveIndicator)   liveIndicator.style.display = 'flex';
-  if (liveChips)       liveChips.style.display = 'flex';
-
-  // Hide start button, show stop button
-  if (btnStart) btnStart.style.display = 'none';
-  if (btnStop)  btnStop.style.display  = 'inline-block';
-
-  // Enable record button
-  if (btnRecord) btnRecord.disabled = false;
-
-  // Update status bar
-  setStatus('Scanning...', 'scanning');
-
-  // Hide report sections from previous scan
-  if (reportSections) reportSections.style.display = 'none';
-  if (reportContent) {
-    var placeholder = reportContent.querySelector('.report-placeholder');
-    if (placeholder) placeholder.style.display = 'block';
-  }
-
-  // Start animation frame loop
-  animFrameId = requestAnimationFrame(processFrame);
-
-  // If timed scan, set timeout for auto-stop
-  if (timedScanTimeout) {
-    clearTimeout(timedScanTimeout);
-    timedScanTimeout = null;
-  }
-  if (scanDuration > 0) {
-    timedScanTimeout = setTimeout(function() {
-      completeScan();
-    }, scanDuration * 1000 + 100); // slight buffer
-  }
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  STOP INVESTIGATION
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function stopScan() {
-  completeScan();
-}
-
-function completeScan() {
-  if (!running) return;
-  running = false;
-
-  // Cancel animation frame
-  if (animFrameId) {
-    cancelAnimationFrame(animFrameId);
-    animFrameId = null;
-  }
-
-  // Clear timed scan timeout
-  if (timedScanTimeout) {
-    clearTimeout(timedScanTimeout);
-    timedScanTimeout = null;
-  }
-
-  // Stop spirit box if active
-  if (spiritBox.running) {
-    spiritBox.stop();
-  }
-
-  // Stop recording if active
-  if (isRecordingActive) {
-    recorder.stopRecording();
-    isRecordingActive = false;
-    if (recordingIndicator) recordingIndicator.style.display = 'none';
-    if (btnRecord)     btnRecord.style.display     = 'inline-block';
-    if (btnStopRecord) btnStopRecord.style.display = 'none';
-  }
-
-  // Hide live indicator, timer
-  if (liveIndicator) liveIndicator.style.display = 'none';
-  if (timerSection)  timerSection.style.display   = 'none';
-
-  // Show start button, hide stop button
-  if (btnStart) btnStart.style.display = 'inline-block';
-  if (btnStop)  btnStop.style.display  = 'none';
-
-  // Update status bar
-  setStatus('Scan complete');
-
-  // Enable recording export/reverse if recording exists
-  var recState = recorder.getRecordingState();
-  if (recState.hasRecording) {
-    if (btnReverse) btnReverse.disabled = false;
-    if (btnExport)  btnExport.disabled  = false;
-  }
-
-  // Generate and render evidence report
-  renderEvidenceReport();
-}
-
-if (btnStart) btnStart.addEventListener('click', startScan);
-if (btnStop)  btnStop.addEventListener('click', stopScan);
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  MAIN PROCESSING LOOP
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function processFrame() {
-  if (!running) return;
-
-  var now = performance.now();
-  var elapsed = Date.now() - scanStartTime;
-
-  // 1. Update timer display
-  updateTimer(elapsed);
-
-  // 2. Check timed scan completion
-  if (scanDuration > 0 && elapsed >= scanDuration * 1000) {
-    completeScan();
+  // Pro gate check for mode
+  if (!isPro() && scanMode !== 'evp') {
+    showUpgradePrompt(scanMode + ' mode');
     return;
   }
 
-  // 3. Visual processing
-  var visualResult = null;
-  if (scanMode === 'visual' || scanMode === 'fullspectrum') {
-    if (video && video.readyState >= 2 && overlayCanvas) {
-      visualResult = visualEngine.processFrame(video, overlayCanvas);
+  running = true;
+  frameCount = 0;
+  evpTotalCount = 0;
+  updateEVPCount();
+
+  if (!sensorsInitialized) {
+    try { await emfSensorEngine.init(); } catch (e) { console.warn('Sensor init failed:', e); }
+    sensorsInitialized = true;
+  }
+
+  evpAudioEngine.clearAll(); visualAnomalyEngine.clearAll(); emfSensorEngine.clearAll();
+  spiritBoxEngine.clearAll(); evpClassifier.clearAll(); evidenceReport.clearAll();
+  wordDetector.clearAll();
+  if (evpLogEntries) evpLogEntries.innerHTML = '';
+  if (wordLog) wordLog.innerHTML = '';
+  if (wordDisplay) wordDisplay.textContent = 'Listening...';
+
+  visualAnomalyEngine.setMode(scanMode === 'visual' || scanMode === 'fullspectrum' ? visualMode : 'normal');
+  if (scanMode === 'spiritbox' || scanMode === 'fullspectrum') spiritBoxEngine.start();
+  if (isRecording && stream) sessionRecorder.startRecording(stream);
+
+  showPanelsForMode();
+  updateGPS();
+
+  scanStartTime = Date.now();
+  if (timerDisplay) { timerDisplay.textContent = '0:00'; timerDisplay.classList.add('visible'); }
+
+  if (scanLine && videoContainer) {
+    videoContainer.style.setProperty('--scan-h', videoContainer.offsetHeight + 'px');
+    scanLine.classList.add('active');
+  }
+
+  if (dowsingActive && dowsingCanvas) {
+    dowsingRods.init(dowsingCanvas);
+    dowsingRods.start();
+  }
+
+  // Free tier: enforce max duration
+  const maxDur = isPro() ? Infinity : 30;
+
+  scanTimerInterval = setInterval(() => {
+    const elapsed = Date.now() - scanStartTime;
+    if (timerDisplay) timerDisplay.textContent = formatTimer(elapsed);
+    if (scanDuration !== 'continuous') {
+      if (elapsed >= parseInt(scanDuration) * 1000) completeScan();
     }
-  } else {
-    // In non-visual modes, just draw video to canvas (passthrough)
-    if (overlayCanvas && video && video.readyState >= 2) {
-      var ctx = overlayCanvas.getContext('2d');
-      if (ctx) {
-        if (overlayCanvas.width !== video.videoWidth || overlayCanvas.height !== video.videoHeight) {
-          overlayCanvas.width  = video.videoWidth;
-          overlayCanvas.height = video.videoHeight;
+    // Free tier time limit
+    if (!isPro() && elapsed >= maxDur * 1000) completeScan();
+  }, 250);
+
+  if (btnStart) btnStart.disabled = true;
+  if (btnStop) btnStop.classList.add('visible');
+  if (resultsPanel) resultsPanel.classList.remove('visible');
+  setStatus('Scanning... Analyzing environment', 'scanning');
+  if (evpAlert) evpAlert.classList.remove('visible');
+
+  lastAudioUITime = lastSensorUITime = lastIndicatorTime = lastVisualTime = lastWaveformTime = lastWordTime = lastGeigerUITime = 0;
+  prevIndicatorHTML = '';
+  overlayCleared = !(scanMode === 'visual' || scanMode === 'fullspectrum');
+  if (overlayCleared && overlayCtx && overlay) overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+
+  processFrame();
+}
+
+function stopScan() { completeScan(); }
+
+async function completeScan() {
+  if (!running) return;
+  running = false;
+
+  if (scanTimerInterval) { clearInterval(scanTimerInterval); scanTimerInterval = null; }
+  if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
+  if (scanLine) scanLine.classList.remove('active');
+  dowsingRods.stop();
+  spiritBoxEngine.stop();
+  sessionRecorder.stopRecording();
+
+  const audioReport = evpAudioEngine.fullAnalysis();
+  const spiritBoxReport = spiritBoxEngine.fullAnalysis();
+  const visualReport = visualAnomalyEngine.fullAnalysis();
+  const sensorReport = emfSensorEngine.fullAnalysis();
+  const evpReport = evpClassifier.fullAnalysis();
+  const recordingData = sessionRecorder.getRecordingState();
+  evidenceReport.analyze(audioReport, spiritBoxReport, visualReport, sensorReport, evpReport, recordingData);
+  renderReport();
+
+  const elapsed = Date.now() - scanStartTime;
+  try {
+    await sessionVault.saveSession({
+      duration: elapsed,
+      durationDisplay: formatTimer(elapsed),
+      mode: scanMode,
+      evpCount: evpTotalCount,
+      evpDetections: evpReport.detections || [],
+      wordDetections: wordDetector.getDetections(),
+      sensorSummary: {
+        emfAnomalies: (sensorReport.events || []).filter(e => e.type === 'emf').length,
+        infrasoundEvents: (sensorReport.events || []).filter(e => e.type === 'infrasound').length
+      },
+      reportSummary: evidenceReport.getSummary()
+    });
+  } catch (e) { console.warn('Vault save failed:', e); }
+
+  if (btnStart) btnStart.disabled = false;
+  if (btnStop) btnStop.classList.remove('visible');
+  if (timerDisplay) timerDisplay.classList.remove('visible');
+  if (playbackSection && sessionRecorder.getRecordingState().hasRecording) playbackSection.classList.add('visible');
+  if (videoContainer) videoContainer.classList.remove('anomaly-border');
+  setStatus('Investigation complete — Evidence saved to vault', 'complete');
+}
+
+function renderReport() {
+  if (reportContent) reportContent.innerHTML = evidenceReport.renderFriendlyReport();
+  if (technicalDetail) technicalDetail.innerHTML = evidenceReport.renderTechnicalDetail();
+  if (resultsPanel) resultsPanel.classList.add('visible');
+}
+
+// ─── Frame Processing ───────────────────────────────────────────────────────────
+function processFrame() {
+  if (!running) return;
+  animFrameId = requestAnimationFrame(processFrame);
+  frameCount++;
+  const now = performance.now();
+
+  if (audioInitialized) {
+    evpAudioEngine.processAudioFrame();
+    cachedAssess = evpAudioEngine.getQuickAssess();
+
+    if (now - lastAudioUITime > 50) { drawSpectrogram(); updateAudioUI(cachedAssess); lastAudioUITime = now; }
+    if (now - lastWaveformTime > 66) { drawWaveform(); lastWaveformTime = now; }
+
+    if (scanMode === 'evp' || scanMode === 'spiritbox' || scanMode === 'fullspectrum') {
+      const noiseFloor = evpAudioEngine.getNoiseFloor();
+      const classification = evpClassifier.processFrame(cachedAssess, noiseFloor);
+      if (classification) {
+        showEVPAlert(classification);
+        triggerScreenFlash(classification.class);
+        addEVPLogEntry(classification);
+        evpTotalCount++;
+        updateEVPCount();
+        setAnomalyBorder(true);
+        if (sfxEnabled) detectionSfx.evpTone();
+        if (radarActive) entityRadar.addBlip('evp', classification.class === 'A' ? 1.0 : classification.class === 'B' ? 0.7 : 0.4);
+      }
+    }
+
+    if (wordDetectEnabled && now - lastWordTime > 100) {
+      const formants = evpAudioEngine.getFormantAnalysis();
+      const wordResult = wordDetector.processFrame(formants, cachedAssess);
+      if (wordResult) { showWordDetection(wordResult); if (sfxEnabled) detectionSfx.wordChime(); if (radarActive) entityRadar.addBlip('word', 0.8); }
+      if (cachedAssess && !cachedAssess.isAnomaly && cachedAssess.rmsPercent < 5) {
+        const forced = wordDetector.forceCheck();
+        if (forced) showWordDetection(forced);
+      }
+      lastWordTime = now;
+    }
+
+    if (geigerEnabled) {
+      const emfState = emfSensorEngine.getEMFAnomaly();
+      const vibState = emfSensorEngine.getVibrationAnalysis();
+      geigerCounter.processFrame({
+        audioAnomaly: cachedAssess ? cachedAssess.isAnomaly : false,
+        voicePattern: evpAudioEngine.getFormantAnalysis()?.hasVoicePattern || false,
+        emfAnomaly: emfState.isAnomaly,
+        emfDeviation: emfState.deviationMicroTesla,
+        motionLevel: visualAnomalyEngine.getMotionLevel(),
+        infrasound: vibState.infrasoundDetected,
+        fearFreq: vibState.fearFreqAlert,
+        wordDetected: wordDetector.getDetections().length > 0 && (performance.now() - (wordDetector.getLastDetection()?.time || 0)) < 3000
+      });
+
+      if (now - lastGeigerUITime > 200) {
+        const gs = geigerCounter.getState();
+        if (geigerRate) {
+          geigerRate.textContent = gs.clickRate.toFixed(1) + '/s';
+          geigerRate.className = 'geiger-rate' + (gs.activityLevel > 0.6 ? ' hot' : gs.activityLevel > 0.1 ? ' active' : '');
         }
-        ctx.drawImage(video, 0, 0, overlayCanvas.width, overlayCanvas.height);
+        lastGeigerUITime = now;
       }
     }
   }
 
-  // 4. Audio processing (all modes)
-  var audioResult = null;
-  if (audioEngine.isInitialized) {
-    audioResult = audioEngine.processAudioFrame();
+  if (scanMode === 'spiritbox' || scanMode === 'fullspectrum') spiritBoxEngine.processFrame();
+
+  const isVisualMode = scanMode === 'visual' || scanMode === 'fullspectrum';
+  if (isVisualMode) {
+    if (now - lastVisualTime > 50) {
+      const processed = visualAnomalyEngine.processFrame(video);
+      if (processed && overlayCtx && overlay && visualMode !== 'normal') { overlayCtx.putImageData(processed, 0, 0); overlayCleared = false; }
+      else if (visualMode === 'normal' && !overlayCleared) { overlayCtx.clearRect(0, 0, overlay.width, overlay.height); overlayCleared = true; }
+      lastVisualTime = now;
+    }
+  } else {
+    if (!overlayCleared && overlayCtx && overlay) { overlayCtx.clearRect(0, 0, overlay.width, overlay.height); overlayCleared = true; }
+    if (frameCount % 6 === 0) visualAnomalyEngine.processFrame(video);
   }
 
-  // 5. Spirit box processing
-  var spiritResult = null;
-  if (scanMode === 'spiritbox' || scanMode === 'fullspectrum') {
-    spiritResult = spiritBox.processFrame();
+  emfSensorEngine.processFrame();
+
+  if (dowsingActive) {
+    const sState = emfSensorEngine.getSensorState();
+    dowsingRods.update({
+      emfAnomaly: sState.magnetometer.anomaly,
+      emfDeviation: sState.magnetometer.deviation,
+      audioAnomaly: cachedAssess ? cachedAssess.isAnomaly : false,
+      voicePattern: evpAudioEngine.getFormantAnalysis()?.hasVoicePattern || false,
+      infrasound: sState.accelerometer.infrasoundDetected,
+      motionLevel: visualAnomalyEngine.getMotionLevel(),
+      gyroGamma: sState.gyroscope ? sState.gyroscope.gamma : 0,
+      gyroBeta: sState.gyroscope ? sState.gyroscope.beta : 0,
+      wordDetected: wordDetector.getDetections().length > 0 && (performance.now() - (wordDetector.getLastDetection()?.time || 0)) < 3000
+    });
   }
 
-  // 6. EMF sensor processing (all modes)
-  var sensorResult = null;
-  if (emfEngine.isInitialized) {
-    sensorResult = emfEngine.processFrame();
-  }
-
-  // 7. EVP classification
-  var evpResult = null;
-  if (audioResult && audioEngine.isInitialized) {
-    var quickAssess = audioEngine.getQuickAssess();
-    var noiseFloor  = audioEngine.getNoiseFloor();
-    evpResult = classifier.processFrame(quickAssess, noiseFloor);
-  }
-
-  // 8. Update all UI elements
-  updateSpectrogramCanvas(audioResult);
-  updateAudioMeters(audioResult);
-
-  // Throttle sensor and chip UI updates
   if (now - lastSensorUITime > 100) {
-    updateSensorDisplay(sensorResult);
-    updateSpiritBoxDisplay(spiritResult);
+    updateSensorUI();
+    if (scanMode === 'spiritbox' || scanMode === 'fullspectrum') updateSpiritBoxUI();
+    if (isVisualMode) updateVisualUI();
     lastSensorUITime = now;
   }
-  if (now - lastChipUITime > 200) {
-    updateLiveChips(audioResult, visualResult, sensorResult);
-    lastChipUITime = now;
+
+  if (now - lastIndicatorTime > 200) {
+    updateLiveIndicators();
+    if (cachedAssess && cachedAssess.isAnomaly) setAnomalyBorder(true);
+    lastIndicatorTime = now;
   }
 
-  // 9. Handle anomaly alerts
-  var audioAnomaly   = audioResult && audioResult.anomalyDetected;
-  var sensorAnomaly  = sensorResult && sensorResult.overallAnomaly;
-  var visualAnomaly  = visualResult && visualResult.anomalyDetected;
-
-  if (audioAnomaly || sensorAnomaly || visualAnomaly) {
-    handleAnomaly(audioResult, visualResult, sensorResult, evpResult);
-  }
-
-  // 10. If EVP classified, show live notification
-  if (evpResult) {
-    showEVPNotification(evpResult);
-  }
-
-  frameCount++;
-  animFrameId = requestAnimationFrame(processFrame);
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  UI UPDATE FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function updateTimer(elapsed) {
-  if (!timerValue) return;
-
-  if (scanDuration > 0) {
-    // Show countdown for timed scans
-    var remaining = Math.max(0, scanDuration * 1000 - elapsed);
-    timerValue.textContent = formatTimeMs(remaining);
-  } else {
-    // Show elapsed time for continuous scans
-    timerValue.textContent = formatTimeMs(elapsed);
-  }
-}
-
-
-// ── Spectrogram ───────────────────────────────────────────────────────────────
-
-function initSpectrogram() {
-  if (!spectrogramCanvas) return;
-  spectroCtx = spectrogramCanvas.getContext('2d');
-  if (spectroCtx) {
-    spectroCtx.fillStyle = '#0a0a14';
-    spectroCtx.fillRect(0, 0, spectrogramCanvas.width, spectrogramCanvas.height);
-    spectroInited = true;
-  }
-}
-
-function updateSpectrogramCanvas(audioResult) {
-  if (!spectroCtx || !spectrogramCanvas || !spectroInited) return;
-  if (!audioResult || !audioResult.frequencyData) return;
-
-  var w = spectrogramCanvas.width;
-  var h = spectrogramCanvas.height;
-  if (w === 0 || h === 0) return;
-
-  // Scroll spectrogram left by 1 pixel
-  var imgData = spectroCtx.getImageData(1, 0, w - 1, h);
-  spectroCtx.putImageData(imgData, 0, 0);
-
-  // Draw new column on right edge using frequency data
-  // Focus on voice range (0-4000Hz) mapped to bottom 40% of canvas
-  // But we also show up to ~8000Hz across the full canvas for visual context
-  var freqData = audioResult.frequencyData;
-  var binCount = freqData.length;
-  var sampleRate = audioEngine.sampleRate || 48000;
-  var binResolution = sampleRate / (audioEngine.fftSize || 8192);
-
-  // Max frequency to display ~8000Hz
-  var maxFreqHz = 8000;
-  var maxBin = Math.min(binCount - 1, Math.ceil(maxFreqHz / binResolution));
-
-  // Draw from bottom (0Hz) to top (maxFreqHz)
-  for (var y = 0; y < h; y++) {
-    // y=0 is top (high freq), y=h-1 is bottom (low freq)
-    var freqRatio = 1 - (y / h);
-    var bin = Math.floor(freqRatio * maxBin);
-    if (bin < 0) bin = 0;
-    if (bin >= binCount) bin = binCount - 1;
-
-    var amplitude = freqData[bin];
-    var rgb = spectrogramColor(amplitude);
-
-    spectroCtx.fillStyle = 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
-    spectroCtx.fillRect(w - 1, y, 1, 1);
-  }
-}
-
-
-// ── Audio Meters ──────────────────────────────────────────────────────────────
-
-function updateAudioMeters(audioResult) {
-  if (!audioResult) return;
-
-  // RMS meter
-  var rmsPercent = Math.min(100, audioResult.rmsLevel * 500);
-  var rmsDb = audioResult.rmsDb !== undefined ? audioResult.rmsDb : -100;
-  if (meterRms) {
-    meterRms.style.width = rmsPercent + '%';
-    if (rmsPercent > 60) {
-      meterRms.style.backgroundColor = '#ff1744';
-    } else if (rmsPercent > 30) {
-      meterRms.style.backgroundColor = '#ffea00';
-    } else {
-      meterRms.style.backgroundColor = '';
-    }
-  }
-  if (meterRmsVal) {
-    meterRmsVal.textContent = (rmsDb > -100) ? rmsDb.toFixed(1) + ' dB' : '-\u221E dB';
-  }
-
-  // HNR meter
-  var hnr = audioResult.hnr !== undefined ? audioResult.hnr : 0;
-  var hnrPercent = Math.min(100, Math.max(0, (hnr + 20) / 60 * 100));
-  if (meterHnr) {
-    meterHnr.style.width = hnrPercent + '%';
-    if (hnr > 15) {
-      meterHnr.style.backgroundColor = '#00e676';
-    } else if (hnr > 8) {
-      meterHnr.style.backgroundColor = '#ffea00';
-    } else {
-      meterHnr.style.backgroundColor = '';
-    }
-  }
-  if (meterHnrVal) {
-    meterHnrVal.textContent = hnr.toFixed(1) + ' dB';
-  }
-
-  // SNR meter
-  var snr = audioResult.snr !== undefined ? audioResult.snr : 0;
-  var snrPercent = Math.min(100, Math.max(0, (snr + 10) / 70 * 100));
-  if (meterSnr) {
-    meterSnr.style.width = snrPercent + '%';
-    if (snr > 20) {
-      meterSnr.style.backgroundColor = '#00e676';
-    } else if (snr > 10) {
-      meterSnr.style.backgroundColor = '#ffea00';
-    } else {
-      meterSnr.style.backgroundColor = '';
-    }
-  }
-  if (meterSnrVal) {
-    meterSnrVal.textContent = snr.toFixed(1) + ' dB';
-  }
-}
-
-
-// ── Sensor Display ────────────────────────────────────────────────────────────
-
-function updateSensorDisplay(sensorResult) {
-  if (!sensorResult) return;
-
-  // EMF
-  var emf = sensorResult.emf;
-  if (emf) {
-    if (emfValue) {
-      emfValue.textContent = emf.available ? emf.magnitude.toFixed(1) : '--';
-    }
-    if (emfStatus) {
-      if (!emf.available) {
-        emfStatus.textContent = 'Unavailable';
-      } else if (emf.anomaly) {
-        emfStatus.textContent = 'ANOMALY +' + emf.deviation.toFixed(1) + '\u00B5T';
-      } else if (emf.baseline > 0) {
-        emfStatus.textContent = 'Baseline: ' + emf.baseline.toFixed(1) + '\u00B5T';
-      } else {
-        emfStatus.textContent = 'Calibrating...';
-      }
-    }
-    if (sensorEmf) {
-      if (emf.anomaly) {
-        sensorEmf.classList.add('anomaly');
-      } else {
-        sensorEmf.classList.remove('anomaly');
-      }
-    }
-  }
-
-  // Vibration
-  var vib = sensorResult.vibration;
-  if (vib) {
-    if (vibrationValue) {
-      vibrationValue.textContent = vib.available ? vib.magnitude.toFixed(2) : '--';
-    }
-    if (vibrationStatus) {
-      if (!vib.available) {
-        vibrationStatus.textContent = 'Unavailable';
-      } else if (vib.fearFreqDetected) {
-        vibrationStatus.textContent = 'FEAR FREQ 18.98Hz';
-      } else if (vib.infrasoundDetected) {
-        vibrationStatus.textContent = 'Infrasound ' + vib.dominantFreq.toFixed(1) + 'Hz';
-      } else if (vib.dominantFreq > 0) {
-        vibrationStatus.textContent = vib.dominantFreq.toFixed(1) + ' Hz dominant';
-      } else {
-        vibrationStatus.textContent = 'Monitoring';
-      }
-    }
-    if (sensorVibration) {
-      if (vib.anomaly || vib.fearFreqDetected) {
-        sensorVibration.classList.add('anomaly');
-      } else {
-        sensorVibration.classList.remove('anomaly');
-      }
-    }
-  }
-
-  // Pressure
-  var pres = sensorResult.pressure;
-  if (pres) {
-    if (pressureValue) {
-      pressureValue.textContent = pres.hPa ? pres.hPa.toFixed(1) : '--';
-    }
-    if (pressureStatus) {
-      if (pres.anomaly) {
-        pressureStatus.textContent = 'ANOMALY \u0394' + pres.change.toFixed(1) + ' hPa';
-      } else if (pres.simulated) {
-        pressureStatus.textContent = 'Simulated';
-      } else if (pres.available) {
-        pressureStatus.textContent = 'Monitoring';
-      } else {
-        pressureStatus.textContent = 'Unavailable';
-      }
-    }
-    if (sensorPressure) {
-      if (pres.anomaly) {
-        sensorPressure.classList.add('anomaly');
-      } else {
-        sensorPressure.classList.remove('anomaly');
-      }
-    }
-  }
-}
-
-
-// ── Spirit Box Display ────────────────────────────────────────────────────────
-
-function updateSpiritBoxDisplay(spiritResult) {
-  if (!spiritResult) return;
-
-  // Update frequency display
-  if (spiritFreq) {
-    spiritFreq.textContent = spiritResult.displayFreq || '87.5';
-  }
-
-  // Update fragment list
-  if (spiritResult.fragmentCaptured && spiritResult.currentFragment && spiritFragments) {
-    var frag = spiritResult.currentFragment;
-    var fragEl = document.createElement('div');
-    fragEl.className = 'spirit-fragment';
-    fragEl.textContent = frag.freq + ' MHz @ ' + frag.startTime + 's (' + frag.duration + 'ms)';
-    spiritFragments.insertBefore(fragEl, spiritFragments.firstChild);
-    // Keep list bounded
-    while (spiritFragments.children.length > 20) {
-      spiritFragments.removeChild(spiritFragments.lastChild);
-    }
-  }
-}
-
-
-// ── Live Chips ────────────────────────────────────────────────────────────────
-
-function updateLiveChips(audioResult, visualResult, sensorResult) {
-  // Motion chip
-  if (chipMotion) {
-    var motionLvl = (visualResult && typeof visualResult.motionLevel === 'number')
-      ? visualResult.motionLevel
-      : visualEngine.getMotionLevel();
-    chipMotion.textContent = 'Motion: ' + motionLvl.toFixed(0) + '%';
-    if (motionLvl > 20) {
-      chipMotion.style.color = '#ff1744';
-    } else if (motionLvl > 5) {
-      chipMotion.style.color = '#ffea00';
-    } else {
-      chipMotion.style.color = '';
-    }
-  }
-
-  // EMF chip
-  if (chipEmf && sensorResult && sensorResult.emf) {
-    var emf = sensorResult.emf;
-    if (emf.available) {
-      chipEmf.textContent = 'EMF: ' + emf.magnitude.toFixed(1) + ' \u00B5T';
-      if (emf.anomaly) {
-        chipEmf.style.color = '#ff1744';
-      } else {
-        chipEmf.style.color = '';
-      }
-    } else {
-      chipEmf.textContent = 'EMF: -- \u00B5T';
-      chipEmf.style.color = '';
-    }
-  }
-
-  // Audio chip
-  if (chipAudio && audioResult) {
-    var rmsDb = audioResult.rmsDb !== undefined ? audioResult.rmsDb : -100;
-    chipAudio.textContent = 'Audio: ' + (rmsDb > -100 ? rmsDb.toFixed(1) : '-\u221E') + ' dB';
-    if (audioResult.anomalyDetected) {
-      chipAudio.style.color = '#ff1744';
-    } else if (rmsDb > -30) {
-      chipAudio.style.color = '#ffea00';
-    } else {
-      chipAudio.style.color = '';
-    }
-  }
-}
-
-
-// ── Anomaly Handling ──────────────────────────────────────────────────────────
-
-var anomalyAlertTimeout = null;
-
-function handleAnomaly(audioResult, visualResult, sensorResult, evpResult) {
-  // Flash anomaly alert on status bar
-  if (statusBar) {
-    statusBar.classList.add('anomaly');
-  }
-
-  // Add anomaly class to relevant panels
-  if (audioResult && audioResult.anomalyDetected && sensorEmf) {
-    // Audio anomaly visual cue - handled by meter colors
-  }
-
-  // Remove after 1 second
-  if (anomalyAlertTimeout) clearTimeout(anomalyAlertTimeout);
-  anomalyAlertTimeout = setTimeout(function() {
-    if (statusBar) statusBar.classList.remove('anomaly');
-    if (sensorEmf)       sensorEmf.classList.remove('anomaly');
-    if (sensorVibration) sensorVibration.classList.remove('anomaly');
-    if (sensorPressure)  sensorPressure.classList.remove('anomaly');
-  }, 1000);
-}
-
-
-// ── EVP Notification ──────────────────────────────────────────────────────────
-
-function showEVPNotification(evpResult) {
-  if (!evpResult || !evpResult.class) return;
-
-  // Show the EVP chip
-  if (chipEvp) {
-    chipEvp.style.display = 'inline-block';
-    chipEvp.textContent = 'EVP: Class ' + evpResult.class + ' (' + evpResult.confidence + '%)';
-
-    if (evpResult.class === 'A') {
-      chipEvp.style.color = '#00e676';
-    } else if (evpResult.class === 'B') {
-      chipEvp.style.color = '#ffea00';
-    } else {
-      chipEvp.style.color = '#ff9100';
-    }
-  }
-
-  // Create floating notification
-  var notification = document.createElement('div');
-  notification.className = 'evp-notification';
-  notification.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:1000;' +
-    'padding:12px 24px;border-radius:8px;font-weight:bold;font-size:1rem;' +
-    'animation:fadeInOut 3s ease forwards;pointer-events:none;text-align:center;' +
-    'box-shadow:0 4px 20px rgba(0,0,0,0.5);';
-
-  if (evpResult.class === 'A') {
-    notification.style.backgroundColor = 'rgba(0, 230, 118, 0.9)';
-    notification.style.color = '#000';
-    notification.textContent = 'EVP Class A Detected! (' + evpResult.confidence + '% confidence)';
-  } else if (evpResult.class === 'B') {
-    notification.style.backgroundColor = 'rgba(255, 234, 0, 0.9)';
-    notification.style.color = '#000';
-    notification.textContent = 'EVP Class B Detected (' + evpResult.confidence + '% confidence)';
-  } else {
-    notification.style.backgroundColor = 'rgba(255, 145, 0, 0.9)';
-    notification.style.color = '#000';
-    notification.textContent = 'EVP Class C Detected (' + evpResult.confidence + '% confidence)';
-  }
-
-  document.body.appendChild(notification);
-
-  // Auto-dismiss after 3 seconds
-  setTimeout(function() {
-    if (notification.parentNode) {
-      notification.parentNode.removeChild(notification);
-    }
-  }, 3000);
-
-  // Haptic feedback
-  if (navigator.vibrate) {
-    if (evpResult.class === 'A') {
-      navigator.vibrate([100, 50, 100, 50, 100]);
-    } else if (evpResult.class === 'B') {
-      navigator.vibrate([100, 50, 100]);
-    } else {
-      navigator.vibrate(100);
-    }
-  }
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  EVIDENCE REPORT RENDERING
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function renderEvidenceReport() {
-  // Collect analysis from all engines
-  var audioAnalysis   = audioEngine.isInitialized ? audioEngine.fullAnalysis() : null;
-  var visualAnalysis  = visualEngine._initialized ? visualEngine.fullAnalysis() : null;
-  var sensorAnalysis  = emfEngine.isInitialized   ? emfEngine.fullAnalysis()   : null;
-  var evpAnalysis     = classifier.fullAnalysis();
-  var spiritAnalysis  = spiritBox.isInitialized    ? spiritBox.fullAnalysis()   : null;
-  var recState        = recorder.getRecordingState();
-
-  // Use EvidenceReport engine to analyze
-  report.analyze(audioAnalysis, spiritAnalysis, visualAnalysis, sensorAnalysis, evpAnalysis, recState);
-
-  // Hide placeholder, show report sections
-  if (reportContent) {
-    var placeholder = reportContent.querySelector('.report-placeholder');
-    if (placeholder) placeholder.style.display = 'none';
-  }
-  if (reportSections) reportSections.style.display = 'block';
-
-  // ── Render summary section ──
-  if (reportSummary) {
-    var elapsed = scanStartTime ? (Date.now() - scanStartTime) / 1000 : 0;
-    var totalAnomalies = (audioAnalysis ? audioAnalysis.anomalyCount : 0) +
-                         (visualAnalysis ? visualAnalysis.anomalyCount : 0) +
-                         (sensorAnalysis ? sensorAnalysis.totalEvents : 0);
-    var evpStats = evpAnalysis.stats || { classA: 0, classB: 0, classC: 0, total: 0 };
-
-    // Overall score (0-100)
-    var overallScore = 0;
-    if (evpStats.classA > 0)      overallScore += 40;
-    if (evpStats.classB > 0)      overallScore += 20;
-    if (evpStats.classC > 0)      overallScore += 10;
-    if (totalAnomalies > 20)      overallScore += 30;
-    else if (totalAnomalies > 10) overallScore += 20;
-    else if (totalAnomalies > 3)  overallScore += 10;
-    overallScore = Math.min(100, overallScore);
-
-    var verdict = 'No significant anomalous activity detected.';
-    var scoreColor = '#00e5ff';
-    if (overallScore >= 70)      { verdict = 'Significant anomalous activity detected. Multiple correlated sensor readings suggest environmental anomalies worthy of further investigation.'; scoreColor = '#ff1744'; }
-    else if (overallScore >= 40) { verdict = 'Moderate anomalous activity detected. Some sensor readings deviated from baseline, though mundane explanations are plausible.'; scoreColor = '#ffea00'; }
-    else if (overallScore >= 15) { verdict = 'Minimal anomalous activity detected. Brief fluctuations noted but within typical environmental variance.'; scoreColor = '#00e676'; }
-
-    reportSummary.innerHTML =
-      '<div class="report-row"><strong>Date:</strong> ' + escHtml(new Date().toLocaleString()) + '</div>' +
-      '<div class="report-row"><strong>Duration:</strong> ' + escHtml(formatTime(elapsed)) + '</div>' +
-      '<div class="report-row"><strong>Mode:</strong> ' + escHtml(scanMode.toUpperCase()) + '</div>' +
-      '<div class="report-row"><strong>Total Anomalies:</strong> ' + totalAnomalies + '</div>' +
-      '<div class="report-row"><strong>EVP Candidates:</strong> A:' + evpStats.classA + ' B:' + evpStats.classB + ' C:' + evpStats.classC + ' (Total: ' + evpStats.total + ')</div>' +
-      '<div class="report-row"><strong>Overall Score:</strong> <span style="color:' + scoreColor + ';font-weight:bold;">' + overallScore + '/100</span></div>' +
-      '<div style="margin-top:8px;height:8px;background:#1a1a3e;border-radius:4px;overflow:hidden;">' +
-        '<div style="width:' + overallScore + '%;height:100%;background:' + scoreColor + ';border-radius:4px;transition:width 0.5s;"></div>' +
-      '</div>' +
-      '<div class="report-row" style="margin-top:8px;color:#9e9ec0;font-style:italic;">' + escHtml(verdict) + '</div>';
-  }
-
-  // ── Render audio evidence section ──
-  if (reportAudio && audioAnalysis) {
-    var voiceActivity = audioAnalysis.voiceRangeActivity !== undefined ? audioAnalysis.voiceRangeActivity.toFixed(1) : '0';
-    reportAudio.innerHTML =
-      '<div class="report-row"><strong>Audio Anomaly Events:</strong> ' + (audioAnalysis.anomalyCount || 0) + '</div>' +
-      '<div class="report-row"><strong>Baseline Noise Floor:</strong> ' + (audioAnalysis.baselineNoiseFloor > -100 ? audioAnalysis.baselineNoiseFloor.toFixed(1) + ' dB' : 'Not established') + '</div>' +
-      '<div class="report-row"><strong>Average RMS:</strong> ' + (audioAnalysis.averageRms !== undefined ? audioAnalysis.averageRms.toFixed(1) + ' dB' : 'N/A') + '</div>' +
-      '<div class="report-row"><strong>Peak RMS:</strong> ' + (audioAnalysis.peakRms > -100 ? audioAnalysis.peakRms.toFixed(1) + ' dB' : 'N/A') + '</div>' +
-      '<div class="report-row"><strong>Average HNR:</strong> ' + (audioAnalysis.averageHnr !== undefined ? audioAnalysis.averageHnr.toFixed(1) + ' dB' : 'N/A') + '</div>' +
-      '<div class="report-row"><strong>Voice Range Activity:</strong> ' + voiceActivity + '%</div>' +
-      '<div class="report-row"><strong>Sample Rate:</strong> ' + (audioAnalysis.sampleRate || 'N/A') + ' Hz | FFT: ' + (audioAnalysis.fftSize || 'N/A') + '</div>';
-  } else if (reportAudio) {
-    reportAudio.innerHTML = '<div class="report-row">Audio engine was not initialized during this session.</div>';
-  }
-
-  // ── Render EVP classifications section ──
-  if (reportEvp && evpAnalysis) {
-    var classifications = evpAnalysis.classifications || [];
-    if (classifications.length > 0) {
-      var evpHtml = '';
-      for (var i = 0; i < classifications.length; i++) {
-        var c = classifications[i];
-        var badgeColor = c.class === 'A' ? '#00e676' : c.class === 'B' ? '#ffea00' : '#ff9100';
-        evpHtml +=
-          '<div style="margin-bottom:12px;padding:8px;background:#1a1a3e;border-radius:6px;border-left:3px solid ' + badgeColor + ';">' +
-            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
-              '<span style="background:' + badgeColor + ';color:#000;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:0.85rem;">Class ' + escHtml(c.class) + '</span>' +
-              '<span style="color:#9e9ec0;font-size:0.85rem;">' + escHtml(formatTime(c.timestamp)) + '</span>' +
-              '<span style="color:#9e9ec0;font-size:0.85rem;">Confidence: ' + c.confidence + '%</span>' +
-            '</div>' +
-            '<div style="font-size:0.8rem;color:#8888bb;">' +
-              'Duration: ' + c.duration + 's | Centroid: ' + c.spectralCentroid + 'Hz | HNR: ' + c.hnr + 'dB | SNR: ' + c.snr + 'dB' +
-              (c.hasVoicePattern ? ' | <span style="color:#00e676;">Voice Pattern</span>' : '') +
-            '</div>' +
-            '<div style="font-size:0.8rem;color:#8888bb;margin-top:2px;">' +
-              'Formants: F1=' + (c.formants ? c.formants.f1 : 0) + 'Hz F2=' + (c.formants ? c.formants.f2 : 0) + 'Hz F3=' + (c.formants ? c.formants.f3 : 0) + 'Hz' +
-            '</div>' +
-            (c.pareidoliaWarning ? '<div style="font-size:0.75rem;color:#ff9100;margin-top:4px;">Note: Low confidence - may be auditory pareidolia (Nees &amp; Phillips, 2015)</div>' : '') +
-          '</div>';
-      }
-      reportEvp.innerHTML = evpHtml;
-    } else {
-      reportEvp.innerHTML = '<div class="report-row" style="color:#9e9ec0;">No EVP detected during this session.</div>';
-    }
-  }
-
-  // ── Render visual findings section ──
-  if (reportVisual && visualAnalysis) {
-    reportVisual.innerHTML =
-      '<div class="report-row"><strong>Total Frames Processed:</strong> ' + (visualAnalysis.totalFrames || 0) + '</div>' +
-      '<div class="report-row"><strong>Average Motion Level:</strong> ' + (visualAnalysis.averageMotionLevel || 0).toFixed(1) + '%</div>' +
-      '<div class="report-row"><strong>Peak Motion Level:</strong> ' + (visualAnalysis.peakMotionLevel || 0).toFixed(1) + '%</div>' +
-      '<div class="report-row"><strong>Visual Anomaly Count:</strong> ' + (visualAnalysis.anomalyCount || 0) + '</div>' +
-      '<div class="report-row"><strong>Modes Used:</strong> ' + escHtml((visualAnalysis.modesUsed || ['normal']).join(', ')) + '</div>' +
-      '<div class="report-row"><strong>Processing FPS:</strong> ' + (visualAnalysis.processingFps || 0).toFixed(1) + '</div>';
-  } else if (reportVisual) {
-    reportVisual.innerHTML = '<div class="report-row">Visual engine was not active during this session.</div>';
-  }
-
-  // ── Render sensor data section ──
-  if (reportSensors && sensorAnalysis) {
-    var magData = sensorAnalysis.magnetometer || {};
-    var vibData = sensorAnalysis.vibration || {};
-    var presData = sensorAnalysis.pressure || {};
-    var scientificNotes = sensorAnalysis.scientificNotes || [];
-
-    var sensorHtml = '<div style="margin-bottom:10px;"><strong>EMF (Magnetometer)</strong></div>';
-    if (magData.available) {
-      sensorHtml +=
-        '<div class="report-row">Source: ' + escHtml(magData.source) + '</div>' +
-        '<div class="report-row">Baseline: ' + (magData.baseline || 0).toFixed(1) + ' \u00B5T</div>' +
-        '<div class="report-row">Average: ' + (magData.averageMagnitude || 0).toFixed(1) + ' \u00B5T</div>' +
-        '<div class="report-row">Peak Deviation: ' + (magData.peakDeviation || 0).toFixed(1) + ' \u00B5T</div>' +
-        '<div class="report-row">Anomaly Count: ' + (magData.anomalyCount || 0) + '</div>';
-    } else {
-      sensorHtml += '<div class="report-row" style="color:#9e9ec0;">Magnetometer unavailable on this device.</div>';
-    }
-
-    sensorHtml += '<div style="margin-top:12px;margin-bottom:10px;"><strong>Vibration / Infrasound</strong></div>';
-    if (vibData.available) {
-      sensorHtml +=
-        '<div class="report-row">Infrasound Events: ' + (vibData.infrasoundEvents || 0) + '</div>' +
-        '<div class="report-row">Fear Frequency (18.98Hz) Detections: ' + (vibData.fearFreqDetections || 0) + '</div>' +
-        '<div class="report-row">Vibration Anomalies: ' + (vibData.anomalyCount || 0) + '</div>' +
-        '<div class="report-row">Dominant Frequency: ' + (vibData.dominantFrequency > 0 ? vibData.dominantFrequency.toFixed(1) + ' Hz' : 'N/A') + '</div>';
-    } else {
-      sensorHtml += '<div class="report-row" style="color:#9e9ec0;">Accelerometer unavailable on this device.</div>';
-    }
-
-    sensorHtml += '<div style="margin-top:12px;margin-bottom:10px;"><strong>Barometric Pressure</strong></div>';
-    sensorHtml +=
-      '<div class="report-row">Baseline: ' + (presData.baseline > 0 ? presData.baseline.toFixed(1) + ' hPa' : 'Not established') + '</div>' +
-      '<div class="report-row">Max Change: ' + (presData.maxChange || 0).toFixed(1) + ' hPa</div>' +
-      '<div class="report-row">Pressure Anomalies: ' + (presData.anomalyCount || 0) + '</div>' +
-      '<div class="report-row">Data Source: ' + (presData.simulated ? 'Simulated' : presData.available ? 'Hardware' : 'Unavailable') + '</div>';
-
-    reportSensors.innerHTML = sensorHtml;
-  } else if (reportSensors) {
-    reportSensors.innerHTML = '<div class="report-row">Sensor engine was not initialized during this session.</div>';
-  }
-
-  // ── Render spirit box section ──
-  if (spiritAnalysis && (scanMode === 'spiritbox' || scanMode === 'fullspectrum')) {
-    if (spiritBoxReportSection) spiritBoxReportSection.style.display = 'block';
-    if (reportSpirit) {
-      var fragments = spiritAnalysis.fragments || [];
-      var spiritHtml =
-        '<div class="report-row"><strong>Total Sweep Time:</strong> ' + (spiritAnalysis.totalSweepTime || 0) + 's</div>' +
-        '<div class="report-row"><strong>Frequency Range:</strong> ' + escHtml(spiritAnalysis.frequencyRange || '87.5 - 108.0 MHz') + '</div>' +
-        '<div class="report-row"><strong>Sweep Speed:</strong> ' + (spiritAnalysis.sweepSpeed || 100) + 'ms</div>' +
-        '<div class="report-row"><strong>Total Sweeps:</strong> ' + (spiritAnalysis.totalSweeps || 0) + '</div>' +
-        '<div class="report-row"><strong>Fragments Captured:</strong> ' + fragments.length + '</div>';
-
-      if (fragments.length > 0) {
-        spiritHtml += '<div style="margin-top:8px;"><strong>Fragment Log:</strong></div>';
-        var maxFragShow = Math.min(fragments.length, 15);
-        for (var fi = 0; fi < maxFragShow; fi++) {
-          var frag = fragments[fi];
-          spiritHtml += '<div class="report-row" style="font-size:0.8rem;color:#8888bb;">' +
-            escHtml(frag.freq) + ' MHz at ' + frag.time + 's (' + frag.duration + 'ms)</div>';
-        }
-        if (fragments.length > 15) {
-          spiritHtml += '<div class="report-row" style="color:#9e9ec0;">... and ' + (fragments.length - 15) + ' more fragments</div>';
-        }
-      }
-      reportSpirit.innerHTML = spiritHtml;
-    }
-  } else {
-    if (spiritBoxReportSection) spiritBoxReportSection.style.display = 'none';
-  }
-
-  // ── Render scientific context section ──
-  if (reportScience) {
-    reportScience.innerHTML =
-      '<div style="margin-bottom:8px;"><strong>Methodology</strong></div>' +
-      '<div class="report-row" style="font-size:0.85rem;color:#9e9ec0;">This investigation used real-time FFT audio analysis (' +
-        (audioEngine.fftSize || 8192) + '-point, ' + (audioEngine.sampleRate || 48000) + ' Hz sample rate), ' +
-        'device magnetometer/accelerometer sensors, and frame-differencing motion detection. ' +
-        'EVP classification follows the standard A/B/C system based on formant structure, harmonic-to-noise ratio, and signal-to-noise ratio.</div>' +
-      '<div style="margin-top:12px;margin-bottom:8px;"><strong>Scientific References</strong></div>' +
-      '<div class="report-row" style="font-size:0.8rem;color:#8888bb;">Nees, M.A. &amp; Phillips, C. (2015). "Auditory pareidolia: Effects of contextual priming on perceptions of purportedly paranormal and ambiguous auditory stimuli." <em>Applied Cognitive Psychology</em>, 29(1), 129-134.</div>' +
-      '<div class="report-row" style="font-size:0.8rem;color:#8888bb;">Tandy, V. &amp; Lawrence, T.R. (1998). "The ghost in the machine." <em>Journal of the Society for Psychical Research</em>, 62(851), 360-364.</div>' +
-      '<div class="report-row" style="font-size:0.8rem;color:#8888bb;">Baruss, I. (2001). "Failure to replicate electronic voice phenomenon." <em>Journal of Scientific Exploration</em>, 15(3), 355-367.</div>' +
-      '<div class="report-row" style="font-size:0.8rem;color:#8888bb;">Persinger, M.A. (1987). <em>Neuropsychological Bases of God Beliefs</em>. Praeger Publishers.</div>' +
-      '<div style="margin-top:12px;margin-bottom:8px;"><strong>Limitations</strong></div>' +
-      '<div class="report-row" style="font-size:0.85rem;color:#9e9ec0;">Smartphone microphones apply automatic gain control (AGC) that can amplify noise during quiet periods. ' +
-        'DeviceOrientation-derived magnetometer values are approximations, not raw sensor data. ' +
-        'Barometric pressure is simulated when hardware is unavailable. ' +
-        'All EVP classifications are susceptible to auditory pareidolia.</div>';
-  }
-
-  // ── Show disclaimer ──
-  if (reportDisclaimer) {
-    reportDisclaimer.style.display = 'block';
-  }
-
-  // ── Enable export button ──
-  if (btnExportReport) {
-    btnExportReport.disabled = false;
-  }
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  REPORT SECTION TOGGLES
-// ═══════════════════════════════════════════════════════════════════════════════
-
-document.querySelectorAll('.report-section-header').forEach(function(header) {
-  header.addEventListener('click', function() {
-    var targetId = header.getAttribute('data-toggle');
-    if (!targetId) return;
-
-    var body = document.getElementById(targetId);
-    if (!body) return;
-
-    var isCollapsed = body.classList.contains('collapsed');
-    body.classList.toggle('collapsed');
-
-    // Rotate toggle icon chevron
-    var icon = header.querySelector('.toggle-icon');
-    if (icon) {
-      icon.style.transform = isCollapsed ? '' : 'rotate(-90deg)';
-    }
-
-    // Toggle body visibility
-    if (isCollapsed) {
-      body.style.display = '';
-    } else {
-      body.style.display = 'none';
-    }
-  });
-});
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  REPORT EXPORT
-// ═══════════════════════════════════════════════════════════════════════════════
-
-if (btnExportReport) {
-  btnExportReport.addEventListener('click', function() {
-    if (!isProUser()) { showUpgradeModal('Report Export'); return; }
-    var rpt = report.report;
-    if (!rpt) return;
-
-    var text = 'EVP-MINI INVESTIGATION REPORT\n';
-    text += '================================\n\n';
-    text += 'Generated: ' + new Date().toISOString() + '\n';
-    text += 'Summary: ' + report.getSummary() + '\n\n';
-
-    // Timeline events
-    var timeline = report.getTimelineEvents();
-    if (timeline.length > 0) {
-      text += 'TIMELINE:\n';
-      for (var i = 0; i < timeline.length; i++) {
-        var ev = timeline[i];
-        text += '[' + formatTime(ev.time) + '] ' + ev.type.toUpperCase() + ': ' + ev.detail + '\n';
-      }
-      text += '\n';
-    }
-
-    text += 'DISCLAIMER: This application uses real sensor data and signal processing algorithms. However, it cannot verify or confirm paranormal activity. All findings should be interpreted with scientific skepticism.\n';
-
-    var blob = new Blob([text], { type: 'text/plain' });
-    var url  = URL.createObjectURL(blob);
-    var a    = document.createElement('a');
-    a.href     = url;
-    a.download = 'evp-mini-report-' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) + '.txt';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
-  });
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  RECORDING CONTROLS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-if (btnRecord) {
-  btnRecord.addEventListener('click', function() {
-    if (!isProUser()) { showUpgradeModal('Recording'); return; }
-    if (!stream || isRecordingActive) return;
-    var started = recorder.startRecording(stream);
-    if (started) {
-      isRecordingActive = true;
-      if (recordingIndicator) recordingIndicator.style.display = 'flex';
-      if (btnRecord)     btnRecord.style.display     = 'none';
-      if (btnStopRecord) btnStopRecord.style.display = 'inline-block';
-    }
-  });
-}
-
-if (btnStopRecord) {
-  btnStopRecord.addEventListener('click', function() {
-    if (!isRecordingActive) return;
-    recorder.stopRecording();
-    isRecordingActive = false;
-    if (recordingIndicator) recordingIndicator.style.display = 'none';
-    if (btnRecord)     btnRecord.style.display     = 'inline-block';
-    if (btnStopRecord) btnStopRecord.style.display = 'none';
-
-    // Enable reverse and export buttons
-    if (btnReverse) btnReverse.disabled = false;
-    if (btnExport)  btnExport.disabled  = false;
-  });
-}
-
-if (btnReverse) {
-  btnReverse.addEventListener('click', function() {
-    if (!isProUser()) { showUpgradeModal('Reverse Playback'); return; }
-    recorder.playReverse();
-  });
-}
-
-if (btnExport) {
-  btnExport.addEventListener('click', function() {
-    if (!isProUser()) { showUpgradeModal('Audio Export'); return; }
-    recorder.exportDownload();
-  });
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  SPIRIT BOX CONTROLS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-if (sweepSpeed) {
-  sweepSpeed.addEventListener('input', function() {
-    var val = parseInt(sweepSpeed.value, 10);
-    spiritBox.setSweepSpeed(val);
-    if (sweepSpeedVal) sweepSpeedVal.textContent = val + 'ms';
-  });
-}
-
-if (noiseLevel) {
-  noiseLevel.addEventListener('input', function() {
-    var val = parseInt(noiseLevel.value, 10);
-    spiritBox.setNoiseLevel(val / 100);
-  });
-}
-
-if (toneLevel) {
-  toneLevel.addEventListener('input', function() {
-    var val = parseInt(toneLevel.value, 10);
-    spiritBox.setToneLevel(val / 100);
-  });
-}
-
-// Noise toggle buttons
-document.querySelectorAll('.noise-btn').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    var noiseType = btn.getAttribute('data-noise');
-    if (!noiseType) return;
-
-    document.querySelectorAll('.noise-btn').forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-
-    spiritBox.setNoiseType(noiseType);
-  });
-});
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  VISUAL MODE CONTROLS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-if (visualModeSelector) {
-  var visBtns = visualModeSelector.querySelectorAll('[data-visual]');
-  visBtns.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var mode = btn.getAttribute('data-visual');
-      if (!mode) return;
-
-      visBtns.forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-
-      visualEngine.setMode(mode);
+  // ── Entity Radar
+  if (radarActive && entityRadar.active) {
+    var emfState = emfSensorEngine.getEMFAnomaly();
+    var vibState = emfSensorEngine.getVibrationAnalysis();
+    var shouldPing = entityRadar.processFrame({
+      emfAnomaly: emfState.isAnomaly,
+      emfIntensity: Math.min(1, emfState.deviationMicroTesla / 10),
+      audioAnomaly: cachedAssess ? cachedAssess.isAnomaly : false,
+      audioIntensity: cachedAssess ? Math.min(1, cachedAssess.rmsPercent / 30) : 0,
+      motionLevel: visualAnomalyEngine.getMotionLevel(),
+      infrasoundDetected: vibState.infrasoundDetected,
+      infrasoundIntensity: vibState.fearFreqAlert ? 0.9 : 0.5
     });
-  });
+    if (shouldPing && sfxEnabled) detectionSfx.radarPing();
+    if (radarEntityCount) radarEntityCount.textContent = entityRadar.getActiveBlipCount() + ' active | ' + entityRadar.getTotalDetections() + ' total';
+  }
+
+  // ── Paranormal Activity Index
+  if (paiBar && paiBar.classList.contains('visible')) {
+    var paiScore = 0;
+    var emfA = emfSensorEngine.getEMFAnomaly();
+    if (emfA.isAnomaly) paiScore += Math.min(30, emfA.deviationMicroTesla * 3);
+    if (cachedAssess && cachedAssess.isAnomaly) paiScore += 20 + cachedAssess.rmsPercent * 0.3;
+    var vib2 = emfSensorEngine.getVibrationAnalysis();
+    if (vib2.infrasoundDetected) paiScore += 15;
+    if (vib2.fearFreqAlert) paiScore += 25;
+    if (visualAnomalyEngine.getMotionLevel() > 10) paiScore += visualAnomalyEngine.getMotionLevel() * 0.3;
+    paiScore += evpTotalCount * 5;
+    paiScore = Math.min(100, Math.round(paiScore));
+    if (paiFill) {
+      paiFill.style.width = paiScore + '%';
+      paiFill.className = 'pai-fill' + (paiScore >= 75 ? ' extreme' : paiScore >= 50 ? ' high' : paiScore >= 25 ? ' active' : ' mild');
+    }
+    if (paiValue) {
+      paiValue.textContent = paiScore;
+      paiValue.style.color = paiScore >= 75 ? '#ff1744' : paiScore >= 50 ? '#ff9100' : paiScore >= 25 ? '#ffea00' : '#00e5ff';
+    }
+  }
 }
 
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  CSS ANIMATION FOR EVP NOTIFICATION
-// ═══════════════════════════════════════════════════════════════════════════════
-
-(function injectNotificationCSS() {
-  var style = document.createElement('style');
-  style.textContent =
-    '@keyframes fadeInOut {' +
-    '  0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }' +
-    '  10% { opacity: 1; transform: translateX(-50%) translateY(0); }' +
-    '  80% { opacity: 1; transform: translateX(-50%) translateY(0); }' +
-    '  100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }' +
-    '}';
-  document.head.appendChild(style);
-})();
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-//  INITIALIZATION
-// ═══════════════════════════════════════════════════════════════════════════════
-
-async function init() {
-  // Handle Stripe return first
-  await handleStripeReturn();
-
-  // Check if pro user — skip landing page
-  if (isProUser()) {
-    showApp();
+// ─── Audio UI ───────────────────────────────────────────────────────────────────
+function updateAudioUI(a) {
+  if (!a) return;
+  if (audioLevelFill) { audioLevelFill.style.width = a.rmsPercent.toFixed(1) + '%'; audioLevelFill.className = 'meter-fill' + (a.isAnomaly ? ' alert' : ''); }
+  if (audioLevelValue) audioLevelValue.textContent = a.rmsPercent.toFixed(0) + '%';
+  if (peakFreqValue) peakFreqValue.textContent = a.peakFreq > 0 ? Math.round(a.peakFreq) + ' Hz' : '— Hz';
+  if (noiseFloorValue) noiseFloorValue.textContent = a.baselineEstablished ? a.noiseFloorDb.toFixed(1) + ' dB' : 'Calibrating...';
+  if (centroidValue) centroidValue.textContent = a.centroid > 0 ? Math.round(a.centroid) + ' Hz' : '— Hz';
+  if (hnrValue) hnrValue.textContent = a.hnr !== 0 ? a.hnr.toFixed(1) + ' dB' : '— dB';
+  if (anomalyValue) { anomalyValue.textContent = a.isAnomaly ? 'DETECTED (' + a.anomalyStrength + ')' : 'None'; anomalyValue.style.color = a.isAnomaly ? '#ff1744' : '#00e5ff'; }
+  if (formantValue) {
+    if (a.formantMatch) { formantValue.textContent = 'MATCH (' + a.formantClarity + '/3)'; formantValue.style.color = '#00e676'; }
+    else { formantValue.textContent = a.formantClarity > 0 ? 'Partial (' + a.formantClarity + '/3)' : '—'; formantValue.style.color = a.formantClarity > 0 ? '#ffea00' : '#00e5ff'; }
   }
-  // else: landing page is shown by default
+}
 
-  // Detect iOS and show sensor permission banner if needed
-  checkSensorPermBanner();
-
-  // Start camera
-  var camOk = await startCamera();
-
-  // Init EMF sensors
-  if (emfEngine && !emfEngine.isInitialized) {
-    try { await emfEngine.init(); } catch (e) { /* sensors may not be available */ }
+// ─── Spectrogram ────────────────────────────────────────────────────────────────
+function drawSpectrogram() {
+  if (!spectrogramCtx || !spectrogramCanvas) return;
+  const slice = evpAudioEngine.getSpectrogramSlice(); if (!slice) return;
+  const w = spectrogramCanvas.width, h = spectrogramCanvas.height; if (!w || !h) return;
+  spectrogramCtx.drawImage(spectrogramCanvas, 1, 0, w - 1, h, 0, 0, w - 1, h);
+  if (!spectroColImg || spectroColImg.height !== h) spectroColImg = spectrogramCtx.createImageData(1, h);
+  const d = spectroColImg.data;
+  const maxBin = Math.min(slice.length, Math.ceil(8000 / evpAudioEngine.binResolution));
+  for (let y = 0; y < h; y++) {
+    const bin = Math.floor((1 - y / h) * maxBin), idx = y * 4;
+    if (bin >= 0 && bin < slice.length) { const n = Math.max(0, Math.min(1, (slice[bin] + 100) / 90)); const rgb = spectroColor(n); d[idx] = rgb[0]; d[idx+1] = rgb[1]; d[idx+2] = rgb[2]; d[idx+3] = 255; }
+    else { d[idx] = d[idx+1] = d[idx+2] = 0; d[idx+3] = 255; }
   }
+  spectrogramCtx.putImageData(spectroColImg, w - 1, 0);
+}
 
-  // Update sensor display with initial values
-  if (emfEngine.isInitialized) {
-    var initialReading = emfEngine.processFrame();
-    updateSensorDisplay(initialReading);
+function spectroColor(t) {
+  if (t < 0.15) return [0, 0, Math.round(t / 0.15 * 100)];
+  if (t < 0.3) { const s = (t - 0.15) / 0.15; return [0, Math.round(s * 180), Math.round(100 + s * 120)]; }
+  if (t < 0.5) { const s = (t - 0.3) / 0.2; return [0, Math.round(180 + s * 75), Math.round(220 - s * 220)]; }
+  if (t < 0.7) { const s = (t - 0.5) / 0.2; return [Math.round(s * 255), 255, 0]; }
+  if (t < 0.85) { const s = (t - 0.7) / 0.15; return [255, Math.round(255 - s * 200), 0]; }
+  const s = (t - 0.85) / 0.15; return [255, Math.round(55 + s * 200), Math.round(s * 255)];
+}
+
+// ─── Waveform ───────────────────────────────────────────────────────────────────
+function drawWaveform() {
+  if (!waveformCtx || !waveformCanvas || !evpAudioEngine.timeDomainData) return;
+  const w = waveformCanvas.width, h = waveformCanvas.height; if (!w || !h) return;
+  const data = evpAudioEngine.timeDomainData, len = data.length;
+  waveformCtx.fillStyle = '#000'; waveformCtx.fillRect(0, 0, w, h);
+  waveformCtx.lineWidth = 1.5; waveformCtx.strokeStyle = '#00e5ff'; waveformCtx.beginPath();
+  const sw = w / len; let x = 0;
+  for (let i = 0; i < len; i++) { const y = (1 - data[i]) * h / 2; if (i === 0) waveformCtx.moveTo(x, y); else waveformCtx.lineTo(x, y); x += sw; }
+  waveformCtx.stroke();
+  waveformCtx.strokeStyle = 'rgba(124, 77, 255, 0.3)'; waveformCtx.lineWidth = 0.5;
+  waveformCtx.beginPath(); waveformCtx.moveTo(0, h/2); waveformCtx.lineTo(w, h/2); waveformCtx.stroke();
+}
+
+// ─── Sensor UI ──────────────────────────────────────────────────────────────────
+function updateSensorUI() {
+  const s = emfSensorEngine.getSensorState();
+  if (emfValue) {
+    if (s.magnetometer.available) { emfValue.textContent = s.magnetometer.magnitude.toFixed(1) + ' uT'; emfValue.className = 'gauge-value' + (s.magnetometer.anomaly ? ' alert' : ''); if (emfBar) { emfBar.style.width = (s.magnetometer.baselineEstablished ? Math.min(100, s.magnetometer.deviation / 20 * 100) : 0) + '%'; emfBar.className = 'gauge-bar-fill' + (s.magnetometer.anomaly ? ' alert' : ''); } }
+    else { emfValue.textContent = 'Unavailable'; emfValue.className = 'gauge-value unavailable'; }
   }
+  if (vibrationValue) {
+    if (s.accelerometer.available) { let t = s.accelerometer.vibrationLevel.toFixed(2) + ' g'; if (s.accelerometer.dominantFreq > 0) t += ' | ' + s.accelerometer.dominantFreq.toFixed(1) + ' Hz'; vibrationValue.textContent = t; vibrationValue.className = 'gauge-value' + (s.accelerometer.fearFreqAlert ? ' alert' : s.accelerometer.infrasoundDetected ? ' warning' : ''); if (vibrationBar) { vibrationBar.style.width = Math.min(100, s.accelerometer.vibrationLevel * 200) + '%'; vibrationBar.className = 'gauge-bar-fill' + (s.accelerometer.fearFreqAlert ? ' alert' : ''); } }
+    else { vibrationValue.textContent = 'Unavailable'; vibrationValue.className = 'gauge-value unavailable'; }
+  }
+  if (gyroValue) {
+    if (s.gyroscope && s.gyroscope.available) { gyroValue.textContent = 'a:' + s.gyroscope.alpha.toFixed(0) + ' b:' + s.gyroscope.beta.toFixed(0) + ' g:' + s.gyroscope.gamma.toFixed(0) + ' °/s'; gyroValue.className = 'gauge-value'; }
+    else { gyroValue.textContent = 'Unavailable'; gyroValue.className = 'gauge-value unavailable'; }
+  }
+  if (pressureValue) {
+    if (s.barometer.available) { pressureValue.textContent = s.barometer.pressure.toFixed(1) + ' hPa'; pressureValue.className = 'gauge-value' + (s.barometer.anomaly ? ' alert' : ''); }
+    else { pressureValue.textContent = 'Unavailable'; pressureValue.className = 'gauge-value unavailable'; }
+  }
+}
 
-  // Set status
-  if (camOk) {
-    setStatus('Ready. Select mode and start investigation.', 'ready');
+function updateSpiritBoxUI() {
+  const s = spiritBoxEngine.getCurrentState();
+  if (sweepFreq) sweepFreq.textContent = s.currentFreqDisplay;
+  if (fragmentCount) fragmentCount.textContent = s.fragmentCount;
+  if (sweepModeEl) sweepModeEl.textContent = s.mode === 'sweep' ? 'Sweep' : s.mode === 'white-noise' ? 'White' : 'Pink';
+}
+
+function updateVisualUI() {
+  if (currentFilter) currentFilter.textContent = visualMode.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  if (motionLevel) motionLevel.textContent = visualAnomalyEngine.getMotionLevel().toFixed(1) + '%';
+}
+
+// ─── EVP Alert ──────────────────────────────────────────────────────────────────
+let evpAlertTimeout = null;
+function showEVPAlert(c) {
+  if (!evpAlert) return;
+  evpAlert.classList.add('visible');
+  if (evpAlertClass) { evpAlertClass.textContent = 'EVP Class ' + c.class + ' Detected'; evpAlertClass.className = 'alert-class class-' + c.class.toLowerCase(); }
+  if (evpAlertDetail) evpAlertDetail.textContent = 'Confidence: ' + c.confidence + '% | Duration: ' + c.duration + 's | Centroid: ' + c.spectralCentroid + 'Hz | HNR: ' + c.hnr + 'dB' + (c.hasVoicePattern ? ' | Voice pattern detected' : '');
+  if (evpAlertTimeout) clearTimeout(evpAlertTimeout);
+  evpAlertTimeout = setTimeout(() => { if (evpAlert) evpAlert.classList.remove('visible'); }, 5000);
+}
+
+// ─── Live Indicators ────────────────────────────────────────────────────────────
+function updateLiveIndicators() {
+  if (!liveIndicators) return;
+  const chips = [];
+  if (evpAudioEngine.isAnomaly) chips.push('<span class="indicator-chip anomaly">AUDIO ANOMALY</span>');
+  const fm = evpAudioEngine.getFormantAnalysis();
+  if (fm && fm.hasVoicePattern) chips.push('<span class="indicator-chip voice">VOICE PATTERN</span>');
+  const emf = emfSensorEngine.getEMFAnomaly();
+  if (emf.isAnomaly) chips.push('<span class="indicator-chip emf">EMF SPIKE +' + emf.deviationMicroTesla.toFixed(1) + 'uT</span>');
+  if (visualAnomalyEngine.getMotionLevel() > 10) chips.push('<span class="indicator-chip motion">MOTION ' + visualAnomalyEngine.getMotionLevel().toFixed(0) + '%</span>');
+  const vib = emfSensorEngine.getVibrationAnalysis();
+  if (vib.fearFreqAlert) chips.push('<span class="indicator-chip infrasound">FEAR FREQ 18.98Hz</span>');
+  else if (vib.infrasoundDetected) chips.push('<span class="indicator-chip infrasound">INFRASOUND ' + vib.dominantFreqHz.toFixed(1) + 'Hz</span>');
+  const lastWord = wordDetector.getLastDetection();
+  if (lastWord && performance.now() - lastWord.time < 5000) chips.push('<span class="indicator-chip voice">WORD: ' + lastWord.word + '</span>');
+  const html = chips.join('');
+  if (html !== prevIndicatorHTML) { liveIndicators.innerHTML = html; prevIndicatorHTML = html; }
+}
+
+// ─── Panel Visibility ───────────────────────────────────────────────────────────
+function showPanelsForMode() {
+  if (audioPanel) audioPanel.classList.add('visible');
+  if (spectrogramSection) spectrogramSection.classList.add('visible');
+  if (waveformSection) waveformSection.classList.add('visible');
+  if (sensorPanel) sensorPanel.classList.add('visible');
+  if (evpLog) evpLog.classList.add('visible');
+  if (wordDetectPanel && wordDetectEnabled && isPro()) wordDetectPanel.classList.add('visible');
+  if (spiritBoxPanel) spiritBoxPanel.classList.toggle('visible', scanMode === 'spiritbox' || scanMode === 'fullspectrum');
+  if (visualInfoPanel) visualInfoPanel.classList.toggle('visible', scanMode === 'visual' || scanMode === 'fullspectrum');
+  if (visualModeSelector) visualModeSelector.style.display = (scanMode === 'visual' || scanMode === 'fullspectrum') ? 'flex' : 'none';
+}
+
+function hidePanels() {
+  [audioPanel, spectrogramSection, waveformSection, sensorPanel, spiritBoxPanel, visualInfoPanel, evpAlert, evpLog, wordDetectPanel].forEach(p => { if (p) p.classList.remove('visible'); });
+}
+
+// ─── Event Listeners ────────────────────────────────────────────────────────────
+if (btnStart) btnStart.addEventListener('click', startScan);
+if (btnStop) btnStop.addEventListener('click', stopScan);
+if (btnTorch) btnTorch.addEventListener('click', toggleTorch);
+if (btnScreenshot) btnScreenshot.addEventListener('click', takeScreenshot);
+if (btnShare) btnShare.addEventListener('click', shareEvidence);
+
+// Share App button (always visible in header)
+// Share/Install action sheet
+const shareModal = document.getElementById('shareModal');
+const btnCloseShare = document.getElementById('btnCloseShare');
+const btnShareLink = document.getElementById('btnShareLink');
+const btnAddHome = document.getElementById('btnAddHome');
+
+if (btnShareApp) btnShareApp.addEventListener('click', () => {
+  if (shareModal) shareModal.classList.add('visible');
+});
+if (btnCloseShare) btnCloseShare.addEventListener('click', () => {
+  if (shareModal) shareModal.classList.remove('visible');
+});
+if (shareModal) shareModal.addEventListener('click', (e) => {
+  if (e.target === shareModal) shareModal.classList.remove('visible');
+});
+
+if (btnShareLink) btnShareLink.addEventListener('click', async () => {
+  if (shareModal) shareModal.classList.remove('visible');
+  const shareData = {
+    title: 'EVP-MINI \u2014 Paranormal Investigation App',
+    text: 'Turn your phone into a ghost hunting tool. EVP capture, spirit box, thermal vision, EMF detection. Free to try.',
+    url: 'https://evp-mini.pages.dev'
+  };
+  if (navigator.share) {
+    try { await navigator.share(shareData); } catch (e) {}
   } else {
-    setStatus('Camera/mic access failed. Check permissions.', 'error');
+    try {
+      await navigator.clipboard.writeText(shareData.url);
+      setStatus('Link copied to clipboard!', 'complete');
+      setTimeout(() => setStatus('', 'ready'), 2000);
+    } catch (e) {}
   }
+});
 
-  // Enable start button
-  if (btnStart) btnStart.disabled = false;
-}
+if (btnAddHome) btnAddHome.addEventListener('click', () => {
+  if (shareModal) shareModal.classList.remove('visible');
+  if (deferredInstallPrompt) {
+    // Android: use native install prompt
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(() => { deferredInstallPrompt = null; });
+  } else if (isIOS) {
+    // iOS: show step-by-step instructions
+    const iosModal = document.getElementById('iosInstallModal');
+    if (iosModal) iosModal.classList.add('visible');
+  } else {
+    alert('Open this page in your mobile browser, then use your browser\u2019s menu to add it to your home screen.');
+  }
+});
 
-// Landing page buttons
-const btnStartFree = document.getElementById('btnStartFree');
-const btnUnlockPro = document.getElementById('btnUnlockPro');
-const btnShowLicense = document.getElementById('btnShowLicense');
-const btnVerifyLicense = document.getElementById('btnVerifyLicense');
-const btnUpgradeNow = document.getElementById('btnUpgradeNow');
-const btnCloseUpgrade = document.getElementById('btnCloseUpgrade');
-const btnUpgradeClose = document.getElementById('btnUpgradeClose');
+// iOS install modal close
+const iosInstallModal = document.getElementById('iosInstallModal');
+const btnCloseIosInstall = document.getElementById('btnCloseIosInstall');
+const btnGotItIos = document.getElementById('btnGotItIos');
+function closeIosModal() { if (iosInstallModal) iosInstallModal.classList.remove('visible'); }
+if (btnCloseIosInstall) btnCloseIosInstall.addEventListener('click', closeIosModal);
+if (btnGotItIos) btnGotItIos.addEventListener('click', closeIosModal);
+if (iosInstallModal) iosInstallModal.addEventListener('click', (e) => { if (e.target === iosInstallModal) closeIosModal(); });
 
-if (btnStartFree) {
-  btnStartFree.addEventListener('click', function() {
-    showApp();
+// Overlay close buttons
+if (btnCloseHistory) btnCloseHistory.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
+if (btnCloseMap) btnCloseMap.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
+if (btnCloseGear) btnCloseGear.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
+if (btnCloseInfo) btnCloseInfo.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
+if (restoreCodeSubmit) restoreCodeSubmit.addEventListener('click', restorePurchase);
+if (restoreCodeInput) restoreCodeInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') restorePurchase(); });
+
+// Upgrade button
+if (btnUpgrade) btnUpgrade.addEventListener('click', () => showUpgradePrompt());
+
+// Install banner
+if (btnInstall) btnInstall.addEventListener('click', async () => {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+  } else if (isIOS) {
+    alert('To add EVP-MINI to your home screen:\n\n1. Tap the Share button (\u2B06) at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add"\n\nThe app icon will appear on your home screen!');
+  }
+  if (installBanner) installBanner.classList.remove('visible');
+});
+if (btnDismissInstall) btnDismissInstall.addEventListener('click', () => {
+  if (installBanner) installBanner.classList.remove('visible');
+  sessionStorage.setItem('installDismissed', '1');
+});
+
+// Bottom navigation
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => navigateTo(btn.dataset.nav));
+});
+
+if (btnNewScan) btnNewScan.addEventListener('click', () => {
+  if (resultsPanel) resultsPanel.classList.remove('visible');
+  if (playbackSection) playbackSection.classList.remove('visible');
+  hidePanels(); sessionRecorder.clearAll(); evpTotalCount = 0; updateEVPCount();
+  setStatus('Ready — Select mode and start investigation', 'ready');
+});
+
+if (btnFlipCamera) btnFlipCamera.addEventListener('click', async () => { facingMode = facingMode === 'environment' ? 'user' : 'environment'; await startCamera(); });
+
+if (btnRecord) btnRecord.addEventListener('click', () => { isRecording = !isRecording; btnRecord.classList.toggle('rec-on', isRecording); btnRecord.textContent = isRecording ? 'REC ON' : 'REC'; });
+
+// Tool toggles — check pro for tools
+if (btnGeiger) btnGeiger.addEventListener('click', () => {
+  if (!isPro()) { showUpgradePrompt('Geiger Counter'); return; }
+  geigerEnabled = !geigerEnabled;
+  geigerCounter.setEnabled(geigerEnabled);
+  btnGeiger.classList.toggle('active', geigerEnabled);
+  if (geigerRate) geigerRate.textContent = geigerEnabled ? '0.5/s' : 'OFF';
+});
+
+if (btnDowsing) btnDowsing.addEventListener('click', () => {
+  if (!isPro()) { showUpgradePrompt('Dowsing Rods'); return; }
+  dowsingActive = !dowsingActive;
+  btnDowsing.classList.toggle('active', dowsingActive);
+  if (dowsingActive && running && dowsingCanvas) { dowsingRods.init(dowsingCanvas); dowsingRods.start(); }
+  else { dowsingRods.stop(); }
+});
+
+if (btnWords) btnWords.addEventListener('click', () => {
+  if (!isPro()) { showUpgradePrompt('Word Detection'); return; }
+  wordDetectEnabled = !wordDetectEnabled;
+  btnWords.classList.toggle('active', wordDetectEnabled);
+  if (wordDetectPanel) wordDetectPanel.classList.toggle('visible', wordDetectEnabled && running);
+});
+
+// Entity Radar toggle
+if (btnRadar) btnRadar.addEventListener('click', () => {
+  if (!isPro()) { showUpgradePrompt('Entity Radar'); return; }
+  radarActive = !radarActive;
+  btnRadar.classList.toggle('active', radarActive);
+  if (radarActive) {
+    entityRadar.init('radarCanvas');
+    entityRadar.start();
+    if (radarPanel) radarPanel.classList.add('visible');
+    if (paiBar) paiBar.classList.add('visible');
+  } else {
+    entityRadar.stop();
+    if (radarPanel) radarPanel.classList.remove('visible');
+    if (paiBar) paiBar.classList.remove('visible');
+  }
+});
+
+// SFX toggle
+if (btnSfx) {
+  btnSfx.classList.toggle('active', sfxEnabled);
+  btnSfx.addEventListener('click', () => {
+    sfxEnabled = !sfxEnabled;
+    detectionSfx.enabled = sfxEnabled;
+    btnSfx.classList.toggle('active', sfxEnabled);
   });
 }
 
-if (btnUnlockPro) {
-  btnUnlockPro.addEventListener('click', startStripeCheckout);
-}
-
-if (btnShowLicense) {
-  btnShowLicense.addEventListener('click', function() {
-    const form = document.getElementById('licenseForm');
-    if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+// Mode selector with pro gate
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.mode;
+    if (!isPro() && mode !== 'evp') { showUpgradePrompt(mode + ' mode'); return; }
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); scanMode = mode;
+    if (modeBadge) { const labels = { evp: 'EVP SCAN', spiritbox: 'SPIRIT BOX', visual: 'VISUAL', fullspectrum: 'FULL SPECTRUM' }; modeBadge.textContent = labels[scanMode] || scanMode.toUpperCase(); }
+    if (visualModeSelector) visualModeSelector.style.display = (scanMode === 'visual' || scanMode === 'fullspectrum') ? 'flex' : 'none';
   });
-}
+});
 
-if (btnVerifyLicense) {
-  btnVerifyLicense.addEventListener('click', function() {
-    const input = document.getElementById('licenseKeyInput');
-    if (input && input.value.trim()) verifyLicenseKey(input.value);
+document.querySelectorAll('.duration-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const dur = btn.dataset.duration;
+    if (!isPro() && (dur === 'continuous' || parseInt(dur) > 30)) { showUpgradePrompt('unlimited session duration'); return; }
+    document.querySelectorAll('.duration-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); scanDuration = dur;
   });
-}
+});
 
-if (btnUpgradeNow) {
-  btnUpgradeNow.addEventListener('click', function() {
-    hideUpgradeModal();
-    startStripeCheckout();
+document.querySelectorAll('.visual-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.visual-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); visualMode = btn.dataset.visual; visualAnomalyEngine.setMode(visualMode);
+    if (visualMode === 'normal') { if (overlayCtx && overlay) overlayCtx.clearRect(0, 0, overlay.width, overlay.height); overlayCleared = true; } else { overlayCleared = false; }
   });
+});
+
+document.querySelectorAll('.spirit-mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => { document.querySelectorAll('.spirit-mode-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); spiritBoxEngine.setMode(btn.dataset.spiritmode); });
+});
+
+if (sweepSpeed) sweepSpeed.addEventListener('input', () => { const s = parseInt(sweepSpeed.value); spiritBoxEngine.setSweepSpeed(s); if (sweepSpeedVal) sweepSpeedVal.textContent = s + 'ms'; });
+
+if (detailToggle) detailToggle.addEventListener('click', () => { if (technicalDetail) { technicalDetail.classList.toggle('visible'); detailToggle.textContent = technicalDetail.classList.contains('visible') ? 'Hide Technical Detail' : 'Show Technical Detail'; } });
+
+if (btnPlayForward) btnPlayForward.addEventListener('click', () => sessionRecorder.playForward());
+if (btnPlayReverse) btnPlayReverse.addEventListener('click', () => sessionRecorder.playReverse());
+if (btnStopPlayback) btnStopPlayback.addEventListener('click', () => sessionRecorder.stopPlayback());
+if (btnDownload) btnDownload.addEventListener('click', () => sessionRecorder.downloadRecording());
+
+if (btnExport) btnExport.addEventListener('click', () => {
+  if (!isPro()) { showUpgradePrompt('Evidence Export'); return; }
+  const summary = evidenceReport.getSummary();
+  const timeline = evidenceReport.getTimelineEvents();
+  let text = 'EVP-MINI INVESTIGATION REPORT\n================================\n\n';
+  text += 'Generated: ' + new Date().toISOString() + '\nSummary: ' + summary + '\n\n';
+  const words = wordDetector.getDetections();
+  if (words.length > 0) { text += 'WORD DETECTIONS:\n'; words.forEach(w => { text += '  ' + w.word + ' (' + w.confidence + '% confidence)\n'; }); text += '\n'; }
+  text += 'TIMELINE:\n';
+  for (const e of timeline) text += '[' + formatTimer(e.time * 1000) + '] ' + e.type.toUpperCase() + ': ' + e.detail + '\n';
+  text += '\nDISCLAIMER: This app uses real sensor data but cannot verify paranormal phenomena.\n';
+  const blob = new Blob([text], { type: 'text/plain' }); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'evp-mini-report-' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) + '.txt';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  sessionRecorder.downloadRecording();
+});
+
+// AudioContext resume
+document.addEventListener('click', () => { if (evpAudioEngine.audioContext && evpAudioEngine.audioContext.state === 'suspended') evpAudioEngine.audioContext.resume(); }, { once: true });
+document.addEventListener('touchstart', () => { if (evpAudioEngine.audioContext && evpAudioEngine.audioContext.state === 'suspended') evpAudioEngine.audioContext.resume(); }, { once: true });
+
+// ─── Initialize ─────────────────────────────────────────────────────────────────
+async function init() {
+  setStatus('Initializing EVP-MINI...', '');
+  await sessionVault.init();
+  applyProRestrictions();
+  const success = await startCamera();
+  if (!success) setStatus('Failed to access camera/microphone. Check permissions.', 'error');
+  updateGPS();
+
+  // Pre-render gear shop
+  renderGearShop();
+
+  // Init sound effects (will use audio context when available)
+  detectionSfx.init(evpAudioEngine.audioContext || null);
 }
 
-if (btnCloseUpgrade) btnCloseUpgrade.addEventListener('click', hideUpgradeModal);
-if (btnUpgradeClose) btnUpgradeClose.addEventListener('click', hideUpgradeModal);
-
-// AudioContext resume on first user gesture
-document.addEventListener('click', function() {
-  resumeAudioContext();
-}, { once: true });
-document.addEventListener('touchstart', function() {
-  resumeAudioContext();
-}, { once: true });
-
-// Run initialization
-init();
+if (document.getElementById('appWrapper')?.classList.contains('authenticated')) {
+  init();
+} else {
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.target.classList?.contains('authenticated')) { observer.disconnect(); init(); break; }
+    }
+  });
+  const wrapper = document.getElementById('appWrapper');
+  if (wrapper) observer.observe(wrapper, { attributes: true, attributeFilter: ['class'] });
+}
