@@ -292,8 +292,10 @@ function activateProInApp() {
 }
 
 function onProActivated() {
-  if (upgradeBanner) upgradeBanner.classList.remove('visible');
-  if (proBadge) proBadge.style.display = '';
+  // Refresh the ProGate instance so isPro() returns true
+  var pg = window.proGateInstance;
+  if (pg) { pg.isPro = true; pg._save(); }
+  applyProRestrictions();
   setStatus('Pro activated! All features unlocked.', 'ready');
 }
 

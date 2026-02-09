@@ -111,7 +111,8 @@
       // Check offline codes first
       var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','evpmini2024'];
       if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
-        try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,activatedAt:Date.now()})); } catch(e){}
+        try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,licenseKey:code,activatedAt:Date.now()})); } catch(e){}
+        if (window.proGateInstance) { window.proGateInstance.isPro = true; }
         evpEnterApp(); return;
       }
       // Try online verification
@@ -690,11 +691,16 @@
   <script src="js/investigation-map.js?v=8"></script>
   <script src="js/app.js?v=8"></script>
 
-  <!-- ProGate instance — no async, no duplicate handlers -->
+  <!-- ProGate instance + re-apply restrictions now that instance exists -->
   <script>
     try {
       window.proGateInstance = new ProGate();
-      if (window.proGateInstance.isPro) { evpEnterApp(); }
+      if (window.proGateInstance.isPro) {
+        evpEnterApp();
+      }
+      // Re-apply restrictions now that proGateInstance exists
+      // (init() may have already run before this script loaded)
+      if (typeof applyProRestrictions === 'function') applyProRestrictions();
     } catch (e) { console.warn('ProGate init:', e); }
   </script>
 
