@@ -59,12 +59,12 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="css/styles.css?v=7">
+  <link rel="stylesheet" href="css/styles.css?v=8">
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        registrations.forEach(function(reg) { reg.unregister(); });
-      });
+      // Register SW — required for PWA "Add to Home Screen" on Android
+      navigator.serviceWorker.register('sw.js').catch(function() {});
+      // Clear old caches to always serve fresh content
       if ('caches' in window) {
         caches.keys().then(function(names) {
           names.forEach(function(name) { caches.delete(name); });
@@ -658,20 +658,20 @@
        ═══════════════════════════════════════════════════════════════ -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://gumroad.com/js/gumroad.js" async></script>
-  <script src="js/pro-gate.js?v=7"></script>
-  <script src="js/evp-audio-engine.js?v=7"></script>
-  <script src="js/visual-anomaly-engine.js?v=7"></script>
-  <script src="js/emf-sensor-engine.js?v=7"></script>
-  <script src="js/spirit-box-engine.js?v=7"></script>
-  <script src="js/evp-classifier.js?v=7"></script>
-  <script src="js/session-recorder.js?v=7"></script>
-  <script src="js/evidence-report.js?v=7"></script>
-  <script src="js/session-vault.js?v=7"></script>
-  <script src="js/geiger-counter.js?v=7"></script>
-  <script src="js/dowsing-rods.js?v=7"></script>
-  <script src="js/word-detector.js?v=7"></script>
-  <script src="js/investigation-map.js?v=7"></script>
-  <script src="js/app.js?v=7"></script>
+  <script src="js/pro-gate.js?v=8"></script>
+  <script src="js/evp-audio-engine.js?v=8"></script>
+  <script src="js/visual-anomaly-engine.js?v=8"></script>
+  <script src="js/emf-sensor-engine.js?v=8"></script>
+  <script src="js/spirit-box-engine.js?v=8"></script>
+  <script src="js/evp-classifier.js?v=8"></script>
+  <script src="js/session-recorder.js?v=8"></script>
+  <script src="js/evidence-report.js?v=8"></script>
+  <script src="js/session-vault.js?v=8"></script>
+  <script src="js/geiger-counter.js?v=8"></script>
+  <script src="js/dowsing-rods.js?v=8"></script>
+  <script src="js/word-detector.js?v=8"></script>
+  <script src="js/investigation-map.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 
   <!-- ProGate instance — no async, no duplicate handlers -->
   <script>

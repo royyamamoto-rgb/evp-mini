@@ -70,14 +70,28 @@ class SessionVault {
   async reverseGeocode(lat, lng) {
     try {
       const resp = await fetch(
-        'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18',
+        'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18&addressdetails=1',
         { headers: { 'Accept-Language': 'en' } }
       );
       if (!resp.ok) return null;
       const data = await resp.json();
+      // Build precise address from structured parts
+      if (data.address) {
+        const a = data.address;
+        const parts = [];
+        // Street-level detail
+        const street = a.house_number ? (a.house_number + ' ' + (a.road || '')) : (a.road || a.pedestrian || a.building || a.amenity || '');
+        if (street.trim()) parts.push(street.trim());
+        // Neighborhood / suburb
+        if (a.neighbourhood || a.suburb || a.quarter) parts.push(a.neighbourhood || a.suburb || a.quarter);
+        // City
+        if (a.city || a.town || a.village || a.hamlet) parts.push(a.city || a.town || a.village || a.hamlet);
+        // State abbreviation
+        if (a.state) parts.push(a.state);
+        if (parts.length > 0) return parts.join(', ');
+      }
       if (data.display_name) {
-        // Shorten to meaningful parts
-        const parts = data.display_name.split(',').slice(0, 3).map(s => s.trim());
+        const parts = data.display_name.split(',').slice(0, 4).map(s => s.trim());
         return parts.join(', ');
       }
       return null;

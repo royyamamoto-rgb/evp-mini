@@ -470,6 +470,10 @@ async function shareEvidence() {
 }
 
 // ─── PWA Install Prompt ─────────────────────────────────────────────────────────
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+const installText = document.querySelector('.install-text');
+
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
@@ -477,6 +481,15 @@ window.addEventListener('beforeinstallprompt', (e) => {
     installBanner.classList.add('visible');
   }
 });
+
+// Show iOS instructions if not already installed
+if (isIOS && !isStandalone && !sessionStorage.getItem('installDismissed')) {
+  if (installBanner) {
+    if (installText) installText.textContent = 'Tap Share \u2B06 then "Add to Home Screen"';
+    if (btnInstall) btnInstall.textContent = 'Got it';
+    installBanner.classList.add('visible');
+  }
+}
 
 // ─── Bottom Navigation ──────────────────────────────────────────────────────────
 function closeAllOverlays() {
@@ -897,6 +910,8 @@ if (btnInstall) btnInstall.addEventListener('click', async () => {
     deferredInstallPrompt.prompt();
     await deferredInstallPrompt.userChoice;
     deferredInstallPrompt = null;
+  } else if (isIOS) {
+    alert('To add EVP-MINI to your home screen:\n\n1. Tap the Share button (\u2B06) at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add"\n\nThe app icon will appear on your home screen!');
   }
   if (installBanner) installBanner.classList.remove('visible');
 });
