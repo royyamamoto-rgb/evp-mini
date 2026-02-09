@@ -241,11 +241,67 @@ function applyProRestrictions() {
   }
 }
 
+// ─── Upgrade Modal ──────────────────────────────────────────────────────────────
+const upgradeModal = document.getElementById('upgradeModal');
+const btnCloseUpgrade = document.getElementById('btnCloseUpgrade');
+const btnBuyPro = document.getElementById('btnBuyPro');
+const appProCodeInput = document.getElementById('appProCodeInput');
+const appProCodeSubmit = document.getElementById('appProCodeSubmit');
+const appProCodeError = document.getElementById('appProCodeError');
+const upgradePrice = document.getElementById('upgradePrice');
+
 function showUpgradePrompt(feature) {
-  if (confirm('Upgrade to Pro to unlock ' + feature + '!\n\nPro includes all 4 scan modes, unlimited sessions, investigation tools, history, map, and export.\n\nPrice: ' + CONFIG.proPrice + ' (lifetime)\n\nOpen purchase page?')) {
-    window.open(CONFIG.gumroadUrl, '_blank');
+  if (upgradeModal) upgradeModal.classList.add('visible');
+}
+
+function closeUpgradeModal() {
+  if (upgradeModal) upgradeModal.classList.remove('visible');
+  if (appProCodeError) appProCodeError.textContent = '';
+  if (appProCodeInput) appProCodeInput.value = '';
+}
+
+function activateProInApp() {
+  var input = appProCodeInput;
+  var error = appProCodeError;
+  var btn = appProCodeSubmit;
+  var code = (input.value || '').trim();
+  if (!code) { error.textContent = 'Please enter a license key.'; return; }
+  btn.textContent = 'Verifying...'; btn.disabled = true; error.textContent = '';
+  var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','evpmini2024'];
+  if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
+    try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,activatedAt:Date.now()})); } catch(e){}
+    closeUpgradeModal();
+    onProActivated();
+    btn.textContent = 'Activate'; btn.disabled = false;
+    return;
+  }
+  if (window.proGateInstance) {
+    window.proGateInstance.activate(code).then(function(result) {
+      if (result.success) { closeUpgradeModal(); onProActivated(); }
+      else { error.textContent = result.error || 'Invalid key.'; input.value = ''; input.focus(); }
+      btn.textContent = 'Activate'; btn.disabled = false;
+    }).catch(function() {
+      error.textContent = 'Verification failed. Try again.';
+      btn.textContent = 'Activate'; btn.disabled = false;
+    });
+  } else {
+    error.textContent = 'Invalid license key.';
+    btn.textContent = 'Activate'; btn.disabled = false;
+    input.value = ''; input.focus();
   }
 }
+
+function onProActivated() {
+  if (upgradeBanner) upgradeBanner.classList.remove('visible');
+  if (proBadge) proBadge.style.display = '';
+  setStatus('Pro activated! All features unlocked.', 'ready');
+}
+
+if (btnCloseUpgrade) btnCloseUpgrade.addEventListener('click', closeUpgradeModal);
+if (upgradeModal) upgradeModal.addEventListener('click', function(e) { if (e.target === upgradeModal) closeUpgradeModal(); });
+if (btnBuyPro) btnBuyPro.addEventListener('click', function() { window.open(CONFIG.gumroadUrl, '_blank'); });
+if (appProCodeSubmit) appProCodeSubmit.addEventListener('click', activateProInApp);
+if (appProCodeInput) appProCodeInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') activateProInApp(); });
 
 // ─── Camera ─────────────────────────────────────────────────────────────────────
 async function startCamera() {
@@ -902,7 +958,7 @@ if (btnCloseMap) btnCloseMap.addEventListener('click', () => { closeAllOverlays(
 if (btnCloseGear) btnCloseGear.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
 
 // Upgrade button
-if (btnUpgrade) btnUpgrade.addEventListener('click', () => showUpgradePrompt('all features'));
+if (btnUpgrade) btnUpgrade.addEventListener('click', () => showUpgradePrompt());
 
 // Install banner
 if (btnInstall) btnInstall.addEventListener('click', async () => {

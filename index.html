@@ -314,6 +314,23 @@
       <button class="upgrade-btn" id="btnUpgrade">Upgrade to Pro</button>
     </div>
 
+    <!-- Upgrade Modal (shown when tapping Upgrade or locked features) -->
+    <div class="upgrade-modal-overlay" id="upgradeModal">
+      <div class="upgrade-modal">
+        <button class="upgrade-modal-close" id="btnCloseUpgrade">&times;</button>
+        <div class="upgrade-modal-title">Unlock Pro</div>
+        <div class="upgrade-modal-price" id="upgradePrice">$4.99 &mdash; Lifetime Access</div>
+        <div class="upgrade-modal-features">All 4 scan modes &bull; Unlimited sessions &bull; Spirit Box &bull; Visual filters &bull; Geiger &bull; Dowsing &bull; Word Detection &bull; History &bull; Map &bull; Export</div>
+        <button class="upgrade-modal-buy" id="btnBuyPro">Purchase on Gumroad</button>
+        <div class="upgrade-modal-divider"><span>Already have a key?</span></div>
+        <div class="upgrade-modal-code-row">
+          <input type="text" id="appProCodeInput" placeholder="Enter license key" autocomplete="off">
+          <button id="appProCodeSubmit">Activate</button>
+        </div>
+        <div class="upgrade-modal-error" id="appProCodeError"></div>
+      </div>
+    </div>
+
     <!-- Header -->
     <div class="app-header">
       <h1>EVP-MINI</h1>

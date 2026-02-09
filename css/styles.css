@@ -227,6 +227,67 @@ a.cta-pro.gumroad-button:hover {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   UPGRADE MODAL
+   ═══════════════════════════════════════════════════════════════════ */
+.upgrade-modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.85); align-items: center; justify-content: center;
+  padding: 20px;
+}
+.upgrade-modal-overlay.visible { display: flex; }
+.upgrade-modal {
+  background: #12122a; border: 1px solid #7c4dff; border-radius: 16px;
+  padding: 28px 24px; max-width: 380px; width: 100%; text-align: center;
+  position: relative;
+}
+.upgrade-modal-close {
+  position: absolute; top: 10px; right: 14px; background: none; border: none;
+  color: #666; font-size: 1.5rem; cursor: pointer; line-height: 1;
+}
+.upgrade-modal-close:hover { color: #fff; }
+.upgrade-modal-title {
+  font-size: 1.4rem; font-weight: 800; color: #00e5ff;
+  margin-bottom: 6px; letter-spacing: 0.5px;
+}
+.upgrade-modal-price {
+  font-size: 1rem; color: #7c4dff; font-weight: 700; margin-bottom: 14px;
+}
+.upgrade-modal-features {
+  font-size: 0.75rem; color: #9e9ec0; line-height: 1.5; margin-bottom: 18px;
+}
+.upgrade-modal-buy {
+  display: block; width: 100%; padding: 14px; border: none; border-radius: 10px;
+  background: linear-gradient(135deg, #7c4dff, #00e5ff); color: #fff;
+  font-size: 1rem; font-weight: 700; cursor: pointer; margin-bottom: 18px;
+  letter-spacing: 0.5px;
+}
+.upgrade-modal-buy:active { opacity: 0.85; }
+.upgrade-modal-divider {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  color: #555; font-size: 0.75rem;
+}
+.upgrade-modal-divider::before, .upgrade-modal-divider::after {
+  content: ''; flex: 1; height: 1px; background: #333;
+}
+.upgrade-modal-code-row {
+  display: flex; gap: 8px; margin-bottom: 8px;
+}
+.upgrade-modal-code-row input {
+  flex: 1; padding: 10px 12px; border: 1px solid #333; border-radius: 8px;
+  background: #0a0a14; color: #fff; font-size: 0.9rem; outline: none;
+}
+.upgrade-modal-code-row input:focus { border-color: #7c4dff; }
+.upgrade-modal-code-row button {
+  padding: 10px 16px; border: none; border-radius: 8px;
+  background: #7c4dff; color: #fff; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+}
+.upgrade-modal-code-row button:disabled { opacity: 0.5; }
+.upgrade-modal-error {
+  color: #ff1744; font-size: 0.75rem; min-height: 1em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    PRO BADGE
    ═══════════════════════════════════════════════════════════════════ */
 .pro-badge {
