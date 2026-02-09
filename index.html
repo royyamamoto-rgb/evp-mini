@@ -332,6 +332,46 @@
       </div>
     </div>
 
+    <!-- Share / Add to Home Action Sheet -->
+    <div class="upgrade-modal-overlay" id="shareModal">
+      <div class="share-sheet">
+        <button class="upgrade-modal-close" id="btnCloseShare">&times;</button>
+        <div class="share-sheet-title">Share &amp; Install</div>
+        <button class="share-sheet-btn" id="btnShareLink">
+          <span class="share-sheet-icon">&#x1F517;</span>
+          <span class="share-sheet-label">Share Link with Friends</span>
+        </button>
+        <button class="share-sheet-btn share-sheet-install" id="btnAddHome">
+          <span class="share-sheet-icon">&#x2795;</span>
+          <span class="share-sheet-label">Add to Home Screen</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- iOS Install Instructions Modal -->
+    <div class="upgrade-modal-overlay" id="iosInstallModal">
+      <div class="upgrade-modal ios-install-modal">
+        <button class="upgrade-modal-close" id="btnCloseIosInstall">&times;</button>
+        <div class="upgrade-modal-title">Add to Home Screen</div>
+        <div class="ios-steps">
+          <div class="ios-step">
+            <div class="ios-step-num">1</div>
+            <div class="ios-step-text">Tap the <b>Safari Share button</b> at the very bottom of your screen (square with arrow &#x2B06;&#xFE0E;)</div>
+          </div>
+          <div class="ios-step">
+            <div class="ios-step-num">2</div>
+            <div class="ios-step-text"><b>Scroll down</b> in the share menu until you see <b>&ldquo;Add to Home Screen&rdquo;</b></div>
+          </div>
+          <div class="ios-step">
+            <div class="ios-step-num">3</div>
+            <div class="ios-step-text">Tap <b>&ldquo;Add&rdquo;</b> &mdash; the EVP-MINI icon will appear on your home screen</div>
+          </div>
+        </div>
+        <div class="ios-note">This is a Safari feature &mdash; the app&rsquo;s Share button cannot do this. You must use Safari&rsquo;s own share button at the bottom of the browser.</div>
+        <button class="upgrade-modal-buy" id="btnGotItIos">Got It</button>
+      </div>
+    </div>
+
     <!-- Header -->
     <div class="app-header">
       <h1>EVP-MINI</h1>

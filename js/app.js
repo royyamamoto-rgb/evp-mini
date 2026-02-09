@@ -1020,24 +1020,63 @@ if (btnScreenshot) btnScreenshot.addEventListener('click', takeScreenshot);
 if (btnShare) btnShare.addEventListener('click', shareEvidence);
 
 // Share App button (always visible in header)
-if (btnShareApp) btnShareApp.addEventListener('click', async () => {
+// Share/Install action sheet
+const shareModal = document.getElementById('shareModal');
+const btnCloseShare = document.getElementById('btnCloseShare');
+const btnShareLink = document.getElementById('btnShareLink');
+const btnAddHome = document.getElementById('btnAddHome');
+
+if (btnShareApp) btnShareApp.addEventListener('click', () => {
+  if (shareModal) shareModal.classList.add('visible');
+});
+if (btnCloseShare) btnCloseShare.addEventListener('click', () => {
+  if (shareModal) shareModal.classList.remove('visible');
+});
+if (shareModal) shareModal.addEventListener('click', (e) => {
+  if (e.target === shareModal) shareModal.classList.remove('visible');
+});
+
+if (btnShareLink) btnShareLink.addEventListener('click', async () => {
+  if (shareModal) shareModal.classList.remove('visible');
   const shareData = {
-    title: 'EVP-MINI — Paranormal Investigation App',
+    title: 'EVP-MINI \u2014 Paranormal Investigation App',
     text: 'Turn your phone into a ghost hunting tool. EVP capture, spirit box, thermal vision, EMF detection. Free to try.',
     url: 'https://evp-mini.pages.dev'
   };
   if (navigator.share) {
-    try { await navigator.share(shareData); } catch (e) { /* cancelled */ }
+    try { await navigator.share(shareData); } catch (e) {}
   } else {
     try {
       await navigator.clipboard.writeText(shareData.url);
       setStatus('Link copied to clipboard!', 'complete');
       setTimeout(() => setStatus('', 'ready'), 2000);
-    } catch (e) {
-      setStatus('Share not available', '');
-    }
+    } catch (e) {}
   }
 });
+
+if (btnAddHome) btnAddHome.addEventListener('click', () => {
+  if (shareModal) shareModal.classList.remove('visible');
+  if (deferredInstallPrompt) {
+    // Android: use native install prompt
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(() => { deferredInstallPrompt = null; });
+  } else if (isIOS) {
+    // iOS: show step-by-step instructions
+    const iosModal = document.getElementById('iosInstallModal');
+    if (iosModal) iosModal.classList.add('visible');
+  } else {
+    alert('Open this page in your mobile browser, then use your browser\u2019s menu to add it to your home screen.');
+  }
+});
+
+// iOS install modal close
+const iosInstallModal = document.getElementById('iosInstallModal');
+const btnCloseIosInstall = document.getElementById('btnCloseIosInstall');
+const btnGotItIos = document.getElementById('btnGotItIos');
+function closeIosModal() { if (iosInstallModal) iosInstallModal.classList.remove('visible'); }
+if (btnCloseIosInstall) btnCloseIosInstall.addEventListener('click', closeIosModal);
+if (btnGotItIos) btnGotItIos.addEventListener('click', closeIosModal);
+if (iosInstallModal) iosInstallModal.addEventListener('click', (e) => { if (e.target === iosInstallModal) closeIosModal(); });
 
 // Overlay close buttons
 if (btnCloseHistory) btnCloseHistory.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });

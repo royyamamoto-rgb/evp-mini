@@ -288,6 +288,50 @@ a.cta-pro.gumroad-button:hover {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   SHARE ACTION SHEET
+   ═══════════════════════════════════════════════════════════════════ */
+.share-sheet {
+  background: #12122a; border: 1px solid #2a2a4a; border-radius: 16px;
+  padding: 24px 20px; max-width: 340px; width: 100%; position: relative;
+}
+.share-sheet-title {
+  font-size: 1.1rem; font-weight: 800; color: #00e5ff; text-align: center;
+  margin-bottom: 16px;
+}
+.share-sheet-btn {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 14px 16px; border: 1px solid #2a2a4a; border-radius: 12px;
+  background: #0a0a14; color: #e0e0f0; font-size: 0.9rem;
+  cursor: pointer; margin-bottom: 10px; text-align: left;
+}
+.share-sheet-btn:last-child { margin-bottom: 0; }
+.share-sheet-btn:active { background: #1a1a3a; }
+.share-sheet-install { border-color: #7c4dff; }
+.share-sheet-icon { font-size: 1.3rem; }
+.share-sheet-label { font-weight: 600; }
+
+/* iOS Install Modal */
+.ios-install-modal { text-align: left; }
+.ios-steps { margin: 16px 0; }
+.ios-step {
+  display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px;
+}
+.ios-step-num {
+  min-width: 28px; height: 28px; border-radius: 50%;
+  background: #7c4dff; color: #fff; font-weight: 800; font-size: 0.85rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.ios-step-text {
+  font-size: 0.85rem; color: #c0c0d0; line-height: 1.5;
+}
+.ios-step-text b { color: #fff; }
+.ios-note {
+  font-size: 0.72rem; color: #6a6a8a; line-height: 1.5;
+  padding: 10px; background: rgba(124,77,255,0.1); border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    PRO BADGE
    ═══════════════════════════════════════════════════════════════════ */
 .pro-badge {
