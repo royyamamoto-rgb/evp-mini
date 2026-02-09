@@ -643,6 +643,130 @@
       <div class="history-list" id="historyList"></div>
     </div>
 
+    <!-- ── Info / About Panel (overlay) ─────────────────────────── -->
+    <div class="overlay-panel" id="infoPanel">
+      <div class="overlay-header">
+        <h2>EVP-MINI</h2>
+        <button class="overlay-close" id="btnCloseInfo">Close</button>
+      </div>
+
+      <!-- Restore Purchase -->
+      <div class="info-section">
+        <div class="info-section-title">Restore Purchase</div>
+        <div class="info-text">Already purchased Pro on another device or browser? Enter your Gumroad license key to restore access.</div>
+        <div class="upgrade-modal-code-row">
+          <input type="text" id="restoreCodeInput" placeholder="Enter license key" autocomplete="off">
+          <button id="restoreCodeSubmit">Activate</button>
+        </div>
+        <div class="upgrade-modal-error" id="restoreCodeError"></div>
+        <div class="info-hint">Your license key was emailed to you by Gumroad after purchase. Check your inbox for &ldquo;Your purchase of EVP-MINI Pro.&rdquo;</div>
+      </div>
+
+      <!-- About -->
+      <div class="info-section">
+        <div class="info-section-title">About</div>
+        <div class="info-text">
+          <b>EVP-MINI</b> is a professional paranormal investigation tool that transforms your phone into a multi-sensor detection system. It uses your device&rsquo;s real hardware &mdash; magnetometer, accelerometer, gyroscope, microphone, and camera &mdash; to capture and analyze environmental data in real-time.
+        </div>
+        <div class="info-text">
+          The app applies science-grounded audio and visual analysis techniques to detect anomalies that may indicate paranormal activity. All readings come from real sensors &mdash; nothing is simulated or faked.
+        </div>
+        <div class="info-version" id="infoVersion">Version 2.0</div>
+      </div>
+
+      <!-- How to Use -->
+      <div class="info-section">
+        <div class="info-section-title">How to Use</div>
+
+        <div class="info-subsection">
+          <div class="info-subtitle">Getting Started</div>
+          <div class="info-text">1. Grant camera and microphone access when prompted. These are required for audio and visual analysis.</div>
+          <div class="info-text">2. Select a scan mode from the dropdown at the top of the investigation screen.</div>
+          <div class="info-text">3. Choose a session duration (30s, 60s, 120s, or Continuous for Pro users).</div>
+          <div class="info-text">4. Tap <b>Start</b> to begin your investigation. Hold your phone steady and remain quiet for best results.</div>
+        </div>
+
+        <div class="info-subsection">
+          <div class="info-subtitle">Scan Modes</div>
+          <div class="info-text"><b>EVP Scan</b> (Free) &mdash; Microphone-focused mode. Captures audio and runs real-time spectral analysis to detect voice-like patterns. Anomalies are classified as Class A (clear), B (moderate), or C (faint) based on spectral centroid, formant detection, and harmonic-to-noise ratio.</div>
+          <div class="info-text"><b>Spirit Box</b> (Pro) &mdash; Simulates an FM radio sweep across frequencies. The rapid scanning creates audio fragments that may form words or phrases. Adjust sweep speed for different sensitivity levels.</div>
+          <div class="info-text"><b>Visual Scan</b> (Pro) &mdash; Activates camera filters for visual anomaly detection. 7 modes available: Normal, Night Vision (green-tinted brightness amplification), Edge Detection (Sobel operator), False Color (thermal palette mapping), Motion Detect (frame differencing), Motion Trails (accumulated movement), and Full Spectrum (combined analysis).</div>
+          <div class="info-text"><b>Full Spectrum</b> (Pro) &mdash; Every sensor and analysis engine running simultaneously at maximum sensitivity. Audio, visual, and environmental sensors all active. Use in locations with reported high activity.</div>
+        </div>
+
+        <div class="info-subsection">
+          <div class="info-subtitle">Investigation Tools (Pro)</div>
+          <div class="info-text"><b>Geiger Counter</b> &mdash; Multi-sensor anomaly detector. Aggregates data from EMF, audio, and motion sensors. Produces audio clicks that increase in frequency when anomalies are detected.</div>
+          <div class="info-text"><b>Dowsing Rods</b> &mdash; Digital dowsing rods displayed on screen. They react to changes in electromagnetic fields and audio anomalies, crossing when significant readings occur.</div>
+          <div class="info-text"><b>Word Detection</b> &mdash; AI phoneme matching engine that analyzes audio anomalies for speech-like patterns. When detected, candidate words are displayed with confidence scores.</div>
+        </div>
+
+        <div class="info-subsection">
+          <div class="info-subtitle">Header Controls</div>
+          <div class="info-text"><b>Torch</b> &mdash; Toggle your phone&rsquo;s flashlight for dark locations.</div>
+          <div class="info-text"><b>Flip</b> &mdash; Switch between front and rear camera. The front camera may detect near-infrared (700-950nm).</div>
+          <div class="info-text"><b>Shot</b> &mdash; Take a screenshot of the current camera view with any active visual filters applied.</div>
+          <div class="info-text"><b>REC</b> &mdash; Record audio during your investigation. Recordings can be played back in reverse (a traditional EVP analysis technique).</div>
+          <div class="info-text"><b>Share</b> &mdash; Share the app link via your phone&rsquo;s native share sheet.</div>
+        </div>
+
+        <div class="info-subsection">
+          <div class="info-subtitle">Sensor Readings</div>
+          <div class="info-text"><b>EMF</b> &mdash; Electromagnetic field strength in microtesla (&micro;T) via your phone&rsquo;s magnetometer. Deviations &gt;5&micro;T from baseline are flagged.</div>
+          <div class="info-text"><b>Infrasound</b> &mdash; Detects low-frequency vibrations via accelerometer. Flags frequencies near 18.98Hz (Tandy&rsquo;s &ldquo;fear frequency&rdquo; linked to unease and visual disturbances).</div>
+          <div class="info-text"><b>Pressure</b> &mdash; Barometric pressure via device barometer (when available). Sudden changes may correlate with reported activity.</div>
+        </div>
+
+        <div class="info-subsection">
+          <div class="info-subtitle">After Your Investigation</div>
+          <div class="info-text">When a timed scan completes, an <b>Evidence Report</b> is generated summarizing all findings: audio events, visual anomalies, sensor data, and EVP classifications.</div>
+          <div class="info-text">Pro users can <b>Export</b> the full report, view past sessions in <b>History</b>, and plot investigation locations on the <b>Map</b>.</div>
+        </div>
+
+        <div class="info-subsection">
+          <div class="info-subtitle">Tips for Best Results</div>
+          <div class="info-text">&bull; Investigate in quiet environments for clearer audio capture.</div>
+          <div class="info-text">&bull; Keep your phone steady &mdash; excess movement affects sensor readings.</div>
+          <div class="info-text">&bull; Use Night Vision or Full Spectrum modes in dark locations.</div>
+          <div class="info-text">&bull; Run multiple sessions at the same location to establish baseline readings.</div>
+          <div class="info-text">&bull; Review recordings in reverse &mdash; EVP phenomena are often reported as clearer in reverse playback.</div>
+        </div>
+      </div>
+
+      <!-- Device & Account Info -->
+      <div class="info-section">
+        <div class="info-section-title">Your Account</div>
+        <div class="info-text">Your Pro status is stored locally on this device and browser. <b>No account or login is required.</b></div>
+        <div class="info-text">If you switch to a different device, browser, or clear your browser data, simply enter your Gumroad license key again using &ldquo;Restore Purchase&rdquo; above. Your license key works on unlimited devices.</div>
+        <div class="info-text" id="infoProStatus"></div>
+      </div>
+
+      <!-- Add to Home Screen -->
+      <div class="info-section">
+        <div class="info-section-title">Add to Home Screen</div>
+        <div class="info-text"><b>iPhone (Safari):</b> Tap the Share button (&#x2B06;&#xFE0E;) at the bottom of Safari, scroll down, and tap &ldquo;Add to Home Screen.&rdquo; The EVP-MINI icon will appear on your home screen like a native app.</div>
+        <div class="info-text"><b>Android (Chrome):</b> Tap the three-dot menu (&#x22EE;), then tap &ldquo;Add to Home Screen&rdquo; or &ldquo;Install App.&rdquo;</div>
+      </div>
+
+      <!-- Legal -->
+      <div class="info-section">
+        <div class="info-section-title">Legal &amp; Disclaimer</div>
+        <div class="info-text"><b>Disclaimer:</b> EVP-MINI is an entertainment and research tool. This application uses real device sensors and real-time signal analysis but <b>cannot verify, confirm, or disprove the existence of paranormal phenomena</b>. Audio anomalies detected by the app may be caused by environmental noise, electronic interference, radio frequency signals, or auditory pareidolia &mdash; the human tendency to perceive meaningful patterns in random stimuli (Nees &amp; Phillips, 2015).</div>
+        <div class="info-text"><b>No Guarantee:</b> Results and readings are provided &ldquo;as is&rdquo; for informational and entertainment purposes only. The developer makes no claims regarding the accuracy, reliability, or supernatural origin of any readings, detections, or classifications produced by this application.</div>
+        <div class="info-text"><b>Sensor Accuracy:</b> Sensor readings depend on your device&rsquo;s hardware capabilities and calibration. Not all devices support all sensors. EMF, barometric, and motion readings may vary between devices and are not calibrated to laboratory-grade instruments.</div>
+        <div class="info-text"><b>Privacy:</b> EVP-MINI processes all audio, video, and sensor data locally on your device. <b>No data is transmitted to external servers</b> except: (1) license key verification via Gumroad&rsquo;s API, and (2) reverse geocoding via OpenStreetMap Nominatim for location tagging. No personal data is collected, stored, or shared. Camera and microphone access is used exclusively for real-time analysis and is never recorded without your explicit action.</div>
+        <div class="info-text"><b>Purchases:</b> Pro upgrades are processed by Gumroad, Inc. All purchases are one-time, non-recurring payments. Refund requests should be directed to Gumroad. License keys are valid for unlimited devices and do not expire.</div>
+        <div class="info-text"><b>Safety:</b> Always investigate responsibly. Obtain permission before entering private property. Be aware of your surroundings. Do not use this app while driving or operating machinery. The developer is not responsible for any actions taken based on readings from this application.</div>
+        <div class="info-text"><b>Scientific References:</b><br>
+          &bull; Tandy, V. (1998). &ldquo;The Ghost in the Machine.&rdquo; <i>Journal of the Society for Psychical Research</i>, 62, 360&ndash;364.<br>
+          &bull; Nees, M. A. &amp; Phillips, C. (2015). &ldquo;Auditory pareidolia.&rdquo; <i>Perception</i>, 44(5), 569&ndash;575.<br>
+          &bull; Baruss, I. (2001). &ldquo;Failure to replicate electronic voice phenomena.&rdquo; <i>Journal of Scientific Exploration</i>, 15(3), 355&ndash;367.<br>
+          &bull; Raudive, K. (1971). <i>Breakthrough: An Amazing Experiment in Electronic Communication with the Dead.</i>
+        </div>
+        <div class="info-text info-copyright">&copy; 2024 EVP-MINI. All rights reserved.</div>
+      </div>
+    </div>
+
     <!-- ── Bottom Navigation ────────────────────────────────────── -->
     <div class="bottom-nav" id="bottomNav">
       <button class="nav-btn active" data-nav="investigate">
@@ -660,6 +784,10 @@
       <button class="nav-btn" data-nav="history">
         <span class="nav-icon">&#x1F4CB;</span>
         <span class="nav-label">History</span>
+      </button>
+      <button class="nav-btn" data-nav="info">
+        <span class="nav-icon">&#x2139;&#xFE0F;</span>
+        <span class="nav-label">Info</span>
       </button>
     </div>
 

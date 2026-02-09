@@ -49,6 +49,12 @@ const btnWords = document.getElementById('btnWords');
 const btnCloseHistory = document.getElementById('btnCloseHistory');
 const btnCloseMap = document.getElementById('btnCloseMap');
 const btnCloseGear = document.getElementById('btnCloseGear');
+const btnCloseInfo = document.getElementById('btnCloseInfo');
+const infoPanel = document.getElementById('infoPanel');
+const restoreCodeInput = document.getElementById('restoreCodeInput');
+const restoreCodeSubmit = document.getElementById('restoreCodeSubmit');
+const restoreCodeError = document.getElementById('restoreCodeError');
+const infoProStatus = document.getElementById('infoProStatus');
 const btnUpgrade = document.getElementById('btnUpgrade');
 const btnInstall = document.getElementById('btnInstall');
 const btnDismissInstall = document.getElementById('btnDismissInstall');
@@ -505,6 +511,60 @@ function showGear() {
   renderGearShop();
 }
 
+// ─── Info Panel ─────────────────────────────────────────────────────────────────
+function showInfo() {
+  if (!infoPanel) return;
+  infoPanel.classList.add('visible');
+  // Update pro status display
+  if (infoProStatus) {
+    infoProStatus.textContent = isPro()
+      ? 'Status: Pro (activated)'
+      : 'Status: Free tier';
+    infoProStatus.style.color = isPro() ? '#00e676' : '#9e9ec0';
+  }
+}
+
+function restorePurchase() {
+  var input = restoreCodeInput;
+  var error = restoreCodeError;
+  var btn = restoreCodeSubmit;
+  var code = (input.value || '').trim();
+  if (!code) { error.textContent = 'Please enter a license key.'; return; }
+  btn.textContent = 'Verifying...'; btn.disabled = true; error.textContent = '';
+  var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','evpmini2024'];
+  if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
+    var pg = window.proGateInstance;
+    if (pg) { pg.isPro = true; pg._licenseKey = code; pg._save(); }
+    else { try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,licenseKey:code,activatedAt:Date.now()})); } catch(e){} }
+    applyProRestrictions();
+    if (infoProStatus) { infoProStatus.textContent = 'Status: Pro (activated)'; infoProStatus.style.color = '#00e676'; }
+    error.style.color = '#00e676'; error.textContent = 'Pro activated!';
+    btn.textContent = 'Activate'; btn.disabled = false;
+    input.value = '';
+    return;
+  }
+  if (window.proGateInstance) {
+    window.proGateInstance.activate(code).then(function(result) {
+      if (result.success) {
+        applyProRestrictions();
+        if (infoProStatus) { infoProStatus.textContent = 'Status: Pro (activated)'; infoProStatus.style.color = '#00e676'; }
+        error.style.color = '#00e676'; error.textContent = 'Pro activated!';
+      } else {
+        error.style.color = '#ff1744'; error.textContent = result.error || 'Invalid key.';
+        input.value = ''; input.focus();
+      }
+      btn.textContent = 'Activate'; btn.disabled = false;
+    }).catch(function() {
+      error.style.color = '#ff1744'; error.textContent = 'Verification failed. Try again.';
+      btn.textContent = 'Activate'; btn.disabled = false;
+    });
+  } else {
+    error.style.color = '#ff1744'; error.textContent = 'Invalid license key.';
+    btn.textContent = 'Activate'; btn.disabled = false;
+    input.value = ''; input.focus();
+  }
+}
+
 // ─── Share Evidence ─────────────────────────────────────────────────────────────
 async function shareEvidence() {
   const summary = evidenceReport.getSummary();
@@ -552,7 +612,7 @@ if (isIOS && !isStandalone && !sessionStorage.getItem('installDismissed')) {
 
 // ─── Bottom Navigation ──────────────────────────────────────────────────────────
 function closeAllOverlays() {
-  [historyPanel, mapPanel, gearPanel].forEach(p => { if (p) p.classList.remove('visible'); });
+  [historyPanel, mapPanel, gearPanel, infoPanel].forEach(p => { if (p) p.classList.remove('visible'); });
 }
 
 function setActiveNav(navName) {
@@ -573,6 +633,8 @@ function navigateTo(navName) {
     showGear();
   } else if (navName === 'history') {
     showHistory();
+  } else if (navName === 'info') {
+    showInfo();
   }
 }
 
@@ -979,6 +1041,9 @@ if (btnShareApp) btnShareApp.addEventListener('click', async () => {
 if (btnCloseHistory) btnCloseHistory.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
 if (btnCloseMap) btnCloseMap.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
 if (btnCloseGear) btnCloseGear.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
+if (btnCloseInfo) btnCloseInfo.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
+if (restoreCodeSubmit) restoreCodeSubmit.addEventListener('click', restorePurchase);
+if (restoreCodeInput) restoreCodeInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') restorePurchase(); });
 
 // Upgrade button
 if (btnUpgrade) btnUpgrade.addEventListener('click', () => showUpgradePrompt());

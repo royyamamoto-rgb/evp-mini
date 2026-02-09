@@ -749,6 +749,38 @@ a.cta-pro.gumroad-button:hover {
 .gear-disclaimer { font-size: 0.65rem; color: #4a4a6a; text-align: center; margin-top: 16px; }
 
 /* ═══════════════════════════════════════════════════════════════════
+   INFO PANEL
+   ═══════════════════════════════════════════════════════════════════ */
+.info-section {
+  background: #12122a; border-radius: 12px; padding: 16px; margin-bottom: 14px;
+}
+.info-section-title {
+  font-size: 1rem; font-weight: 800; color: #00e5ff; margin-bottom: 10px;
+  letter-spacing: 0.3px;
+}
+.info-subtitle {
+  font-size: 0.85rem; font-weight: 700; color: #7c4dff; margin-bottom: 6px;
+  margin-top: 4px;
+}
+.info-subsection { margin-bottom: 14px; }
+.info-subsection:last-child { margin-bottom: 0; }
+.info-text {
+  font-size: 0.78rem; color: #c0c0d0; line-height: 1.6; margin-bottom: 8px;
+}
+.info-text:last-child { margin-bottom: 0; }
+.info-text b { color: #e0e0f0; }
+.info-text i { color: #9e9ec0; }
+.info-hint {
+  font-size: 0.7rem; color: #6a6a8a; margin-top: 8px; line-height: 1.5;
+}
+.info-version {
+  font-size: 0.7rem; color: #4a4a6a; margin-top: 8px;
+}
+.info-copyright {
+  font-size: 0.7rem; color: #4a4a6a; margin-top: 12px; text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    BOTTOM NAVIGATION
    ═══════════════════════════════════════════════════════════════════ */
 .bottom-nav {
