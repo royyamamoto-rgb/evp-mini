@@ -46,6 +46,13 @@ const btnDownload = document.getElementById('btnDownload');
 const btnGeiger = document.getElementById('btnGeiger');
 const btnDowsing = document.getElementById('btnDowsing');
 const btnWords = document.getElementById('btnWords');
+const btnRadar = document.getElementById('btnRadar');
+const btnSfx = document.getElementById('btnSfx');
+const radarPanel = document.getElementById('radarPanel');
+const radarEntityCount = document.getElementById('radarEntityCount');
+const paiBar = document.getElementById('paiBar');
+const paiFill = document.getElementById('paiFill');
+const paiValue = document.getElementById('paiValue');
 const btnCloseHistory = document.getElementById('btnCloseHistory');
 const btnCloseMap = document.getElementById('btnCloseMap');
 const btnCloseGear = document.getElementById('btnCloseGear');
@@ -154,6 +161,8 @@ let evpTotalCount = 0;
 let geigerEnabled = false;
 let dowsingActive = false;
 let wordDetectEnabled = true;
+let radarActive = false;
+let sfxEnabled = true;
 let deferredInstallPrompt = null;
 
 // Performance throttling
@@ -182,6 +191,8 @@ const geigerCounter = new GeigerCounter();
 const dowsingRods = new DowsingRods();
 const wordDetector = new WordDetector();
 const investigationMap = new InvestigationMap();
+const entityRadar = new EntityRadar();
+const detectionSfx = new DetectionSFX();
 
 // ─── Pro Gate Reference ─────────────────────────────────────────────────────────
 function getProGate() { return window.proGateInstance || null; }
@@ -791,13 +802,15 @@ function processFrame() {
         evpTotalCount++;
         updateEVPCount();
         setAnomalyBorder(true);
+        if (sfxEnabled) detectionSfx.evpTone();
+        if (radarActive) entityRadar.addBlip('evp', classification.class === 'A' ? 1.0 : classification.class === 'B' ? 0.7 : 0.4);
       }
     }
 
     if (wordDetectEnabled && now - lastWordTime > 100) {
       const formants = evpAudioEngine.getFormantAnalysis();
       const wordResult = wordDetector.processFrame(formants, cachedAssess);
-      if (wordResult) showWordDetection(wordResult);
+      if (wordResult) { showWordDetection(wordResult); if (sfxEnabled) detectionSfx.wordChime(); if (radarActive) entityRadar.addBlip('word', 0.8); }
       if (cachedAssess && !cachedAssess.isAnomaly && cachedAssess.rmsPercent < 5) {
         const forced = wordDetector.forceCheck();
         if (forced) showWordDetection(forced);
@@ -873,6 +886,45 @@ function processFrame() {
     updateLiveIndicators();
     if (cachedAssess && cachedAssess.isAnomaly) setAnomalyBorder(true);
     lastIndicatorTime = now;
+  }
+
+  // ── Entity Radar
+  if (radarActive && entityRadar.active) {
+    var emfState = emfSensorEngine.getEMFAnomaly();
+    var vibState = emfSensorEngine.getVibrationAnalysis();
+    var shouldPing = entityRadar.processFrame({
+      emfAnomaly: emfState.isAnomaly,
+      emfIntensity: Math.min(1, emfState.deviationMicroTesla / 10),
+      audioAnomaly: cachedAssess ? cachedAssess.isAnomaly : false,
+      audioIntensity: cachedAssess ? Math.min(1, cachedAssess.rmsPercent / 30) : 0,
+      motionLevel: visualAnomalyEngine.getMotionLevel(),
+      infrasoundDetected: vibState.infrasoundDetected,
+      infrasoundIntensity: vibState.fearFreqAlert ? 0.9 : 0.5
+    });
+    if (shouldPing && sfxEnabled) detectionSfx.radarPing();
+    if (radarEntityCount) radarEntityCount.textContent = entityRadar.getActiveBlipCount() + ' active | ' + entityRadar.getTotalDetections() + ' total';
+  }
+
+  // ── Paranormal Activity Index
+  if (paiBar && paiBar.classList.contains('visible')) {
+    var paiScore = 0;
+    var emfA = emfSensorEngine.getEMFAnomaly();
+    if (emfA.isAnomaly) paiScore += Math.min(30, emfA.deviationMicroTesla * 3);
+    if (cachedAssess && cachedAssess.isAnomaly) paiScore += 20 + cachedAssess.rmsPercent * 0.3;
+    var vib2 = emfSensorEngine.getVibrationAnalysis();
+    if (vib2.infrasoundDetected) paiScore += 15;
+    if (vib2.fearFreqAlert) paiScore += 25;
+    if (visualAnomalyEngine.getMotionLevel() > 10) paiScore += visualAnomalyEngine.getMotionLevel() * 0.3;
+    paiScore += evpTotalCount * 5;
+    paiScore = Math.min(100, Math.round(paiScore));
+    if (paiFill) {
+      paiFill.style.width = paiScore + '%';
+      paiFill.className = 'pai-fill' + (paiScore >= 75 ? ' extreme' : paiScore >= 50 ? ' high' : paiScore >= 25 ? ' active' : ' mild');
+    }
+    if (paiValue) {
+      paiValue.textContent = paiScore;
+      paiValue.style.color = paiScore >= 75 ? '#ff1744' : paiScore >= 50 ? '#ff9100' : paiScore >= 25 ? '#ffea00' : '#00e5ff';
+    }
   }
 }
 
@@ -1145,6 +1197,33 @@ if (btnWords) btnWords.addEventListener('click', () => {
   if (wordDetectPanel) wordDetectPanel.classList.toggle('visible', wordDetectEnabled && running);
 });
 
+// Entity Radar toggle
+if (btnRadar) btnRadar.addEventListener('click', () => {
+  if (!isPro()) { showUpgradePrompt('Entity Radar'); return; }
+  radarActive = !radarActive;
+  btnRadar.classList.toggle('active', radarActive);
+  if (radarActive) {
+    entityRadar.init('radarCanvas');
+    entityRadar.start();
+    if (radarPanel) radarPanel.classList.add('visible');
+    if (paiBar) paiBar.classList.add('visible');
+  } else {
+    entityRadar.stop();
+    if (radarPanel) radarPanel.classList.remove('visible');
+    if (paiBar) paiBar.classList.remove('visible');
+  }
+});
+
+// SFX toggle
+if (btnSfx) {
+  btnSfx.classList.toggle('active', sfxEnabled);
+  btnSfx.addEventListener('click', () => {
+    sfxEnabled = !sfxEnabled;
+    detectionSfx.enabled = sfxEnabled;
+    btnSfx.classList.toggle('active', sfxEnabled);
+  });
+}
+
 // Mode selector with pro gate
 document.querySelectorAll('.mode-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1219,6 +1298,9 @@ async function init() {
 
   // Pre-render gear shop
   renderGearShop();
+
+  // Init sound effects (will use audio context when available)
+  detectionSfx.init(evpAudioEngine.audioContext || null);
 }
 
 if (document.getElementById('appWrapper')?.classList.contains('authenticated')) {

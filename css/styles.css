@@ -691,6 +691,53 @@ a.cta-pro.gumroad-button:hover {
 }
 .tool-btn.active { background: #e040fb; border-color: #e040fb; color: #fff; }
 .tool-btn:active { transform: scale(0.95); }
+.tool-btn-radar { border-color: #00e5ff; color: #00e5ff; }
+.tool-btn-radar.active { background: #00e5ff; border-color: #00e5ff; color: #0a0a14; }
+.tool-btn-sfx.active { background: #00e676; border-color: #00e676; color: #0a0a14; }
+
+/* Entity Radar Panel */
+.radar-panel {
+  display: none; margin-top: 12px; padding: 12px;
+  border-radius: 12px; background: #0a0a14; border: 1px solid #00e5ff33;
+}
+.radar-panel.visible { display: block; animation: panel-fade 0.3s ease-out; }
+.radar-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.radar-title { font-size: 0.75rem; font-weight: 700; color: #00e5ff; text-transform: uppercase; letter-spacing: 1px; }
+.radar-count { font-size: 0.7rem; color: #9e9ec0; }
+.radar-canvas-wrap { display: flex; justify-content: center; }
+#radarCanvas { border-radius: 50%; }
+
+/* Paranormal Activity Index */
+.pai-bar {
+  display: none; margin-top: 10px; padding: 10px 12px;
+  border-radius: 10px; background: #12122a; border: 1px solid #1e1e3a;
+  align-items: center; gap: 10px;
+}
+.pai-bar.visible { display: flex; }
+.pai-label {
+  font-size: 0.65rem; font-weight: 700; color: #9e9ec0;
+  text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
+}
+.pai-track {
+  flex: 1; height: 10px; border-radius: 5px; background: #0a0a14;
+  overflow: hidden; position: relative;
+}
+.pai-fill {
+  height: 100%; width: 0%; border-radius: 5px;
+  background: linear-gradient(90deg, #00e5ff, #00e676);
+  transition: width 0.5s ease, background 0.5s ease;
+}
+.pai-fill.mild { background: linear-gradient(90deg, #00e5ff, #00e676); }
+.pai-fill.active { background: linear-gradient(90deg, #00e676, #ffea00); }
+.pai-fill.high { background: linear-gradient(90deg, #ffea00, #ff9100); }
+.pai-fill.extreme { background: linear-gradient(90deg, #ff9100, #ff1744); box-shadow: 0 0 12px rgba(255, 23, 68, 0.5); }
+.pai-value {
+  min-width: 28px; text-align: right; font-size: 0.85rem;
+  font-weight: 800; color: #00e5ff; font-variant-numeric: tabular-nums;
+}
 
 /* Word Detection */
 .word-detect-panel { margin-top: 12px; padding: 12px; border-radius: 8px; background: #12122a; border: 1px solid #1e1e3a; display: none; }

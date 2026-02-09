@@ -59,7 +59,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="css/styles.css?v=8">
+  <link rel="stylesheet" href="css/styles.css?v=9">
   <script>
     if ('serviceWorker' in navigator) {
       // Register SW — required for PWA "Add to Home Screen" on Android
@@ -433,6 +433,28 @@
           <button class="tool-btn" id="btnGeiger">Geiger<span class="lock-icon" data-lock="tools"></span></button>
           <button class="tool-btn" id="btnDowsing">Dowsing Rods<span class="lock-icon" data-lock="tools"></span></button>
           <button class="tool-btn" id="btnWords">Word Detect<span class="lock-icon" data-lock="tools"></span></button>
+          <button class="tool-btn tool-btn-radar" id="btnRadar">Radar<span class="lock-icon" data-lock="tools"></span></button>
+          <button class="tool-btn tool-btn-sfx" id="btnSfx" title="Toggle sound effects">SFX</button>
+        </div>
+
+        <!-- Entity Radar Panel -->
+        <div class="radar-panel" id="radarPanel">
+          <div class="radar-header">
+            <span class="radar-title">Entity Radar</span>
+            <span class="radar-count" id="radarEntityCount">0 detections</span>
+          </div>
+          <div class="radar-canvas-wrap">
+            <canvas id="radarCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Paranormal Activity Index -->
+        <div class="pai-bar" id="paiBar">
+          <div class="pai-label">Paranormal Activity</div>
+          <div class="pai-track">
+            <div class="pai-fill" id="paiFill"></div>
+          </div>
+          <div class="pai-value" id="paiValue">0</div>
         </div>
 
         <!-- Duration Selector -->
@@ -845,20 +867,22 @@
        ═══════════════════════════════════════════════════════════════ -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://gumroad.com/js/gumroad.js" async></script>
-  <script src="js/pro-gate.js?v=8"></script>
-  <script src="js/evp-audio-engine.js?v=8"></script>
-  <script src="js/visual-anomaly-engine.js?v=8"></script>
-  <script src="js/emf-sensor-engine.js?v=8"></script>
-  <script src="js/spirit-box-engine.js?v=8"></script>
-  <script src="js/evp-classifier.js?v=8"></script>
-  <script src="js/session-recorder.js?v=8"></script>
-  <script src="js/evidence-report.js?v=8"></script>
-  <script src="js/session-vault.js?v=8"></script>
-  <script src="js/geiger-counter.js?v=8"></script>
-  <script src="js/dowsing-rods.js?v=8"></script>
-  <script src="js/word-detector.js?v=8"></script>
-  <script src="js/investigation-map.js?v=8"></script>
-  <script src="js/app.js?v=8"></script>
+  <script src="js/pro-gate.js?v=9"></script>
+  <script src="js/evp-audio-engine.js?v=9"></script>
+  <script src="js/visual-anomaly-engine.js?v=9"></script>
+  <script src="js/emf-sensor-engine.js?v=9"></script>
+  <script src="js/spirit-box-engine.js?v=9"></script>
+  <script src="js/evp-classifier.js?v=9"></script>
+  <script src="js/session-recorder.js?v=9"></script>
+  <script src="js/evidence-report.js?v=9"></script>
+  <script src="js/session-vault.js?v=9"></script>
+  <script src="js/geiger-counter.js?v=9"></script>
+  <script src="js/dowsing-rods.js?v=9"></script>
+  <script src="js/word-detector.js?v=9"></script>
+  <script src="js/investigation-map.js?v=9"></script>
+  <script src="js/entity-radar.js?v=9"></script>
+  <script src="js/detection-sfx.js?v=9"></script>
+  <script src="js/app.js?v=9"></script>
 
   <!-- ProGate instance + re-apply restrictions now that instance exists -->
   <script>
