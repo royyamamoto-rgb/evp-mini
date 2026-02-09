@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Button Test</title>
+<style>
+body { background: #0a0a14; color: #fff; font-family: system-ui; padding: 40px 20px; text-align: center; }
+button { display: block; width: 100%; padding: 18px; margin: 12px 0; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer; }
+.free { background: #12122a; color: #00e5ff; border: 2px solid #00e5ff; }
+.pro { background: linear-gradient(135deg, #7c4dff, #00e5ff); color: #fff; }
+#result { margin-top: 20px; padding: 16px; background: #1a3a2a; border-radius: 8px; color: #00e676; font-size: 1rem; display: none; }
+</style>
+</head>
+<body>
+<h1 style="color:#00e5ff">EVP-MINI Button Test</h1>
+<p style="color:#999">Tap the buttons below:</p>
+
+<button class="free" onclick="document.getElementById('result').style.display='block';document.getElementById('result').textContent='FREE button works! '+new Date().toLocaleTimeString()">Start Free Investigation</button>
+
+<button class="pro" onclick="window.open('https://lumina888.gumroad.com/l/pptpp','_blank');document.getElementById('result').style.display='block';document.getElementById('result').textContent='PRO button works! Opening Gumroad...'">Unlock Pro — $4.99</button>
+
+<div id="result"></div>
+
+<p style="color:#666;margin-top:30px;font-size:0.8rem">If buttons work here but not on the main page, it's a CSS overlay issue.</p>
+</body>
+</html>

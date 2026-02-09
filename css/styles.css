@@ -12,8 +12,8 @@ body { background: #0a0a14; color: #e0e0e0; font-family: system-ui, -apple-syste
    ═══════════════════════════════════════════════════════════════════ */
 .landing-page {
   position: fixed; inset: 0; z-index: 9999;
-  display: flex; align-items: center; justify-content: center;
-  background: #0a0a14; overflow-y: auto;
+  display: flex; align-items: flex-start; justify-content: center;
+  background: #0a0a14; overflow-y: auto; -webkit-overflow-scrolling: touch;
 }
 .landing-page.hidden { display: none; }
 
@@ -48,11 +48,11 @@ body { background: #0a0a14; color: #e0e0e0; font-family: system-ui, -apple-syste
 
 .landing-content {
   position: relative; z-index: 1; width: 100%; max-width: 500px;
-  padding: 40px 20px; text-align: center;
+  padding: 30px 20px 40px; text-align: center;
 }
 
 /* Hero */
-.landing-hero { margin-bottom: 32px; }
+.landing-hero { margin-bottom: 20px; }
 .landing-logo {
   font-size: 3rem; font-weight: 800; color: #00e5ff;
   letter-spacing: 4px; text-shadow: 0 0 30px rgba(0, 229, 255, 0.4);
