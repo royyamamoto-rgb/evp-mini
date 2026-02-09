@@ -1,15 +1,15 @@
-// EVP-MINI Service Worker — DISABLED for live updates
-// This service worker intentionally unregisters itself and clears all caches
-// to ensure users always get the latest code from Cloudflare Pages.
-
-self.addEventListener('install', () => {
+// SERVICE WORKER — DISABLED
+// Immediately unregisters itself and clears all caches.
+self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((names) => {
-      return Promise.all(names.map((name) => caches.delete(name)));
+    caches.keys().then((keys) =>
+      Promise.all(keys.map((k) => caches.delete(k)))
+    ).then(() => {
+      return self.registration.unregister();
     }).then(() => {
       return self.clients.claim();
     })
