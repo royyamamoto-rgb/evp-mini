@@ -226,8 +226,14 @@ function hideUpgradeModal() {
 
 // Stripe Checkout redirect
 async function startStripeCheckout() {
+  var controller = new AbortController();
+  var timeout = setTimeout(function() { controller.abort(); }, 15000);
   try {
-    const res = await fetch('/api/create-checkout', { method: 'POST' });
+    const res = await fetch('/api/create-checkout', {
+      method: 'POST',
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
     const data = await res.json();
     if (data.url) {
       window.location.href = data.url;
@@ -235,7 +241,10 @@ async function startStripeCheckout() {
       alert('Payment system temporarily unavailable. Please try again.');
     }
   } catch (e) {
-    alert('Could not connect to payment server. Check your connection.');
+    clearTimeout(timeout);
+    alert(e.name === 'AbortError'
+      ? 'Request timed out. Please try again.'
+      : 'Could not connect to payment server. Check your connection.');
   }
 }
 
@@ -253,11 +262,15 @@ async function handleStripeReturn() {
 
   if (sessionId) {
     try {
+      var verifyController = new AbortController();
+      var verifyTimeout = setTimeout(function() { verifyController.abort(); }, 15000);
       const res = await fetch('/api/verify-stripe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sessionId })
+        body: JSON.stringify({ session_id: sessionId }),
+        signal: verifyController.signal
       });
+      clearTimeout(verifyTimeout);
       const data = await res.json();
       if (data.success) {
         unlockPro(data.email);
@@ -273,15 +286,19 @@ async function handleStripeReturn() {
   }
 }
 
-// Verify manual license key
+// Verify manual license key (email or session ID)
 async function verifyLicenseKey(key) {
   const errorEl = document.getElementById('licenseError');
+  const controller = new AbortController();
+  const timeout = setTimeout(function() { controller.abort(); }, 15000);
   try {
-    const res = await fetch('/api/verify-stripe', {
+    const res = await fetch('/api/verify-license-key', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: key.trim() })
+      body: JSON.stringify({ license_key: key.trim() }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
     const data = await res.json();
     if (data.success) {
       unlockPro(data.email);
@@ -293,8 +310,11 @@ async function verifyLicenseKey(key) {
       }
     }
   } catch (e) {
+    clearTimeout(timeout);
     if (errorEl) {
-      errorEl.textContent = 'Could not verify. Check your connection.';
+      errorEl.textContent = e.name === 'AbortError'
+        ? 'Request timed out. Please try again.'
+        : 'Could not verify. Check your connection.';
       errorEl.style.display = 'block';
     }
   }

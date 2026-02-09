@@ -12,11 +12,20 @@
  * NOTE: Uses Stripe REST API directly via fetch(). No npm packages.
  */
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+const ALLOWED_ORIGINS = [
+  'https://evp-mini.pages.dev',
+  'http://localhost:8788',
+];
+
+function getCorsHeaders(request) {
+  const origin = request.headers.get('Origin') || '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+}
 
 /**
  * POST /api/create-checkout
@@ -26,9 +35,10 @@ const CORS_HEADERS = {
  * Response: { url: "https://checkout.stripe.com/c/pay/cs_..." }
  */
 export async function onRequestPost(context) {
+  const corsHeaders = getCorsHeaders(context.request);
   const headers = {
     'Content-Type': 'application/json',
-    ...CORS_HEADERS,
+    ...corsHeaders,
   };
 
   try {
@@ -134,9 +144,9 @@ export async function onRequestPost(context) {
 /**
  * OPTIONS /api/create-checkout — CORS preflight
  */
-export async function onRequestOptions() {
+export async function onRequestOptions(context) {
   return new Response(null, {
     status: 204,
-    headers: CORS_HEADERS,
+    headers: getCorsHeaders(context.request),
   });
 }
