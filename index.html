@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0a14">
+  <title>EVP-MINI | Paranormal Investigation</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css?v=1">
+  <script>
+    // Cache nuke — unregister old service workers and clear caches
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        registrations.forEach(function(reg) { reg.unregister(); });
+      });
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          names.forEach(function(name) { caches.delete(name); });
+        });
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Password Gate -->
+  <div class="password-gate" id="passwordGate">
+    <h1>EVP-MINI</h1>
+    <div class="subtitle">Paranormal Investigation Tool</div>
+    <input type="password" id="passwordInput" placeholder="Enter access code" autocomplete="off">
+    <button id="passwordSubmit">Enter</button>
+    <div class="error" id="passwordError"></div>
+  </div>
+
+  <!-- App Wrapper (hidden until authenticated) -->
+  <div class="app-wrapper" id="appWrapper">
+
+    <!-- Header -->
+    <div class="app-header">
+      <h1>EVP-MINI</h1>
+      <span class="mode-badge" id="modeBadge">EVP SCAN</span>
+      <div class="header-controls">
+        <button id="btnFlipCamera" title="Flip Camera">Flip</button>
+        <button id="btnRecord" title="Record">REC</button>
+      </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+
+      <!-- Left Panel: Live View -->
+      <div class="video-panel">
+
+        <!-- Video + Overlay -->
+        <div class="video-container">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="overlay"></canvas>
+          <div class="nir-badge" id="nirBadge">NIR 700-950nm</div>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+          <button class="mode-btn active" data-mode="evp">EVP Scan</button>
+          <button class="mode-btn" data-mode="spiritbox">Spirit Box</button>
+          <button class="mode-btn" data-mode="visual">Visual</button>
+          <button class="mode-btn" data-mode="fullspectrum">Full Spectrum</button>
+        </div>
+
+        <!-- Visual Mode Selector (shown in visual/fullspectrum modes) -->
+        <div class="visual-mode-selector" id="visualModeSelector" style="display:none;">
+          <button class="visual-btn active" data-visual="normal">Normal</button>
+          <button class="visual-btn" data-visual="night-vision">Night Vision</button>
+          <button class="visual-btn" data-visual="edge-detect">Edges</button>
+          <button class="visual-btn" data-visual="false-color">Thermal</button>
+          <button class="visual-btn" data-visual="motion-detect">Motion</button>
+          <button class="visual-btn" data-visual="motion-trails">Trails</button>
+          <button class="visual-btn" data-visual="full-spectrum">Spectrum</button>
+        </div>
+
+        <!-- Duration Selector -->
+        <div class="duration-selector">
+          <button class="duration-btn active" data-duration="continuous">Continuous</button>
+          <button class="duration-btn" data-duration="30">30s</button>
+          <button class="duration-btn" data-duration="60">60s</button>
+          <button class="duration-btn" data-duration="120">2 min</button>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-row">
+          <button class="btn-start" id="btnStart">Start Investigation</button>
+          <button class="btn-stop" id="btnStop">Stop</button>
+        </div>
+
+        <!-- Status -->
+        <div class="status-bar" id="statusBar">Ready — Select mode and start investigation</div>
+
+        <!-- Timer -->
+        <div class="timer-display" id="timerDisplay">0:00</div>
+
+        <!-- Spectrogram -->
+        <div class="spectrogram-section" id="spectrogramSection">
+          <div class="section-label">Audio Spectrogram</div>
+          <canvas class="spectrogram-canvas" id="spectrogramCanvas"></canvas>
+        </div>
+
+        <!-- Audio Panel -->
+        <div class="audio-panel" id="audioPanel">
+          <div class="panel-title">Audio Analysis</div>
+          <div class="meter-row">
+            <span class="meter-label">Level</span>
+            <div class="meter-bar"><div class="meter-fill" id="audioLevelFill"></div></div>
+            <span class="meter-value" id="audioLevelValue">0%</span>
+          </div>
+          <div class="reading-grid">
+            <div class="reading-item">
+              <span class="rl">Peak Freq</span>
+              <span class="rv" id="peakFreqValue">— Hz</span>
+            </div>
+            <div class="reading-item">
+              <span class="rl">Noise Floor</span>
+              <span class="rv" id="noiseFloorValue">— dB</span>
+            </div>
+            <div class="reading-item">
+              <span class="rl">Spectral Centroid</span>
+              <span class="rv" id="centroidValue">— Hz</span>
+            </div>
+            <div class="reading-item">
+              <span class="rl">HNR</span>
+              <span class="rv" id="hnrValue">— dB</span>
+            </div>
+            <div class="reading-item">
+              <span class="rl">Anomaly</span>
+              <span class="rv" id="anomalyValue">None</span>
+            </div>
+            <div class="reading-item">
+              <span class="rl">Formant Match</span>
+              <span class="rv" id="formantValue">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- EVP Alert -->
+        <div class="evp-alert" id="evpAlert">
+          <div class="alert-class" id="evpAlertClass">EVP DETECTED</div>
+          <div class="alert-detail" id="evpAlertDetail">Analyzing...</div>
+        </div>
+
+        <!-- Sensor Panel -->
+        <div class="sensor-panel" id="sensorPanel">
+          <div class="panel-title">Environmental Sensors</div>
+          <div class="sensor-gauge">
+            <span class="gauge-icon">&#x26A1;</span>
+            <div class="gauge-info">
+              <div class="gauge-label">EMF (Magnetometer)</div>
+              <div class="gauge-value" id="emfValue">Initializing...</div>
+            </div>
+            <div class="gauge-bar"><div class="gauge-bar-fill" id="emfBar"></div></div>
+          </div>
+          <div class="sensor-gauge">
+            <span class="gauge-icon">&#x301C;</span>
+            <div class="gauge-info">
+              <div class="gauge-label">Vibration (Accelerometer)</div>
+              <div class="gauge-value" id="vibrationValue">Initializing...</div>
+            </div>
+            <div class="gauge-bar"><div class="gauge-bar-fill" id="vibrationBar"></div></div>
+          </div>
+          <div class="sensor-gauge">
+            <span class="gauge-icon">&#x2601;</span>
+            <div class="gauge-info">
+              <div class="gauge-label">Pressure (Barometer)</div>
+              <div class="gauge-value unavailable" id="pressureValue">Checking...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spirit Box Panel -->
+        <div class="spirit-box-panel" id="spiritBoxPanel">
+          <div class="panel-title">Spirit Box</div>
+          <div class="sweep-display">
+            <div class="sweep-freq" id="sweepFreq">87.5</div>
+            <div class="sweep-freq-label">MHz (simulated FM sweep)</div>
+          </div>
+          <div class="sweep-controls">
+            <label>Speed:</label>
+            <input type="range" id="sweepSpeed" min="30" max="350" value="150" step="10">
+            <span class="speed-val" id="sweepSpeedVal">150ms</span>
+          </div>
+          <div class="reading-grid" style="margin-top:8px;">
+            <div class="reading-item">
+              <span class="rl">Fragments</span>
+              <span class="rv" id="fragmentCount">0</span>
+            </div>
+            <div class="reading-item">
+              <span class="rl">Mode</span>
+              <span class="rv" id="sweepMode">Sweep</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Info Panel -->
+        <div class="visual-info-panel" id="visualInfoPanel">
+          <div class="panel-title">Visual Analysis</div>
+          <div class="reading-grid">
+            <div class="reading-item">
+              <span class="rl">Filter</span>
+              <span class="rv" id="currentFilter">Normal</span>
+            </div>
+            <div class="reading-item">
+              <span class="rl">Motion Level</span>
+              <span class="rv" id="motionLevel">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Indicators -->
+        <div class="live-indicators" id="liveIndicators"></div>
+
+        <!-- Playback Controls -->
+        <div class="playback-section" id="playbackSection">
+          <div class="panel-title">Audio Playback</div>
+          <div class="playback-controls">
+            <button id="btnPlayForward">Play Forward</button>
+            <button id="btnPlayReverse">Play Reverse</button>
+            <button id="btnStopPlayback">Stop</button>
+            <button id="btnDownload">Download</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Panel: Evidence Report -->
+      <div class="results-panel" id="resultsPanel">
+        <div class="report-header">
+          <h2>Investigation Report</h2>
+          <div class="report-subtitle">EVP-MINI Evidence Analysis</div>
+        </div>
+
+        <div id="reportContent">
+          <!-- Populated by evidence-report.js -->
+        </div>
+
+        <button class="detail-toggle" id="detailToggle">Show Technical Detail</button>
+        <div class="technical-detail" id="technicalDetail">
+          <!-- Populated by evidence-report.js -->
+        </div>
+
+        <div class="disclaimer">
+          This app uses real device sensors and audio analysis but cannot verify paranormal phenomena.
+          Audio anomalies may be caused by environmental noise, electronic interference, or auditory pareidolia
+          (Nees & Phillips, 2015). Results should be interpreted with scientific skepticism.
+        </div>
+
+        <div class="report-actions">
+          <button id="btnNewScan">New Investigation</button>
+          <button class="btn-export" id="btnExport">Export Evidence</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/evp-audio-engine.js?v=1"></script>
+  <script src="js/visual-anomaly-engine.js?v=1"></script>
+  <script src="js/emf-sensor-engine.js?v=1"></script>
+  <script src="js/spirit-box-engine.js?v=1"></script>
+  <script src="js/evp-classifier.js?v=1"></script>
+  <script src="js/session-recorder.js?v=1"></script>
+  <script src="js/evidence-report.js?v=1"></script>
+  <script src="js/app.js?v=1"></script>
+
+  <!-- Password Gate Logic -->
+  <script>
+    (function() {
+      const SITE_PASSWORD = 'evpmini2024';
+      const gate = document.getElementById('passwordGate');
+      const wrapper = document.getElementById('appWrapper');
+      const input = document.getElementById('passwordInput');
+      const submit = document.getElementById('passwordSubmit');
+      const error = document.getElementById('passwordError');
+
+      if (sessionStorage.getItem('evpAuth') === 'true') {
+        gate.classList.add('hidden');
+        wrapper.classList.add('authenticated');
+      }
+
+      function tryAuth() {
+        if (input.value === SITE_PASSWORD) {
+          sessionStorage.setItem('evpAuth', 'true');
+          gate.classList.add('hidden');
+          wrapper.classList.add('authenticated');
+        } else {
+          error.textContent = 'Invalid access code';
+          input.value = '';
+          input.focus();
+        }
+      }
+
+      submit.addEventListener('click', tryAuth);
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') tryAuth();
+      });
+    })();
+  </script>
+
+</body>
+</html>

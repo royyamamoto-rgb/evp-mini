@@ -1,0 +1,11 @@
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(self), magnetometer=(self), accelerometer=(self), gyroscope=(self), geolocation=()
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache

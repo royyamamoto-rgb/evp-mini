@@ -1,0 +1,24 @@
+{
+  "name": "EVP-MINI",
+  "short_name": "EVP-MINI",
+  "description": "Paranormal Investigation & EVP Capture Tool — Electronic Voice Phenomena Detection",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a14",
+  "theme_color": "#0a0a14",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
