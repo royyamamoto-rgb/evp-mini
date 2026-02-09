@@ -75,7 +75,7 @@
 </head>
 <body>
 
-  <!-- Landing page button logic — runs early, zero dependencies -->
+  <!-- CORE button logic — no async, no dependencies, maximum compatibility -->
   <script>
     function evpEnterApp() {
       document.getElementById('landingPage').style.display = 'none';
@@ -88,31 +88,6 @@
     function evpBuyPro() {
       window.open('https://lumina888.gumroad.com/l/pptpp', '_blank');
     }
-    async function evpActivateCode() {
-      var input = document.getElementById('proCodeInput');
-      var error = document.getElementById('proCodeError');
-      var btn = document.getElementById('proCodeSubmit');
-      var code = (input.value || '').trim();
-      if (!code) { error.textContent = 'Please enter a license key.'; return; }
-      btn.textContent = 'Verifying...'; btn.disabled = true; error.textContent = '';
-      try {
-        if (window.proGateInstance) {
-          var result = await window.proGateInstance.activate(code);
-          if (result.success) { evpEnterApp(); return; }
-          error.textContent = result.error;
-        } else {
-          // Fallback: check offline codes directly
-          var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','evpmini2024'];
-          if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
-            try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,activatedAt:Date.now()})); } catch(e){}
-            evpEnterApp(); return;
-          }
-          error.textContent = 'Invalid license key.';
-        }
-      } catch(e) { error.textContent = 'Verification failed. Try again.'; }
-      btn.textContent = 'Activate'; btn.disabled = false;
-      input.value = ''; input.focus();
-    }
     // Auto-enter if returning user
     if (sessionStorage.getItem('evpFreeAccess') === '1') {
       document.addEventListener('DOMContentLoaded', evpEnterApp);
@@ -123,6 +98,46 @@
         document.addEventListener('DOMContentLoaded', evpEnterApp);
       }
     } catch(e) {}
+  </script>
+  <!-- License key activation — separate block so async doesn't break buttons -->
+  <script>
+    function evpActivateCode() {
+      var input = document.getElementById('proCodeInput');
+      var error = document.getElementById('proCodeError');
+      var btn = document.getElementById('proCodeSubmit');
+      var code = (input.value || '').trim();
+      if (!code) { error.textContent = 'Please enter a license key.'; return; }
+      btn.textContent = 'Verifying...'; btn.disabled = true; error.textContent = '';
+      // Check offline codes first
+      var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','evpmini2024'];
+      if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
+        try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,activatedAt:Date.now()})); } catch(e){}
+        evpEnterApp(); return;
+      }
+      // Try online verification
+      if (window.proGateInstance) {
+        window.proGateInstance.activate(code).then(function(result) {
+          if (result.success) { evpEnterApp(); return; }
+          error.textContent = result.error;
+          btn.textContent = 'Activate'; btn.disabled = false;
+          input.value = ''; input.focus();
+        }).catch(function() {
+          error.textContent = 'Verification failed. Try again.';
+          btn.textContent = 'Activate'; btn.disabled = false;
+        });
+      } else {
+        error.textContent = 'Invalid license key. Check your purchase email.';
+        btn.textContent = 'Activate'; btn.disabled = false;
+        input.value = ''; input.focus();
+      }
+    }
+    // Enter key on license input
+    document.addEventListener('DOMContentLoaded', function() {
+      var inp = document.getElementById('proCodeInput');
+      if (inp) inp.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') evpActivateCode();
+      });
+    });
   </script>
 
   <!-- ═══════════════════════════════════════════════════════════════
@@ -139,25 +154,24 @@
     <div class="landing-content">
       <!-- Hero -->
       <div class="landing-hero">
-        <img src="assets/icon-192.png" alt="EVP-MINI" class="landing-icon" width="80" height="80">
+        <img src="assets/icon-192.png" alt="EVP-MINI" class="landing-icon" width="72" height="72">
         <div class="landing-logo">EVP-MINI</div>
-        <div class="landing-tagline">Turn Your Phone Into a Professional<br>Paranormal Investigation Tool</div>
-        <div class="landing-version">v2.0</div>
+        <div class="landing-tagline">Professional Paranormal Investigation Tool</div>
         <div class="landing-stats">
-          <span class="stat-item">4.8 &#9733; Rating</span>
+          <span class="stat-item">4.8 &#9733;</span>
           <span class="stat-dot">&#183;</span>
-          <span class="stat-item">2.4K+ Downloads</span>
+          <span class="stat-item">2.4K+ Users</span>
           <span class="stat-dot">&#183;</span>
           <span class="stat-item">Free to Start</span>
         </div>
       </div>
 
-      <!-- CTA Buttons — visible immediately on mobile -->
+      <!-- CTA Buttons -->
       <div class="landing-ctas">
         <button class="cta-btn cta-free" id="ctaFree" onclick="evpStartFree()">Start Free Investigation</button>
         <button class="cta-btn cta-pro" id="ctaPro" onclick="evpBuyPro()">
           Unlock Pro &mdash; $4.99
-          <span class="cta-sub">All features. Lifetime access.</span>
+          <span class="cta-sub">All features. Lifetime access. One-time purchase.</span>
         </button>
       </div>
 
@@ -166,7 +180,7 @@
         <div class="feature-card">
           <div class="feature-icon">&#x1F3A4;</div>
           <div class="feature-name">EVP Capture</div>
-          <div class="feature-desc">Real-time audio analysis with AI-powered A/B/C classification</div>
+          <div class="feature-desc">AI-powered A/B/C classification of electronic voice phenomena</div>
         </div>
         <div class="feature-card">
           <div class="feature-icon">&#x1F4E1;</div>
@@ -176,64 +190,12 @@
         <div class="feature-card">
           <div class="feature-icon">&#x1F441;</div>
           <div class="feature-name">Visual Scan</div>
-          <div class="feature-desc">7 camera filters: night vision, thermal, edge detect, motion trails</div>
+          <div class="feature-desc">Night vision, thermal, edge detect, motion trails &amp; more</div>
         </div>
         <div class="feature-card">
           <div class="feature-icon">&#x26A1;</div>
           <div class="feature-name">EMF &amp; Sensors</div>
-          <div class="feature-desc">Magnetometer, accelerometer, gyroscope &amp; infrasound detection</div>
-        </div>
-      </div>
-
-      <!-- Pro Code Entry -->
-      <div class="pro-code-section">
-        <div class="pro-code-label">Have a license key from your purchase?</div>
-        <div class="pro-code-row">
-          <input type="text" id="proCodeInput" placeholder="Enter license key" autocomplete="off">
-          <button id="proCodeSubmit" onclick="evpActivateCode()">Activate</button>
-        </div>
-        <div class="pro-code-error" id="proCodeError"></div>
-      </div>
-
-      <!-- How It Works -->
-      <div class="how-it-works">
-        <div class="hiw-title">How It Works</div>
-        <div class="hiw-steps">
-          <div class="hiw-step">
-            <div class="hiw-num">1</div>
-            <div class="hiw-text">Open app &amp; grant camera + mic access</div>
-          </div>
-          <div class="hiw-step">
-            <div class="hiw-num">2</div>
-            <div class="hiw-text">Choose scan mode &amp; start investigation</div>
-          </div>
-          <div class="hiw-step">
-            <div class="hiw-num">3</div>
-            <div class="hiw-text">AI analyzes audio, video &amp; sensors in real-time</div>
-          </div>
-          <div class="hiw-step">
-            <div class="hiw-num">4</div>
-            <div class="hiw-text">Review evidence report &amp; share findings</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Reviews -->
-      <div class="reviews-section">
-        <div class="review">
-          <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <div class="review-text">&ldquo;Best ghost hunting app I&rsquo;ve used. The EVP classification actually picks up real anomalies. Got a Class A hit at Waverly Hills.&rdquo;</div>
-          <div class="review-author">&mdash; Mike R., Paranormal Investigator</div>
-        </div>
-        <div class="review">
-          <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <div class="review-text">&ldquo;The thermal vision and motion trails are incredible. Way better than apps that cost 10x more. Love the spirit box too.&rdquo;</div>
-          <div class="review-author">&mdash; Sarah K., Ghost Tour Guide</div>
-        </div>
-        <div class="review">
-          <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
-          <div class="review-text">&ldquo;Used this on our investigation at the Stanley Hotel. The word detection feature is wild — picked up &lsquo;hello&rsquo; and &lsquo;leave&rsquo; multiple times.&rdquo;</div>
-          <div class="review-author">&mdash; Jason T., Amateur Ghost Hunter</div>
+          <div class="feature-desc">Real magnetometer, accelerometer, gyroscope &amp; infrasound</div>
         </div>
       </div>
 
@@ -246,6 +208,7 @@
             <li class="yes">EVP Scan mode</li>
             <li class="yes">30-second sessions</li>
             <li class="yes">Basic audio analysis</li>
+            <li class="yes">Gear shop</li>
             <li class="no">Spirit Box</li>
             <li class="no">Visual filters</li>
             <li class="no">Full Spectrum</li>
@@ -267,6 +230,70 @@
             <li class="yes">Geiger, Dowsing, Words</li>
             <li class="yes">History, map &amp; export</li>
           </ul>
+        </div>
+      </div>
+
+      <!-- Already Purchased — License Key Entry -->
+      <div class="pro-code-section">
+        <div class="pro-code-title">Already purchased Pro?</div>
+        <div class="pro-code-label">Enter the license key from your Gumroad confirmation email:</div>
+        <div class="pro-code-row">
+          <input type="text" id="proCodeInput" placeholder="Enter license key" autocomplete="off">
+          <button id="proCodeSubmit" onclick="evpActivateCode()">Activate</button>
+        </div>
+        <div class="pro-code-error" id="proCodeError"></div>
+      </div>
+
+      <!-- How To Get Pro -->
+      <div class="how-it-works">
+        <div class="hiw-title">How To Unlock Pro</div>
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="hiw-num">1</div>
+            <div class="hiw-text">Tap &ldquo;Unlock Pro&rdquo; above &amp; complete purchase on Gumroad</div>
+          </div>
+          <div class="hiw-step">
+            <div class="hiw-num">2</div>
+            <div class="hiw-text">Check your email for the license key from Gumroad</div>
+          </div>
+          <div class="hiw-step">
+            <div class="hiw-num">3</div>
+            <div class="hiw-text">Enter the license key above to activate Pro features</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add to Home Screen -->
+      <div class="how-it-works">
+        <div class="hiw-title">Add to Home Screen</div>
+        <div class="hiw-steps">
+          <div class="hiw-step">
+            <div class="hiw-num">&#xF8FF;</div>
+            <div class="hiw-text"><b>iPhone:</b> Tap the Share button (&#x2B06;) in Safari, then &ldquo;Add to Home Screen&rdquo;</div>
+          </div>
+          <div class="hiw-step">
+            <div class="hiw-num">&#x25B6;</div>
+            <div class="hiw-text"><b>Android:</b> Tap the menu (&#x22EE;) in Chrome, then &ldquo;Add to Home Screen&rdquo; or &ldquo;Install App&rdquo;</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reviews -->
+      <div class="reviews-section">
+        <div class="review">
+          <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <div class="review-text">&ldquo;Best ghost hunting app I&rsquo;ve used. Got a Class A EVP hit at Waverly Hills.&rdquo;</div>
+          <div class="review-author">&mdash; Mike R., Paranormal Investigator</div>
+        </div>
+        <div class="review">
+          <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <div class="review-text">&ldquo;Thermal vision and motion trails are incredible. Way better than apps that cost 10x more.&rdquo;</div>
+          <div class="review-author">&mdash; Sarah K., Ghost Tour Guide</div>
+        </div>
+        <div class="review">
+          <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</div>
+          <div class="review-text">&ldquo;Word detection picked up &lsquo;hello&rsquo; and &lsquo;leave&rsquo; at the Stanley Hotel. Wild.&rdquo;</div>
+          <div class="review-author">&mdash; Jason T., Ghost Hunter</div>
         </div>
       </div>
 
@@ -646,67 +673,12 @@
   <script src="js/investigation-map.js?v=7"></script>
   <script src="js/app.js?v=7"></script>
 
-  <!-- Landing Page Logic -->
+  <!-- ProGate instance — no async, no duplicate handlers -->
   <script>
-    (function() {
-      try {
-      var proGate = new ProGate();
-      window.proGateInstance = proGate;
-
-      var landing = document.getElementById('landingPage');
-      var wrapper = document.getElementById('appWrapper');
-
-      // Check if already authenticated
-      if (proGate.isPro || sessionStorage.getItem('evpFreeAccess') === '1') {
-        landing.classList.add('hidden');
-        wrapper.classList.add('authenticated');
-      }
-
-      function enterApp() {
-        landing.classList.add('hidden');
-        wrapper.classList.add('authenticated');
-      }
-
-      // Start Free
-      document.getElementById('ctaFree').addEventListener('click', function() {
-        sessionStorage.setItem('evpFreeAccess', '1');
-        enterApp();
-      });
-
-      // Buy Pro — open Gumroad checkout
-      document.getElementById('ctaPro').addEventListener('click', function() {
-        window.open('https://lumina888.gumroad.com/l/pptpp', '_blank');
-      });
-
-      // Activate Pro Code (async — supports online Gumroad verification)
-      document.getElementById('proCodeSubmit').addEventListener('click', async function() {
-        var input = document.getElementById('proCodeInput');
-        var error = document.getElementById('proCodeError');
-        var btn = document.getElementById('proCodeSubmit');
-        btn.textContent = 'Verifying...';
-        btn.disabled = true;
-        error.textContent = '';
-        try {
-          var result = await proGate.activate(input.value);
-          if (result.success) {
-            enterApp();
-          } else {
-            error.textContent = result.error;
-            input.value = '';
-            input.focus();
-          }
-        } catch (e) {
-          error.textContent = 'Verification failed. Try again.';
-        }
-        btn.textContent = 'Activate';
-        btn.disabled = false;
-      });
-
-      document.getElementById('proCodeInput').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') document.getElementById('proCodeSubmit').click();
-      });
-      } catch (err) { console.warn('Landing page init error:', err); }
-    })();
+    try {
+      window.proGateInstance = new ProGate();
+      if (window.proGateInstance.isPro) { evpEnterApp(); }
+    } catch (e) { console.warn('ProGate init:', e); }
   </script>
 
 </body>
