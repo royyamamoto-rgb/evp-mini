@@ -19,7 +19,7 @@ const CONFIG = {
   gumroadUrl: 'https://evpmini.gumroad.com/l/pro',
 
   // Price display (update if you change pricing)
-  proPrice: '$9.99',
+  proPrice: '$4.99',
 };
 
 // ─── DOM Elements ───────────────────────────────────────────────────────────────
