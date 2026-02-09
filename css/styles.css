@@ -31,19 +31,19 @@ body { background: #0a0a14; color: #e0e0e0; font-family: system-ui, -apple-syste
 
 /* ─── Header ─────────────────────────────────────────────── */
 .app-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 20px; background: #12122a; border-bottom: 1px solid #1e1e3a;
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  padding: 10px 16px; background: #12122a; border-bottom: 1px solid #1e1e3a;
 }
-.app-header h1 { font-size: 1.3rem; color: #00e5ff; letter-spacing: 1px; }
+.app-header h1 { font-size: 1.3rem; color: #00e5ff; letter-spacing: 1px; margin-right: auto; }
 .app-header .mode-badge {
   padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 600;
   text-transform: uppercase; letter-spacing: 1px; background: #7c4dff; color: #fff;
 }
-.header-controls { display: flex; gap: 8px; }
+.header-controls { display: flex; gap: 6px; }
 .header-controls button {
-  padding: 6px 12px; border: 1px solid #2a2a4a; border-radius: 6px;
-  background: #1a1a3a; color: #e0e0e0; font-size: 0.8rem; cursor: pointer;
-  transition: all 0.2s;
+  padding: 5px 10px; border: 1px solid #2a2a4a; border-radius: 6px;
+  background: #1a1a3a; color: #e0e0e0; font-size: 0.75rem; cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 .header-controls button:hover { border-color: #00e5ff; color: #00e5ff; }
 .header-controls button.active { background: #7c4dff; border-color: #7c4dff; color: #fff; }
@@ -373,8 +373,12 @@ body { background: #0a0a14; color: #e0e0e0; font-family: system-ui, -apple-syste
 }
 
 @media (max-width: 600px) {
-  .app-header { padding: 10px 12px; }
-  .app-header h1 { font-size: 1.1rem; }
+  .app-header { padding: 8px 10px; gap: 6px; }
+  .app-header h1 { font-size: 1rem; }
+  .app-header .mode-badge { padding: 3px 8px; font-size: 0.6rem; }
+  .app-header .evp-count { font-size: 0.6rem; padding: 2px 8px; }
+  .header-controls { gap: 4px; }
+  .header-controls button { padding: 4px 7px; font-size: 0.65rem; }
   .reading-grid { grid-template-columns: 1fr; }
   .mode-selector { gap: 4px; }
   .mode-btn, .duration-btn, .visual-btn { min-width: 60px; font-size: 0.65rem; padding: 6px 2px; }
@@ -425,19 +429,20 @@ body { background: #0a0a14; color: #e0e0e0; font-family: system-ui, -apple-syste
 
 /* ─── Scan Line Animation ───────────────────────────────────── */
 .scan-line {
-  position: absolute; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, #00e5ff, transparent);
-  box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
-  pointer-events: none; opacity: 0; z-index: 2;
-  top: 0;
+  position: absolute; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent 0%, #00e5ff 20%, #00e5ff 80%, transparent 100%);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.8), 0 0 24px rgba(0, 229, 255, 0.4);
+  pointer-events: none; opacity: 0; z-index: 10;
+  top: 0; will-change: transform;
 }
 .scan-line.active {
   opacity: 1;
-  animation: scan-sweep 3s linear infinite;
+  animation: scan-sweep 2.5s ease-in-out infinite;
 }
 @keyframes scan-sweep {
-  0% { top: 0; }
-  100% { top: 100%; }
+  0% { transform: translateY(0); }
+  50% { transform: translateY(calc(var(--scan-h, 300px) - 3px)); }
+  100% { transform: translateY(0); }
 }
 
 /* ─── Screen Flash on EVP Detection ─────────────────────────── */

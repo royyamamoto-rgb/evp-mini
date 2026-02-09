@@ -399,8 +399,11 @@ async function startScan() {
     timerDisplay.classList.add('visible');
   }
 
-  // Scan line
-  if (scanLine) scanLine.classList.add('active');
+  // Scan line — set height variable for animation
+  if (scanLine && videoContainer) {
+    videoContainer.style.setProperty('--scan-h', videoContainer.offsetHeight + 'px');
+    scanLine.classList.add('active');
+  }
 
   // Start timer interval
   scanTimerInterval = setInterval(() => {
