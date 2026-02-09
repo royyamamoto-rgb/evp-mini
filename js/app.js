@@ -38,6 +38,7 @@ const btnScreenshot = document.getElementById('btnScreenshot');
 const btnNewScan = document.getElementById('btnNewScan');
 const btnExport = document.getElementById('btnExport');
 const btnShare = document.getElementById('btnShare');
+const btnShareApp = document.getElementById('btnShareApp');
 const btnPlayForward = document.getElementById('btnPlayForward');
 const btnPlayReverse = document.getElementById('btnPlayReverse');
 const btnStopPlayback = document.getElementById('btnStopPlayback');
@@ -953,6 +954,26 @@ if (btnStop) btnStop.addEventListener('click', stopScan);
 if (btnTorch) btnTorch.addEventListener('click', toggleTorch);
 if (btnScreenshot) btnScreenshot.addEventListener('click', takeScreenshot);
 if (btnShare) btnShare.addEventListener('click', shareEvidence);
+
+// Share App button (always visible in header)
+if (btnShareApp) btnShareApp.addEventListener('click', async () => {
+  const shareData = {
+    title: 'EVP-MINI — Paranormal Investigation App',
+    text: 'Turn your phone into a ghost hunting tool. EVP capture, spirit box, thermal vision, EMF detection. Free to try.',
+    url: 'https://evp-mini.pages.dev'
+  };
+  if (navigator.share) {
+    try { await navigator.share(shareData); } catch (e) { /* cancelled */ }
+  } else {
+    try {
+      await navigator.clipboard.writeText(shareData.url);
+      setStatus('Link copied to clipboard!', 'complete');
+      setTimeout(() => setStatus('', 'ready'), 2000);
+    } catch (e) {
+      setStatus('Share not available', '');
+    }
+  }
+});
 
 // Overlay close buttons
 if (btnCloseHistory) btnCloseHistory.addEventListener('click', () => { closeAllOverlays(); setActiveNav('investigate'); });
