@@ -16,7 +16,7 @@ const CONFIG = {
   // 1. Create account: https://gumroad.com
   // 2. Create product "EVP-MINI Pro" at $9.99, enable license keys
   // 3. Replace URL below with your product URL
-  gumroadUrl: 'https://evpmini.gumroad.com/l/pro',
+  gumroadUrl: 'https://lumina888.gumroad.com/l/pptpp',
 
   // Price display (update if you change pricing)
   proPrice: '$4.99',
