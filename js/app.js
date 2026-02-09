@@ -147,52 +147,164 @@ function formatTimeMs(ms) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  PASSWORD GATE
+//  PRO LICENSE & AUTH
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const AUTH_KEY      = 'evpmini_auth';
-const AUTH_PASSWORD = 'evpmini2024';
+const PRO_KEY = 'evpmini_pro';
+const PRO_EMAIL_KEY = 'evpmini_email';
 
-function checkAuth() {
+function isProUser() {
   try {
-    return sessionStorage.getItem(AUTH_KEY) === 'true';
+    return localStorage.getItem(PRO_KEY) === 'true';
   } catch (e) {
     return false;
   }
 }
 
-function authenticate() {
-  if (!sitePassword) return;
-  const entered = sitePassword.value.trim();
-  if (entered === AUTH_PASSWORD) {
-    try { sessionStorage.setItem(AUTH_KEY, 'true'); } catch (e) { /* ignore */ }
-    showApp();
-  } else {
-    if (passwordError) {
-      passwordError.style.display = 'block';
+function unlockPro(email) {
+  try {
+    localStorage.setItem(PRO_KEY, 'true');
+    if (email) localStorage.setItem(PRO_EMAIL_KEY, email);
+  } catch (e) {}
+  applyProStatus();
+}
+
+function applyProStatus() {
+  const isPro = isProUser();
+
+  // Update mode buttons — lock pro-only modes if not pro
+  const proModes = ['spiritbox', 'visual', 'fullspectrum'];
+  const modeBtns = modeSelector ? modeSelector.querySelectorAll('[data-mode]') : [];
+  modeBtns.forEach(function(btn) {
+    const mode = btn.getAttribute('data-mode');
+    if (proModes.includes(mode)) {
+      if (isPro) {
+        btn.classList.remove('locked');
+        btn.disabled = false;
+      } else {
+        btn.classList.add('locked');
+        // Don't disable — let click handler show upgrade modal
+      }
     }
-    sitePassword.value = '';
-    sitePassword.focus();
+  });
+
+  // Update recording buttons
+  if (!isPro) {
+    if (btnRecord) btnRecord.classList.add('locked');
+    if (btnReverse) btnReverse.classList.add('locked');
+    if (btnExport) btnExport.classList.add('locked');
+    if (btnExportReport) btnExportReport.classList.add('locked');
+  } else {
+    if (btnRecord) btnRecord.classList.remove('locked');
+    if (btnReverse) btnReverse.classList.remove('locked');
+    if (btnExport) btnExport.classList.remove('locked');
+    if (btnExportReport) btnExportReport.classList.remove('locked');
+  }
+
+  // Update mode badge
+  if (modeBadge) {
+    modeBadge.textContent = isPro ? 'PRO' : 'FREE';
+    modeBadge.className = 'mode-badge ' + (isPro ? 'mode-badge-pro' : 'mode-badge-free');
+    modeBadge.style.display = 'inline-block';
+  }
+}
+
+// Show upgrade modal
+function showUpgradeModal(featureName) {
+  const modal = document.getElementById('upgradeModal');
+  const msg = document.getElementById('upgradeMessage');
+  if (modal) {
+    if (msg) msg.textContent = (featureName || 'This feature') + ' requires EVP-MINI Pro.';
+    modal.style.display = 'flex';
+  }
+}
+
+function hideUpgradeModal() {
+  const modal = document.getElementById('upgradeModal');
+  if (modal) modal.style.display = 'none';
+}
+
+// Stripe Checkout redirect
+async function startStripeCheckout() {
+  try {
+    const res = await fetch('/api/create-checkout', { method: 'POST' });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert('Payment system temporarily unavailable. Please try again.');
+    }
+  } catch (e) {
+    alert('Could not connect to payment server. Check your connection.');
+  }
+}
+
+// Handle Stripe return
+async function handleStripeReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id');
+  const canceled = params.get('canceled');
+
+  if (canceled) {
+    // Clean up URL
+    window.history.replaceState({}, '', window.location.pathname);
+    return;
+  }
+
+  if (sessionId) {
+    try {
+      const res = await fetch('/api/verify-stripe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        unlockPro(data.email);
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+        // Show app directly
+        showApp();
+        return;
+      }
+    } catch (e) {}
+    // Clean URL even on failure
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+// Verify manual license key
+async function verifyLicenseKey(key) {
+  const errorEl = document.getElementById('licenseError');
+  try {
+    const res = await fetch('/api/verify-stripe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: key.trim() })
+    });
+    const data = await res.json();
+    if (data.success) {
+      unlockPro(data.email);
+      showApp();
+    } else {
+      if (errorEl) {
+        errorEl.textContent = data.error || 'Invalid key. Check your purchase email.';
+        errorEl.style.display = 'block';
+      }
+    }
+  } catch (e) {
+    if (errorEl) {
+      errorEl.textContent = 'Could not verify. Check your connection.';
+      errorEl.style.display = 'block';
+    }
   }
 }
 
 function showApp() {
-  if (passwordGate) passwordGate.style.display = 'none';
+  const landing = document.getElementById('landingPage');
+  if (landing) landing.style.display = 'none';
   if (appWrapper) appWrapper.style.display = 'block';
-}
-
-function hideApp() {
-  if (passwordGate) passwordGate.style.display = '';
-  if (appWrapper) appWrapper.style.display = 'none';
-}
-
-if (passwordSubmit) {
-  passwordSubmit.addEventListener('click', authenticate);
-}
-if (sitePassword) {
-  sitePassword.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') authenticate();
-  });
+  applyProStatus();
 }
 
 
@@ -340,6 +452,14 @@ if (modeSelector) {
     btn.addEventListener('click', function() {
       const mode = btn.getAttribute('data-mode');
       if (!mode) return;
+
+      // Pro gate check
+      const proModes = ['spiritbox', 'visual', 'fullspectrum'];
+      if (proModes.includes(mode) && !isProUser()) {
+        const names = { spiritbox: 'Spirit Box', visual: 'Visual Scan', fullspectrum: 'Full Spectrum' };
+        showUpgradeModal(names[mode] || 'This mode');
+        return;
+      }
 
       // Update active button state
       modeBtns.forEach(function(b) { b.classList.remove('active'); });
@@ -1289,6 +1409,7 @@ document.querySelectorAll('.report-section-header').forEach(function(header) {
 
 if (btnExportReport) {
   btnExportReport.addEventListener('click', function() {
+    if (!isProUser()) { showUpgradeModal('Report Export'); return; }
     var rpt = report.report;
     if (!rpt) return;
 
@@ -1330,6 +1451,7 @@ if (btnExportReport) {
 
 if (btnRecord) {
   btnRecord.addEventListener('click', function() {
+    if (!isProUser()) { showUpgradeModal('Recording'); return; }
     if (!stream || isRecordingActive) return;
     var started = recorder.startRecording(stream);
     if (started) {
@@ -1358,12 +1480,14 @@ if (btnStopRecord) {
 
 if (btnReverse) {
   btnReverse.addEventListener('click', function() {
+    if (!isProUser()) { showUpgradeModal('Reverse Playback'); return; }
     recorder.playReverse();
   });
 }
 
 if (btnExport) {
   btnExport.addEventListener('click', function() {
+    if (!isProUser()) { showUpgradeModal('Audio Export'); return; }
     recorder.exportDownload();
   });
 }
@@ -1451,79 +1575,85 @@ if (visualModeSelector) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 async function init() {
-  // 1. Check sessionStorage for auth
-  if (checkAuth()) {
-    showApp();
-  } else {
-    hideApp();
-    // Focus password input
-    if (sitePassword) sitePassword.focus();
-    return; // Wait for user to authenticate
-  }
+  // Handle Stripe return first
+  await handleStripeReturn();
 
-  // 3. Detect iOS and show sensor permission banner if needed
+  // Check if pro user — skip landing page
+  if (isProUser()) {
+    showApp();
+  }
+  // else: landing page is shown by default
+
+  // Detect iOS and show sensor permission banner if needed
   checkSensorPermBanner();
 
-  // 4. Start camera
+  // Start camera
   var camOk = await startCamera();
 
-  // 5. Init EMF sensors
+  // Init EMF sensors
   if (emfEngine && !emfEngine.isInitialized) {
     try { await emfEngine.init(); } catch (e) { /* sensors may not be available */ }
   }
 
-  // 6. Update sensor display with initial values
+  // Update sensor display with initial values
   if (emfEngine.isInitialized) {
     var initialReading = emfEngine.processFrame();
     updateSensorDisplay(initialReading);
   }
 
-  // 7. Set status
+  // Set status
   if (camOk) {
     setStatus('Ready. Select mode and start investigation.', 'ready');
   } else {
     setStatus('Camera/mic access failed. Check permissions.', 'error');
   }
 
-  // 8. Enable start button
+  // Enable start button
   if (btnStart) btnStart.disabled = false;
 }
 
-// Handle authentication -> init flow
-// If already authenticated, init immediately
-// Otherwise, wait for password gate to complete then init
-function onAuthenticated() {
-  showApp();
-  init();
-}
+// Landing page buttons
+const btnStartFree = document.getElementById('btnStartFree');
+const btnUnlockPro = document.getElementById('btnUnlockPro');
+const btnShowLicense = document.getElementById('btnShowLicense');
+const btnVerifyLicense = document.getElementById('btnVerifyLicense');
+const btnUpgradeNow = document.getElementById('btnUpgradeNow');
+const btnCloseUpgrade = document.getElementById('btnCloseUpgrade');
+const btnUpgradeClose = document.getElementById('btnUpgradeClose');
 
-// Override authenticate to chain into init
-var _origAuthenticate = authenticate;
-authenticate = function() {
-  if (!sitePassword) return;
-  var entered = sitePassword.value.trim();
-  if (entered === AUTH_PASSWORD) {
-    try { sessionStorage.setItem(AUTH_KEY, 'true'); } catch (e) { /* ignore */ }
-    onAuthenticated();
-  } else {
-    if (passwordError) {
-      passwordError.style.display = 'block';
-    }
-    sitePassword.value = '';
-    sitePassword.focus();
-  }
-};
-
-// Re-attach event listeners with updated authenticate
-if (passwordSubmit) {
-  passwordSubmit.removeEventListener('click', _origAuthenticate);
-  passwordSubmit.addEventListener('click', authenticate);
-}
-if (sitePassword) {
-  sitePassword.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') authenticate();
+if (btnStartFree) {
+  btnStartFree.addEventListener('click', function() {
+    showApp();
   });
 }
+
+if (btnUnlockPro) {
+  btnUnlockPro.addEventListener('click', startStripeCheckout);
+}
+
+if (btnShowLicense) {
+  btnShowLicense.addEventListener('click', function() {
+    const form = document.getElementById('licenseForm');
+    if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+  });
+}
+
+if (btnVerifyLicense) {
+  btnVerifyLicense.addEventListener('click', function() {
+    const input = document.getElementById('licenseKeyInput');
+    if (input && input.value.trim()) verifyLicenseKey(input.value);
+  });
+}
+
+if (btnUpgradeNow) {
+  btnUpgradeNow.addEventListener('click', function() {
+    hideUpgradeModal();
+    startStripeCheckout();
+  });
+}
+
+if (btnCloseUpgrade) btnCloseUpgrade.addEventListener('click', hideUpgradeModal);
+if (btnUpgradeClose) btnUpgradeClose.addEventListener('click', hideUpgradeModal);
 
 // AudioContext resume on first user gesture
 document.addEventListener('click', function() {

@@ -2652,7 +2652,550 @@ a.cta-pro.gumroad-button:hover {
 
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   42. UTILITY CLASSES & ACCESSIBILITY
+   42. LANDING / SALES PAGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.landing-page {
+  min-height: 100vh;
+  background: var(--bg-deep);
+  overflow-y: auto;
+}
+
+.landing-hero {
+  text-align: center;
+  padding: 4rem 1.5rem 2.5rem;
+  padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+}
+
+.hero-ghost {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: ghost-float 3s ease-in-out infinite;
+}
+
+@keyframes ghost-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.landing-hero h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.hero-tagline {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.hero-desc {
+  font-size: 1rem;
+  color: var(--text-muted);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Feature Cards */
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1.5rem 2.5rem;
+}
+
+.feature-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.feature-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.feature-card h3 {
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.feature-card p {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* Pricing Section */
+.landing-pricing {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+  text-align: center;
+}
+
+.landing-pricing h2 {
+  color: var(--text-primary);
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.pricing-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: left;
+  position: relative;
+}
+
+.pricing-card-pro {
+  border-color: var(--secondary);
+  box-shadow: 0 0 30px rgba(124, 77, 255, 0.15);
+}
+
+.pricing-badge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 16px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+
+.pricing-tier {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.pricing-price {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 1.25rem;
+}
+
+.pricing-price span {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.pricing-features li {
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.pricing-features li.included {
+  color: var(--text-primary);
+}
+
+.pricing-features li.locked {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.btn-free {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.btn-free:hover {
+  background: var(--bg-panel-hover);
+  border-color: var(--primary);
+}
+
+.btn-pro {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.btn-pro:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(124, 77, 255, 0.4);
+}
+
+.pricing-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+/* License Key Entry */
+.license-section {
+  margin-top: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.btn-link:hover {
+  color: var(--text-primary);
+}
+
+.license-form {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 400px;
+  margin: 0.75rem auto 0;
+  align-items: center;
+}
+
+.license-form input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.license-form input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.btn-verify {
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--secondary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-verify:hover {
+  background: var(--primary);
+}
+
+.license-error {
+  color: var(--alert);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+/* How It Works */
+.landing-how {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+.landing-how h2 {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.how-step {
+  text-align: center;
+}
+
+.step-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--secondary);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.75rem;
+}
+
+.how-step h3 {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+}
+
+.how-step p {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* Testimonials */
+.landing-social {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 2.5rem;
+  text-align: center;
+}
+
+.landing-social h2 {
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+}
+
+.testimonials {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.testimonial {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: left;
+}
+
+.testimonial p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.testimonial span {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+/* Landing Footer */
+.landing-footer {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.landing-footer p {
+  margin-bottom: 0.25rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   43. PRO GATE — LOCKED STATE & UPGRADE MODAL
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.mode-btn.locked {
+  position: relative;
+  opacity: 0.7;
+}
+
+.mode-btn.locked::after {
+  content: "PRO";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  color: #fff;
+  font-size: 0.55rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.btn.locked {
+  opacity: 0.5;
+  position: relative;
+}
+
+.btn.locked::after {
+  content: "🔒";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+}
+
+.mode-badge-pro {
+  background: linear-gradient(135deg, var(--secondary), var(--primary)) !important;
+  color: #fff !important;
+}
+
+.mode-badge-free {
+  background: var(--border) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Upgrade Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 20, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--secondary);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.modal-card h2 {
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-card p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1.25rem;
+}
+
+.modal-card .btn-pro {
+  margin-bottom: 0.75rem;
+}
+
+.modal-card .btn-link {
+  font-size: 0.85rem;
+}
+
+/* Ad Slot Placeholder */
+.ad-slot {
+  background: var(--bg-panel);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  min-height: 90px;
+  margin: 1.5rem auto;
+  max-width: 728px;
+}
+
+.ad-slot-landing {
+  margin: 2rem auto;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   44. LANDING PAGE RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .landing-features { grid-template-columns: 1fr; max-width: 400px; }
+  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto 2rem; }
+  .how-steps { grid-template-columns: repeat(2, 1fr); }
+  .testimonials { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .landing-hero h1 { font-size: 2.2rem; }
+  .hero-tagline { font-size: 1rem; }
+  .how-steps { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .pricing-card { padding: 1.5rem 1rem; }
+}
+
+@media (max-width: 400px) {
+  .landing-hero h1 { font-size: 1.8rem; }
+  .how-steps { grid-template-columns: 1fr; }
+  .license-form { flex-direction: column; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   45. UTILITY CLASSES & ACCESSIBILITY
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   *,

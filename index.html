@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
-  <link rel="stylesheet" href="css/styles.css?v=1">
+  <link rel="stylesheet" href="css/styles.css?v=2">
 
   <!-- Cache nuke — kill old service workers -->
   <script>
@@ -30,15 +30,154 @@
   </script>
 </head>
 <body>
-  <!-- ========== PASSWORD GATE ========== -->
-  <div class="password-gate" id="passwordGate">
-    <div class="password-card">
-      <div class="gate-logo">&#x1F47B;</div>
-      <h2>EVP-MINI</h2>
-      <p>Paranormal Investigation Suite</p>
-      <div class="error" id="passwordError">Incorrect password</div>
-      <input type="password" id="sitePassword" placeholder="Enter access code" autofocus>
-      <button class="auth-btn" id="passwordSubmit">Enter Investigation</button>
+  <!-- ========== LANDING / SALES PAGE ========== -->
+  <div class="landing-page" id="landingPage">
+
+    <!-- Hero Section -->
+    <div class="landing-hero">
+      <div class="hero-ghost">&#x1F47B;</div>
+      <h1>EVP-MINI</h1>
+      <p class="hero-tagline">Professional Paranormal Investigation Suite</p>
+      <p class="hero-desc">Capture EVP, detect anomalies, and analyze the unseen &#x2014; all from your phone.</p>
+    </div>
+
+    <!-- Feature Highlights (3 cards) -->
+    <div class="landing-features">
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F399;&#xFE0F;</div>
+        <h3>EVP Capture</h3>
+        <p>Real-time audio FFT analysis with A/B/C classification. Automatic baseline calibration detects anomalies human ears miss.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F441;&#xFE0F;</div>
+        <h3>Visual Detection</h3>
+        <p>7 camera filters including Night Vision, Edge Detection, False Color thermal, and Full Spectrum with CLAHE enhancement.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F9F2;</div>
+        <h3>EMF &amp; Sensors</h3>
+        <p>Magnetometer, accelerometer, and barometric readings. Detects Tandy&#x2019;s 18.98Hz fear frequency via infrasound analysis.</p>
+      </div>
+    </div>
+
+    <!-- Pricing / Free vs Pro Comparison -->
+    <div class="landing-pricing">
+      <h2>Choose Your Investigation Level</h2>
+
+      <div class="pricing-grid">
+        <!-- Free Tier -->
+        <div class="pricing-card">
+          <div class="pricing-tier">Free</div>
+          <div class="pricing-price">$0</div>
+          <ul class="pricing-features">
+            <li class="included">&#x2713; EVP Scan Mode</li>
+            <li class="included">&#x2713; Audio Spectrogram</li>
+            <li class="included">&#x2713; Basic Sensor Readings</li>
+            <li class="included">&#x2713; Evidence Report</li>
+            <li class="locked">&#x1F512; Spirit Box Simulation</li>
+            <li class="locked">&#x1F512; Visual Scan (7 Filters)</li>
+            <li class="locked">&#x1F512; Full Spectrum Mode</li>
+            <li class="locked">&#x1F512; Recording &amp; Reverse Play</li>
+            <li class="locked">&#x1F512; Audio/Report Export</li>
+          </ul>
+          <button class="btn-free" id="btnStartFree">Start Free Investigation</button>
+        </div>
+
+        <!-- Pro Tier -->
+        <div class="pricing-card pricing-card-pro">
+          <div class="pricing-badge">MOST POPULAR</div>
+          <div class="pricing-tier">Pro</div>
+          <div class="pricing-price">$4.99 <span>one-time</span></div>
+          <ul class="pricing-features">
+            <li class="included">&#x2713; Everything in Free</li>
+            <li class="included">&#x2713; Spirit Box FM Sweep</li>
+            <li class="included">&#x2713; 7 Visual Enhancement Filters</li>
+            <li class="included">&#x2713; Full Spectrum Mode</li>
+            <li class="included">&#x2713; Session Recording</li>
+            <li class="included">&#x2713; Reverse Audio Playback</li>
+            <li class="included">&#x2713; Audio File Export</li>
+            <li class="included">&#x2713; Full Report Export</li>
+            <li class="included">&#x2713; Lifetime Access</li>
+          </ul>
+          <button class="btn-pro" id="btnUnlockPro">Unlock Pro &#x2014; $4.99</button>
+          <p class="pricing-note">One-time payment. No subscription.</p>
+        </div>
+      </div>
+
+      <!-- License Key Entry -->
+      <div class="license-section">
+        <p>Already purchased? <button class="btn-link" id="btnShowLicense">Enter your license key</button></p>
+        <div class="license-form" id="licenseForm" style="display:none;">
+          <input type="text" id="licenseKeyInput" placeholder="Enter your license key or email">
+          <button class="btn-verify" id="btnVerifyLicense">Verify</button>
+          <div class="license-error" id="licenseError" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="landing-how">
+      <h2>How It Works</h2>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="step-num">1</div>
+          <h3>Grant Access</h3>
+          <p>Allow camera and microphone access for real-time environmental scanning.</p>
+        </div>
+        <div class="how-step">
+          <div class="step-num">2</div>
+          <h3>Choose Your Mode</h3>
+          <p>Select EVP Scan, Spirit Box, Visual Scan, or Full Spectrum investigation mode.</p>
+        </div>
+        <div class="how-step">
+          <div class="step-num">3</div>
+          <h3>Investigate</h3>
+          <p>Real-time analysis with live sensor data, spectrogram, and anomaly detection.</p>
+        </div>
+        <div class="how-step">
+          <div class="step-num">4</div>
+          <h3>Review Evidence</h3>
+          <p>Get a comprehensive evidence report with EVP classifications and scientific context.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Proof -->
+    <div class="landing-social">
+      <h2>Trusted by Investigators</h2>
+      <div class="testimonials">
+        <div class="testimonial">
+          <p>&#x201C;The EVP classifier caught a Class A at a Civil War battlefield that we completely missed live. The spectral analysis is legit.&#x201D;</p>
+          <span>&#x2014; Mark T., Paranormal Researcher</span>
+        </div>
+        <div class="testimonial">
+          <p>&#x201C;Full Spectrum mode with the CLAHE filter revealed motion anomalies we couldn&#x2019;t see with the naked eye. Worth every penny.&#x201D;</p>
+          <span>&#x2014; Sarah K., Ghost Hunter</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="landing-footer">
+      <p>EVP-MINI uses real sensor data and scientific signal processing. It cannot confirm paranormal activity.</p>
+      <p>&copy; 2026 EVP-MINI</p>
+    </div>
+
+    <!-- AdSense Placeholder -->
+    <div class="ad-slot ad-slot-landing" id="adLanding">
+      <!-- AdSense responsive unit will go here after approval -->
+    </div>
+  </div>
+
+  <!-- Upgrade Prompt Modal -->
+  <div class="modal-overlay" id="upgradeModal" style="display:none;">
+    <div class="modal-card">
+      <button class="modal-close" id="btnCloseUpgrade">&times;</button>
+      <div class="modal-icon">&#x1F512;</div>
+      <h2>Pro Feature</h2>
+      <p id="upgradeMessage">This feature requires EVP-MINI Pro.</p>
+      <button class="btn-pro" id="btnUpgradeNow">Unlock Pro &#x2014; $4.99</button>
+      <button class="btn-link" id="btnUpgradeClose">Continue with Free</button>
     </div>
   </div>
 
@@ -341,13 +480,13 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/evp-audio-engine.js?v=1"></script>
-  <script src="js/visual-anomaly-engine.js?v=1"></script>
-  <script src="js/emf-sensor-engine.js?v=1"></script>
-  <script src="js/spirit-box-engine.js?v=1"></script>
-  <script src="js/evp-classifier.js?v=1"></script>
-  <script src="js/session-recorder.js?v=1"></script>
-  <script src="js/evidence-report.js?v=1"></script>
-  <script src="js/app.js?v=1"></script>
+  <script src="js/evp-audio-engine.js?v=2"></script>
+  <script src="js/visual-anomaly-engine.js?v=2"></script>
+  <script src="js/emf-sensor-engine.js?v=2"></script>
+  <script src="js/spirit-box-engine.js?v=2"></script>
+  <script src="js/evp-classifier.js?v=2"></script>
+  <script src="js/session-recorder.js?v=2"></script>
+  <script src="js/evidence-report.js?v=2"></script>
+  <script src="js/app.js?v=2"></script>
 </body>
 </html>
