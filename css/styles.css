@@ -320,6 +320,7 @@ a.cta-pro.gumroad-button:hover {
 }
 .header-controls button:hover { border-color: #00e5ff; color: #00e5ff; }
 .header-controls button.active { background: #7c4dff; border-color: #7c4dff; color: #fff; }
+.header-controls .share-btn-header { background: linear-gradient(135deg, #7c4dff, #00e5ff); border-color: transparent; color: #fff; font-weight: 700; }
 
 /* ═══════════════════════════════════════════════════════════════════
    MAIN LAYOUT

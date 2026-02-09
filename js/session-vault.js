@@ -45,25 +45,79 @@ class SessionVault {
       return this.currentLocation;
     }
 
+    // Use watchPosition to get the most accurate reading, then stop
     return new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          this.currentLocation = {
-            available: true,
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
-            altitude: pos.coords.altitude,
-            timestamp: pos.timestamp
-          };
-          resolve(this.currentLocation);
-        },
-        (err) => {
-          this.currentLocation = { available: false, error: err.message };
-          resolve(this.currentLocation);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      );
+      let bestPosition = null;
+      let watchId = null;
+      const timeout = setTimeout(() => {
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        if (bestPosition) {
+          this.currentLocation = bestPosition;
+          resolve(bestPosition);
+        } else {
+          // Fallback: single attempt with no cache
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              this.currentLocation = {
+                available: true,
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+                altitude: pos.coords.altitude,
+                timestamp: pos.timestamp
+              };
+              resolve(this.currentLocation);
+            },
+            (err) => {
+              this.currentLocation = { available: false, error: err.message };
+              resolve(this.currentLocation);
+            },
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+          );
+        }
+      }, 6000); // Wait up to 6s for best GPS fix
+
+      try {
+        watchId = navigator.geolocation.watchPosition(
+          (pos) => {
+            const loc = {
+              available: true,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+              altitude: pos.coords.altitude,
+              timestamp: pos.timestamp
+            };
+            // Keep the most accurate reading
+            if (!bestPosition || loc.accuracy < bestPosition.accuracy) {
+              bestPosition = loc;
+              this.currentLocation = loc;
+            }
+            // If accuracy is good enough (<30m), resolve immediately
+            if (loc.accuracy <= 30) {
+              clearTimeout(timeout);
+              if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+              this.currentLocation = loc;
+              resolve(loc);
+            }
+          },
+          (err) => {
+            clearTimeout(timeout);
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+            if (bestPosition) {
+              resolve(bestPosition);
+            } else {
+              this.currentLocation = { available: false, error: err.message };
+              resolve(this.currentLocation);
+            }
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
+      } catch (e) {
+        clearTimeout(timeout);
+        this.currentLocation = { available: false, error: 'GPS error' };
+        resolve(this.currentLocation);
+      }
     });
   }
 

@@ -109,7 +109,7 @@
       if (!code) { error.textContent = 'Please enter a license key.'; return; }
       btn.textContent = 'Verifying...'; btn.disabled = true; error.textContent = '';
       // Check offline codes first
-      var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','evpmini2024'];
+      var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','TESTPRO1','evpmini2024'];
       if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
         try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,licenseKey:code,activatedAt:Date.now()})); } catch(e){}
         if (window.proGateInstance) { window.proGateInstance.isPro = true; }
@@ -343,7 +343,7 @@
         <button id="btnFlipCamera" title="Flip Camera">Flip</button>
         <button id="btnScreenshot" title="Screenshot">Shot</button>
         <button id="btnRecord" title="Record">REC</button>
-        <button id="btnShareApp" title="Share App">Share</button>
+        <button id="btnShareApp" title="Share App" class="share-btn-header">Share</button>
       </div>
     </div>
 

@@ -274,7 +274,7 @@ function activateProInApp() {
   var code = (input.value || '').trim();
   if (!code) { error.textContent = 'Please enter a license key.'; return; }
   btn.textContent = 'Verifying...'; btn.disabled = true; error.textContent = '';
-  var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','evpmini2024'];
+  var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','TESTPRO1','evpmini2024'];
   if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
     try { localStorage.setItem('evpProStatus', JSON.stringify({pro:true,activatedAt:Date.now()})); } catch(e){}
     closeUpgradeModal();
@@ -440,13 +440,15 @@ function showWordDetection(detection) {
 
 // ─── GPS ────────────────────────────────────────────────────────────────────────
 async function updateGPS() {
+  if (gpsText) gpsText.textContent = 'Acquiring GPS...';
   const loc = await sessionVault.acquireLocation();
   if (gpsText) {
     if (loc.available) {
-      gpsText.textContent = loc.latitude.toFixed(5) + ', ' + loc.longitude.toFixed(5);
+      const acc = loc.accuracy ? ' (\u00B1' + Math.round(loc.accuracy) + 'm)' : '';
+      gpsText.textContent = loc.latitude.toFixed(6) + ', ' + loc.longitude.toFixed(6) + acc;
       gpsText.classList.add('located');
       const name = await sessionVault.reverseGeocode(loc.latitude, loc.longitude);
-      if (name && gpsText) gpsText.textContent = name;
+      if (name && gpsText) gpsText.textContent = name + acc;
     } else {
       gpsText.textContent = 'Location unavailable';
     }
@@ -531,7 +533,7 @@ function restorePurchase() {
   var code = (input.value || '').trim();
   if (!code) { error.textContent = 'Please enter a license key.'; return; }
   btn.textContent = 'Verifying...'; btn.disabled = true; error.textContent = '';
-  var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','evpmini2024'];
+  var codes = ['EVPMINI-PRO-2024','GHOST-HUNTER-VIP','PARANORMAL-PRO-1','EVP-LAUNCH-2024','TESTPRO1','evpmini2024'];
   if (codes.indexOf(code) !== -1 || codes.indexOf(code.toUpperCase()) !== -1) {
     var pg = window.proGateInstance;
     if (pg) { pg.isPro = true; pg._licenseKey = code; pg._save(); }

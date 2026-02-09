@@ -19,6 +19,7 @@ class ProGate {
       'GHOST-HUNTER-VIP',
       'PARANORMAL-PRO-1',
       'EVP-LAUNCH-2024',
+      'TESTPRO1',
       'evpmini2024'
     ]);
 
