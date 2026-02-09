@@ -335,6 +335,9 @@ class VisualAnomalyEngine {
   _storePrevFrame(videoElement) {
     // Only store for modes that don't already update prevGray
     if (this.mode === 'normal' || this.mode === 'night-vision' || this.mode === 'edge-detect' || this.mode === 'false-color') {
+      // Save old previous frame before overwriting
+      const oldPrevGray = this.prevGray;
+
       this.prevCtx.drawImage(videoElement, 0, 0, this.width, this.height);
       const prevData = this.prevCtx.getImageData(0, 0, this.width, this.height);
       const src = prevData.data;
@@ -345,21 +348,13 @@ class VisualAnomalyEngine {
       }
       this.hasPrevFrame = true;
 
-      // Compute motion level even in non-motion modes
-      if (this.prevGray) {
-        const currentData = this.ctx.getImageData(0, 0, this.width, this.height);
-        const curSrc = currentData.data;
-        const curGray = new Uint8Array(this.width * this.height);
-        for (let i = 0; i < curGray.length; i++) {
-          const p = i * 4;
-          curGray[i] = Math.round(0.299 * curSrc[p] + 0.587 * curSrc[p + 1] + 0.114 * curSrc[p + 2]);
-        }
-        // Simple motion check
+      // Compare current against OLD previous frame (not itself)
+      if (oldPrevGray && oldPrevGray.length === this.prevGray.length) {
         let mp = 0;
-        for (let i = 0; i < curGray.length; i++) {
-          if (Math.abs(curGray[i] - this.prevGray[i]) > 25) mp++;
+        for (let i = 0; i < this.prevGray.length; i++) {
+          if (Math.abs(this.prevGray[i] - oldPrevGray[i]) > 25) mp++;
         }
-        this.motionLevel = (mp / curGray.length) * 100;
+        this.motionLevel = (mp / this.prevGray.length) * 100;
       }
     }
   }

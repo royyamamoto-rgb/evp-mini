@@ -165,33 +165,43 @@ class EVPAudioEngine {
   }
 
   _computeHNR() {
-    // Simplified HNR using autocorrelation
+    // HNR via autocorrelation on 4x downsampled data for performance
     const data = this.timeDomainData;
     const len = data.length;
-    const minLag = Math.floor(this.sampleRate / 4000); // Max freq 4000Hz
-    const maxLag = Math.floor(this.sampleRate / 80);    // Min freq 80Hz
+    const dsFactor = 4;
+    const dsLen = Math.floor(len / dsFactor);
+    if (dsLen < 128) return 0;
 
-    if (maxLag >= len) return 0;
+    // Downsample (reuse buffer to avoid GC pressure)
+    if (!this._hnrBuf || this._hnrBuf.length !== dsLen) {
+      this._hnrBuf = new Float32Array(dsLen);
+    }
+    for (let i = 0; i < dsLen; i++) {
+      this._hnrBuf[i] = data[i * dsFactor];
+    }
 
-    // Compute energy
+    const dsRate = this.sampleRate / dsFactor;
+    const minLag = Math.floor(dsRate / 4000);
+    const maxLag = Math.floor(dsRate / 80);
+    if (maxLag >= dsLen) return 0;
+
     let energy = 0;
-    for (let i = 0; i < len; i++) {
-      energy += data[i] * data[i];
+    for (let i = 0; i < dsLen; i++) {
+      energy += this._hnrBuf[i] * this._hnrBuf[i];
     }
     if (energy < 1e-10) return 0;
 
-    // Find peak autocorrelation at lag > 0
     let maxCorr = 0;
-    for (let lag = minLag; lag < Math.min(maxLag, len / 2); lag++) {
+    const limit = Math.min(maxLag, Math.floor(dsLen / 2));
+    for (let lag = minLag; lag < limit; lag++) {
       let corr = 0;
-      for (let i = 0; i < len - lag; i++) {
-        corr += data[i] * data[i + lag];
+      for (let i = 0; i < dsLen - lag; i++) {
+        corr += this._hnrBuf[i] * this._hnrBuf[i + lag];
       }
       corr /= energy;
       if (corr > maxCorr) maxCorr = corr;
     }
 
-    // HNR = 10 * log10(r / (1 - r)) where r is normalized autocorrelation peak
     if (maxCorr <= 0 || maxCorr >= 1) return 0;
     return 10 * Math.log10(maxCorr / (1 - maxCorr));
   }

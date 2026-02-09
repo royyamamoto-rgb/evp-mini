@@ -88,6 +88,16 @@ let isRecording = false;
 let audioInitialized = false;
 let sensorsInitialized = false;
 
+// ─── Performance Throttling ─────────────────────────────────────────────────────
+let lastAudioUITime = 0;
+let lastSensorUITime = 0;
+let lastIndicatorTime = 0;
+let lastVisualTime = 0;
+let cachedAssess = null;
+let prevIndicatorHTML = '';
+let overlayCleared = true;
+let spectroColImg = null;
+
 // ─── Engine Instances ───────────────────────────────────────────────────────────
 const evpAudioEngine = new EVPAudioEngine();
 const visualAnomalyEngine = new VisualAnomalyEngine();
@@ -137,11 +147,9 @@ async function startCamera() {
     { video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: evpAudio },
     { video: { facingMode: facingMode }, audio: evpAudio },
     { video: true, audio: evpAudio },
-    // Simplified audio fallbacks
     { video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true },
     { video: { facingMode: facingMode }, audio: true },
     { video: true, audio: true },
-    // Video-only fallbacks
     { video: { facingMode: facingMode }, audio: false },
     { video: true, audio: false }
   ];
@@ -167,6 +175,7 @@ async function startCamera() {
       if (spectrogramCanvas) {
         spectrogramCanvas.width = spectrogramCanvas.offsetWidth * (window.devicePixelRatio || 1);
         spectrogramCanvas.height = 120 * (window.devicePixelRatio || 1);
+        spectroColImg = null; // Reset column buffer on resize
       }
 
       // Init audio if stream has audio tracks
@@ -175,15 +184,8 @@ async function startCamera() {
         const success = await evpAudioEngine.initAudioContext(stream);
         if (success) {
           audioInitialized = true;
-          // Init spirit box with same audio context
           spiritBoxEngine.init(evpAudioEngine.audioContext);
         }
-      }
-
-      // Init sensors
-      if (!sensorsInitialized) {
-        await emfSensorEngine.init();
-        sensorsInitialized = true;
       }
 
       // Update NIR badge
@@ -209,10 +211,20 @@ function updateNIRBadge() {
 }
 
 // ─── Scan Lifecycle ─────────────────────────────────────────────────────────────
-function startScan() {
+async function startScan() {
   if (running) return;
   running = true;
   frameCount = 0;
+
+  // Init sensors on first scan (requires user gesture for iOS permissions)
+  if (!sensorsInitialized) {
+    try {
+      await emfSensorEngine.init();
+    } catch (e) {
+      console.warn('Sensor init failed:', e);
+    }
+    sensorsInitialized = true;
+  }
 
   // Clear all engines
   evpAudioEngine.clearAll();
@@ -269,6 +281,19 @@ function startScan() {
 
   // Hide EVP alert
   if (evpAlert) evpAlert.classList.remove('visible');
+
+  // Reset throttling state
+  lastAudioUITime = 0;
+  lastSensorUITime = 0;
+  lastIndicatorTime = 0;
+  lastVisualTime = 0;
+  prevIndicatorHTML = '';
+  overlayCleared = !(scanMode === 'visual' || scanMode === 'fullspectrum');
+
+  // Clear overlay for non-visual modes
+  if (overlayCleared && overlayCtx && overlay) {
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+  }
 
   // Start processing loop
   processFrame();
@@ -342,56 +367,87 @@ function processFrame() {
   animFrameId = requestAnimationFrame(processFrame);
   frameCount++;
 
-  // 1. Audio processing
+  const now = performance.now();
+
+  // 1. Audio processing (every frame — AnalyserNode read is lightweight)
   if (audioInitialized) {
     evpAudioEngine.processAudioFrame();
-    updateAudioUI();
-    drawSpectrogram();
+    cachedAssess = evpAudioEngine.getQuickAssess();
 
-    // 2. EVP classification
+    // Audio UI + spectrogram at ~20fps
+    if (now - lastAudioUITime > 50) {
+      drawSpectrogram();
+      updateAudioUI(cachedAssess);
+      lastAudioUITime = now;
+    }
+
+    // EVP classification (every frame for accurate duration tracking)
     if (scanMode === 'evp' || scanMode === 'spiritbox' || scanMode === 'fullspectrum') {
-      const assess = evpAudioEngine.getQuickAssess();
       const noiseFloor = evpAudioEngine.getNoiseFloor();
-      const classification = evpClassifier.processFrame(assess, noiseFloor);
+      const classification = evpClassifier.processFrame(cachedAssess, noiseFloor);
       if (classification) {
         showEVPAlert(classification);
       }
     }
   }
 
-  // 3. Spirit box processing
+  // 2. Spirit box processing
   if (scanMode === 'spiritbox' || scanMode === 'fullspectrum') {
     spiritBoxEngine.processFrame();
-    updateSpiritBoxUI();
   }
 
-  // 4. Visual processing
-  if (scanMode === 'visual' || scanMode === 'fullspectrum') {
-    const processed = visualAnomalyEngine.processFrame(video);
-    if (processed && overlayCtx && overlay) {
-      overlayCtx.putImageData(processed, 0, 0);
+  // 3. Visual processing
+  const isVisualMode = scanMode === 'visual' || scanMode === 'fullspectrum';
+  if (isVisualMode) {
+    // Visual filters at ~20fps (pixel processing is expensive)
+    if (now - lastVisualTime > 50) {
+      const processed = visualAnomalyEngine.processFrame(video);
+      if (processed && overlayCtx && overlay && visualMode !== 'normal') {
+        overlayCtx.putImageData(processed, 0, 0);
+        overlayCleared = false;
+      } else if (visualMode === 'normal' && !overlayCleared) {
+        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+        overlayCleared = true;
+      }
+      lastVisualTime = now;
     }
-    updateVisualUI();
   } else {
-    // Normal mode — clear overlay
-    if (overlayCtx && overlay) {
+    // Clear overlay once when not in visual mode
+    if (!overlayCleared && overlayCtx && overlay) {
       overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+      overlayCleared = true;
     }
-    // Still track motion in background
-    visualAnomalyEngine.processFrame(video);
+    // Background motion tracking at ~5fps
+    if (frameCount % 6 === 0) {
+      visualAnomalyEngine.processFrame(video);
+    }
   }
 
-  // 5. Sensor processing
+  // 4. Sensor processing (reading cached values — lightweight)
   emfSensorEngine.processFrame();
-  updateSensorUI();
 
-  // 6. Live indicators
-  updateLiveIndicators();
+  // 5. UI updates at ~10fps (DOM writes are expensive)
+  if (now - lastSensorUITime > 100) {
+    updateSensorUI();
+    if (scanMode === 'spiritbox' || scanMode === 'fullspectrum') {
+      updateSpiritBoxUI();
+    }
+    if (isVisualMode) {
+      updateVisualUI();
+    }
+    lastSensorUITime = now;
+  }
+
+  // 6. Live indicators at ~5fps
+  if (now - lastIndicatorTime > 200) {
+    updateLiveIndicators();
+    lastIndicatorTime = now;
+  }
 }
 
 // ─── Audio UI Updates ───────────────────────────────────────────────────────────
-function updateAudioUI() {
-  const assess = evpAudioEngine.getQuickAssess();
+function updateAudioUI(assess) {
+  if (!assess) assess = evpAudioEngine.getQuickAssess();
 
   if (audioLevelFill) {
     audioLevelFill.style.width = assess.rmsPercent.toFixed(1) + '%';
@@ -426,48 +482,59 @@ function drawSpectrogram() {
 
   const w = spectrogramCanvas.width;
   const h = spectrogramCanvas.height;
+  if (w === 0 || h === 0) return;
 
-  // Scroll left by 1 pixel
-  const existing = spectrogramCtx.getImageData(1, 0, w - 1, h);
-  spectrogramCtx.putImageData(existing, 0, 0);
+  // Scroll left using canvas self-copy (much faster than getImageData/putImageData)
+  spectrogramCtx.drawImage(spectrogramCanvas, 1, 0, w - 1, h, 0, 0, w - 1, h);
 
-  // Draw new column at right edge
+  // Prepare column ImageData (reuse buffer across frames)
+  if (!spectroColImg || spectroColImg.height !== h) {
+    spectroColImg = spectrogramCtx.createImageData(1, h);
+  }
+  const d = spectroColImg.data;
+
   // Only show up to ~8000Hz (relevant range)
   const maxBin = Math.min(slice.length, Math.ceil(8000 / evpAudioEngine.binResolution));
 
   for (let y = 0; y < h; y++) {
     const bin = Math.floor((1 - y / h) * maxBin);
+    const idx = y * 4;
     if (bin >= 0 && bin < slice.length) {
-      // Map dB (-100 to -10) to color intensity
       const db = slice[bin];
       const normalized = Math.max(0, Math.min(1, (db + 100) / 90));
-      const color = spectrogramColor(normalized);
-      spectrogramCtx.fillStyle = color;
-      spectrogramCtx.fillRect(w - 1, y, 1, 1);
+      const rgb = spectrogramColorRGB(normalized);
+      d[idx] = rgb[0];
+      d[idx + 1] = rgb[1];
+      d[idx + 2] = rgb[2];
+      d[idx + 3] = 255;
+    } else {
+      d[idx] = 0; d[idx + 1] = 0; d[idx + 2] = 0; d[idx + 3] = 255;
     }
   }
+
+  spectrogramCtx.putImageData(spectroColImg, w - 1, 0);
 }
 
-function spectrogramColor(t) {
-  // Black -> deep blue -> cyan -> green -> yellow -> red -> white
+function spectrogramColorRGB(t) {
+  // Returns [r, g, b] — avoids CSS string allocation per pixel
   if (t < 0.15) {
     const s = t / 0.15;
-    return `rgb(0,0,${Math.round(s * 100)})`;
+    return [0, 0, Math.round(s * 100)];
   } else if (t < 0.3) {
     const s = (t - 0.15) / 0.15;
-    return `rgb(0,${Math.round(s * 180)},${Math.round(100 + s * 120)})`;
+    return [0, Math.round(s * 180), Math.round(100 + s * 120)];
   } else if (t < 0.5) {
     const s = (t - 0.3) / 0.2;
-    return `rgb(0,${Math.round(180 + s * 75)},${Math.round(220 - s * 220)})`;
+    return [0, Math.round(180 + s * 75), Math.round(220 - s * 220)];
   } else if (t < 0.7) {
     const s = (t - 0.5) / 0.2;
-    return `rgb(${Math.round(s * 255)},255,0)`;
+    return [Math.round(s * 255), 255, 0];
   } else if (t < 0.85) {
     const s = (t - 0.7) / 0.15;
-    return `rgb(255,${Math.round(255 - s * 200)},0)`;
+    return [255, Math.round(255 - s * 200), 0];
   } else {
     const s = (t - 0.85) / 0.15;
-    return `rgb(255,${Math.round(55 + s * 200)},${Math.round(s * 255)})`;
+    return [255, Math.round(55 + s * 200), Math.round(s * 255)];
   }
 }
 
@@ -598,7 +665,12 @@ function updateLiveIndicators() {
     chips.push('<span class="indicator-chip infrasound">INFRASOUND ' + vibState.dominantFreqHz.toFixed(1) + 'Hz</span>');
   }
 
-  liveIndicators.innerHTML = chips.join('');
+  // Only update DOM if content actually changed
+  const html = chips.join('');
+  if (html !== prevIndicatorHTML) {
+    liveIndicators.innerHTML = html;
+    prevIndicatorHTML = html;
+  }
 }
 
 // ─── Panel Visibility ───────────────────────────────────────────────────────────
@@ -702,6 +774,15 @@ document.querySelectorAll('.visual-btn').forEach(btn => {
     btn.classList.add('active');
     visualMode = btn.dataset.visual;
     visualAnomalyEngine.setMode(visualMode);
+    // Reset overlay state when switching visual modes
+    if (visualMode === 'normal') {
+      if (overlayCtx && overlay) {
+        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+      }
+      overlayCleared = true;
+    } else {
+      overlayCleared = false;
+    }
   });
 });
 
@@ -735,7 +816,6 @@ if (btnDownload) btnDownload.addEventListener('click', () => sessionRecorder.dow
 // Export evidence
 if (btnExport) {
   btnExport.addEventListener('click', () => {
-    // Download report as text file
     const summary = evidenceReport.getSummary();
     const timeline = evidenceReport.getTimelineEvents();
 
