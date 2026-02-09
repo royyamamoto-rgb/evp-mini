@@ -12,7 +12,7 @@
   <title>EVP-MINI | Paranormal Investigation</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
-  <link rel="stylesheet" href="css/styles.css?v=4.1">
+  <link rel="stylesheet" href="css/styles.css?v=5">
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -50,6 +50,7 @@
         <button id="btnFlipCamera" title="Flip Camera">Flip</button>
         <button id="btnScreenshot" title="Screenshot">Shot</button>
         <button id="btnRecord" title="Record">REC</button>
+        <button id="btnHistory" title="History">History</button>
       </div>
     </div>
 
@@ -63,9 +64,16 @@
         <div class="video-container" id="videoContainer">
           <video id="video" autoplay playsinline muted></video>
           <canvas id="overlay"></canvas>
+          <canvas id="dowsingCanvas" class="dowsing-canvas"></canvas>
           <div class="nir-badge" id="nirBadge">NIR 700-950nm</div>
           <div class="scan-line" id="scanLine"></div>
           <div class="screen-flash" id="screenFlash"></div>
+        </div>
+
+        <!-- GPS Location -->
+        <div class="gps-bar" id="gpsBar">
+          <span class="gps-icon">&#x1F4CD;</span>
+          <span class="gps-text" id="gpsText">Acquiring location...</span>
         </div>
 
         <!-- Mode Selector -->
@@ -87,6 +95,13 @@
           <button class="visual-btn" data-visual="full-spectrum">Spectrum</button>
         </div>
 
+        <!-- Tools Row -->
+        <div class="tools-row">
+          <button class="tool-btn" id="btnGeiger">Geiger</button>
+          <button class="tool-btn" id="btnDowsing">Dowsing Rods</button>
+          <button class="tool-btn" id="btnWords">Word Detect</button>
+        </div>
+
         <!-- Duration Selector -->
         <div class="duration-selector">
           <button class="duration-btn active" data-duration="continuous">Continuous</button>
@@ -106,6 +121,13 @@
 
         <!-- Timer -->
         <div class="timer-display" id="timerDisplay">0:00</div>
+
+        <!-- Word Detection Display -->
+        <div class="word-detect-panel" id="wordDetectPanel">
+          <div class="panel-title">Word Detection (AI Phoneme Match)</div>
+          <div class="word-display" id="wordDisplay">Listening...</div>
+          <div class="word-log" id="wordLog"></div>
+        </div>
 
         <!-- Spectrogram -->
         <div class="spectrogram-section" id="spectrogramSection">
@@ -152,6 +174,12 @@
               <span class="rl">Formant Match</span>
               <span class="rv" id="formantValue">—</span>
             </div>
+          </div>
+          <!-- Geiger Counter Status -->
+          <div class="geiger-status" id="geigerStatus">
+            <span class="geiger-icon">&#x2622;</span>
+            <span class="geiger-label">Geiger:</span>
+            <span class="geiger-rate" id="geigerRate">OFF</span>
           </div>
         </div>
 
@@ -287,17 +315,32 @@
       </div>
 
     </div>
+
+    <!-- History Panel (overlay) -->
+    <div class="history-panel" id="historyPanel">
+      <div class="history-header">
+        <h2>Investigation History</h2>
+        <button class="history-close" id="btnCloseHistory">Close</button>
+      </div>
+      <div class="history-storage" id="historyStorage"></div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+
   </div>
 
   <!-- Scripts -->
-  <script src="js/evp-audio-engine.js?v=4.1"></script>
-  <script src="js/visual-anomaly-engine.js?v=4.1"></script>
-  <script src="js/emf-sensor-engine.js?v=4.1"></script>
-  <script src="js/spirit-box-engine.js?v=4.1"></script>
-  <script src="js/evp-classifier.js?v=4.1"></script>
-  <script src="js/session-recorder.js?v=4.1"></script>
-  <script src="js/evidence-report.js?v=4.1"></script>
-  <script src="js/app.js?v=4.1"></script>
+  <script src="js/evp-audio-engine.js?v=5"></script>
+  <script src="js/visual-anomaly-engine.js?v=5"></script>
+  <script src="js/emf-sensor-engine.js?v=5"></script>
+  <script src="js/spirit-box-engine.js?v=5"></script>
+  <script src="js/evp-classifier.js?v=5"></script>
+  <script src="js/session-recorder.js?v=5"></script>
+  <script src="js/evidence-report.js?v=5"></script>
+  <script src="js/session-vault.js?v=5"></script>
+  <script src="js/geiger-counter.js?v=5"></script>
+  <script src="js/dowsing-rods.js?v=5"></script>
+  <script src="js/word-detector.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
 
   <!-- Password Gate Logic -->
   <script>

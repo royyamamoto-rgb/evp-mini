@@ -557,3 +557,141 @@ body { background: #0a0a14; color: #e0e0e0; font-family: system-ui, -apple-syste
 /* ─── Smoother Meter Transitions ────────────────────────────── */
 .gauge-bar-fill { transition: width 0.15s ease-out; }
 .meter-fill { transition: width 0.08s ease-out; }
+
+/* ─── GPS Bar ───────────────────────────────────────────────── */
+.gps-bar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 10px; margin-top: 8px; border-radius: 6px;
+  background: #12122a; border: 1px solid #1e1e3a; font-size: 0.7rem;
+}
+.gps-icon { font-size: 0.9rem; }
+.gps-text { color: #9e9ec0; flex: 1; }
+.gps-text.located { color: #00e676; }
+
+/* ─── Tools Row ─────────────────────────────────────────────── */
+.tools-row {
+  display: flex; gap: 6px; margin-top: 10px;
+}
+.tool-btn {
+  flex: 1; padding: 8px 4px; border: 1px solid #2a2a4a; border-radius: 8px;
+  background: #12122a; color: #9e9ec0; font-size: 0.7rem; font-weight: 600;
+  text-align: center; cursor: pointer; text-transform: uppercase;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.tool-btn.active {
+  background: #e040fb; border-color: #e040fb; color: #fff;
+}
+.tool-btn:active { transform: scale(0.95); }
+
+/* ─── Word Detection Panel ──────────────────────────────────── */
+.word-detect-panel {
+  margin-top: 12px; padding: 12px; border-radius: 8px;
+  background: #12122a; border: 1px solid #1e1e3a; display: none;
+}
+.word-detect-panel.visible { display: block; }
+.word-display {
+  text-align: center; padding: 12px; font-size: 1.8rem; font-weight: 700;
+  color: #e040fb; font-family: 'Courier New', monospace;
+  text-transform: uppercase; letter-spacing: 3px;
+  min-height: 60px; display: flex; align-items: center; justify-content: center;
+}
+.word-display.detected {
+  animation: word-pulse 0.5s ease-out;
+}
+@keyframes word-pulse {
+  0% { transform: scale(1.3); color: #ff1744; }
+  100% { transform: scale(1); color: #e040fb; }
+}
+.word-log {
+  max-height: 120px; overflow-y: auto; margin-top: 8px;
+}
+.word-log-entry {
+  display: flex; align-items: center; gap: 8px;
+  padding: 4px 8px; margin-bottom: 3px; border-radius: 4px;
+  background: #0a0a14; font-size: 0.7rem;
+  animation: log-slide 0.3s ease-out;
+}
+.word-log-entry .wl-time { color: #9e9ec0; font-family: monospace; min-width: 40px; }
+.word-log-entry .wl-word { color: #e040fb; font-weight: 700; font-size: 0.8rem; }
+.word-log-entry .wl-conf { color: #7c4dff; margin-left: auto; }
+
+/* ─── Geiger Counter Status ─────────────────────────────────── */
+.geiger-status {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 8px; padding: 6px 8px; border-radius: 4px;
+  background: #0a0a14;
+}
+.geiger-icon { font-size: 1rem; }
+.geiger-label { font-size: 0.7rem; color: #9e9ec0; }
+.geiger-rate {
+  font-size: 0.8rem; color: #00e5ff; font-family: monospace; font-weight: 600;
+}
+.geiger-rate.active { color: #00e676; }
+.geiger-rate.hot { color: #ff1744; animation: chip-pulse 0.5s infinite; }
+
+/* ─── Dowsing Canvas ───────────────────────────────────────── */
+.dowsing-canvas {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 5; display: none; pointer-events: none;
+}
+
+/* ─── History Panel ─────────────────────────────────────────── */
+.history-panel {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: #0a0a14; overflow-y: auto;
+  padding: 16px; padding-top: env(safe-area-inset-top, 16px);
+}
+.history-panel.visible { display: block; animation: panel-fade 0.3s ease-out; }
+.history-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #1e1e3a;
+}
+.history-header h2 { font-size: 1.2rem; color: #00e5ff; }
+.history-close {
+  padding: 6px 16px; border: 1px solid #2a2a4a; border-radius: 6px;
+  background: #12122a; color: #e0e0e0; font-size: 0.8rem; cursor: pointer;
+}
+.history-storage {
+  padding: 8px 12px; border-radius: 6px; background: #12122a;
+  font-size: 0.7rem; color: #9e9ec0; margin-bottom: 12px; text-align: center;
+}
+
+/* ─── Vault Entries ─────────────────────────────────────────── */
+.vault-empty {
+  text-align: center; padding: 40px 16px; color: #4a4a6a; font-size: 0.85rem;
+  line-height: 1.6;
+}
+.vault-entry {
+  padding: 12px; margin-bottom: 10px; border-radius: 8px;
+  background: #12122a; border: 1px solid #1e1e3a;
+}
+.vault-entry-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;
+}
+.vault-date { font-size: 0.75rem; color: #9e9ec0; }
+.vault-score {
+  padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 700;
+}
+.vault-score.score-high { background: rgba(255, 23, 68, 0.2); color: #ff1744; }
+.vault-score.score-medium { background: rgba(255, 234, 0, 0.2); color: #ffea00; }
+.vault-score.score-low { background: rgba(0, 229, 255, 0.2); color: #00e5ff; }
+.vault-location {
+  font-size: 0.8rem; color: #00e676; margin-bottom: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vault-stats {
+  display: flex; gap: 12px; font-size: 0.7rem; color: #9e9ec0; margin-bottom: 6px;
+}
+.vault-evps { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+.vault-evp-badge {
+  padding: 1px 6px; border-radius: 3px; font-size: 0.6rem; font-weight: 700;
+}
+.vault-evp-badge.class-a { background: #00e676; color: #0a0a14; }
+.vault-evp-badge.class-b { background: #ffea00; color: #0a0a14; }
+.vault-evp-badge.class-c { background: #ff9100; color: #0a0a14; }
+.vault-more { font-size: 0.65rem; color: #7c4dff; }
+.vault-actions { display: flex; justify-content: flex-end; }
+.vault-delete-btn {
+  padding: 4px 12px; border: 1px solid rgba(255, 23, 68, 0.3); border-radius: 4px;
+  background: transparent; color: #ff1744; font-size: 0.65rem; cursor: pointer;
+}
