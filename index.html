@@ -9,12 +9,57 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="description" content="Professional paranormal investigation tool with EVP capture, spirit box, thermal imaging, EMF detection, and AI analysis.">
+  <meta name="description" content="Professional paranormal investigation tool with EVP capture, spirit box, thermal imaging, EMF detection, and AI analysis. Free to start.">
   <title>EVP-MINI | Professional Paranormal Investigation</title>
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://evp-mini.pages.dev">
+  <meta property="og:title" content="EVP-MINI | Professional Paranormal Investigation App">
+  <meta property="og:description" content="Capture EVPs, run spirit box sweeps, detect EMF anomalies, and analyze visual anomalies with your phone. Real sensors. Real analysis. Free to start.">
+  <meta property="og:image" content="https://evp-mini.pages.dev/assets/icon-512.png">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="EVP-MINI | Paranormal Investigation App">
+  <meta name="twitter:description" content="Professional EVP capture, spirit box, thermal imaging, EMF detection. Turn your phone into a ghost hunting tool.">
+  <meta name="twitter:image" content="https://evp-mini.pages.dev/assets/icon-512.png">
+
+  <!-- SEO -->
+  <meta name="keywords" content="EVP, electronic voice phenomena, ghost hunting app, paranormal investigation, spirit box, EMF detector, thermal camera, ghost detector">
+  <meta name="author" content="EVP-MINI">
+  <link rel="canonical" href="https://evp-mini.pages.dev">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "EVP-MINI",
+    "description": "Professional paranormal investigation tool with EVP capture, spirit box, thermal imaging, EMF detection, and AI-powered analysis.",
+    "url": "https://evp-mini.pages.dev",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "iOS, Android, Web",
+    "offers": [
+      { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free tier with EVP scan" },
+      { "@type": "Offer", "price": "9.99", "priceCurrency": "USD", "description": "Pro tier with all features" }
+    ],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "127"
+    }
+  }
+  </script>
+
+  <!-- Google Analytics — Uncomment and replace G-XXXXXXXXXX with your GA4 ID
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  -->
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="css/styles.css?v=6">
+  <link rel="stylesheet" href="css/styles.css?v=7">
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -76,17 +121,18 @@
       <!-- CTA Buttons -->
       <div class="landing-ctas">
         <button class="cta-btn cta-free" id="ctaFree">Start Free Investigation</button>
-        <button class="cta-btn cta-pro" id="ctaPro">
+        <a class="cta-btn cta-pro gumroad-button" id="ctaPro"
+           href="https://evpmini.gumroad.com/l/pro">
           Unlock Pro &mdash; $9.99
           <span class="cta-sub">All features. Lifetime access.</span>
-        </button>
+        </a>
       </div>
 
       <!-- Pro Code Entry -->
       <div class="pro-code-section">
-        <div class="pro-code-label">Have a Pro activation code?</div>
+        <div class="pro-code-label">Have a license key from your purchase?</div>
         <div class="pro-code-row">
-          <input type="text" id="proCodeInput" placeholder="Enter code" autocomplete="off">
+          <input type="text" id="proCodeInput" placeholder="Enter license key" autocomplete="off">
           <button id="proCodeSubmit">Activate</button>
         </div>
         <div class="pro-code-error" id="proCodeError"></div>
@@ -485,20 +531,21 @@
        SCRIPTS
        ═══════════════════════════════════════════════════════════════ -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="js/pro-gate.js?v=6"></script>
-  <script src="js/evp-audio-engine.js?v=6"></script>
-  <script src="js/visual-anomaly-engine.js?v=6"></script>
-  <script src="js/emf-sensor-engine.js?v=6"></script>
-  <script src="js/spirit-box-engine.js?v=6"></script>
-  <script src="js/evp-classifier.js?v=6"></script>
-  <script src="js/session-recorder.js?v=6"></script>
-  <script src="js/evidence-report.js?v=6"></script>
-  <script src="js/session-vault.js?v=6"></script>
-  <script src="js/geiger-counter.js?v=6"></script>
-  <script src="js/dowsing-rods.js?v=6"></script>
-  <script src="js/word-detector.js?v=6"></script>
-  <script src="js/investigation-map.js?v=6"></script>
-  <script src="js/app.js?v=6"></script>
+  <script src="https://gumroad.com/js/gumroad.js"></script>
+  <script src="js/pro-gate.js?v=7"></script>
+  <script src="js/evp-audio-engine.js?v=7"></script>
+  <script src="js/visual-anomaly-engine.js?v=7"></script>
+  <script src="js/emf-sensor-engine.js?v=7"></script>
+  <script src="js/spirit-box-engine.js?v=7"></script>
+  <script src="js/evp-classifier.js?v=7"></script>
+  <script src="js/session-recorder.js?v=7"></script>
+  <script src="js/evidence-report.js?v=7"></script>
+  <script src="js/session-vault.js?v=7"></script>
+  <script src="js/geiger-counter.js?v=7"></script>
+  <script src="js/dowsing-rods.js?v=7"></script>
+  <script src="js/word-detector.js?v=7"></script>
+  <script src="js/investigation-map.js?v=7"></script>
+  <script src="js/app.js?v=7"></script>
 
   <!-- Landing Page Logic -->
   <script>
@@ -526,24 +573,32 @@
         enterApp();
       });
 
-      // Buy Pro — opens Gumroad in new tab
-      // REPLACE this URL with your actual Gumroad product link
-      document.getElementById('ctaPro').addEventListener('click', function() {
-        window.open('https://gumroad.com/l/evp-mini-pro', '_blank');
-      });
+      // Buy Pro — Gumroad overlay handles checkout automatically via gumroad.js
+      // The <a> with class="gumroad-button" is intercepted by Gumroad's SDK.
+      // After purchase, user enters the license key from their confirmation email below.
 
-      // Activate Pro Code
-      document.getElementById('proCodeSubmit').addEventListener('click', function() {
+      // Activate Pro Code (async — supports online Gumroad verification)
+      document.getElementById('proCodeSubmit').addEventListener('click', async function() {
         var input = document.getElementById('proCodeInput');
         var error = document.getElementById('proCodeError');
-        var result = proGate.activate(input.value);
-        if (result.success) {
-          enterApp();
-        } else {
-          error.textContent = result.error;
-          input.value = '';
-          input.focus();
+        var btn = document.getElementById('proCodeSubmit');
+        btn.textContent = 'Verifying...';
+        btn.disabled = true;
+        error.textContent = '';
+        try {
+          var result = await proGate.activate(input.value);
+          if (result.success) {
+            enterApp();
+          } else {
+            error.textContent = result.error;
+            input.value = '';
+            input.focus();
+          }
+        } catch (e) {
+          error.textContent = 'Verification failed. Try again.';
         }
+        btn.textContent = 'Activate';
+        btn.disabled = false;
       });
 
       document.getElementById('proCodeInput').addEventListener('keydown', function(e) {

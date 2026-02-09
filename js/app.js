@@ -1,8 +1,26 @@
 /**
- * EVP-MINI — Main Application Controller v6
+ * EVP-MINI — Main Application Controller v7
  * Commercial edition with Pro gate, gear shop, investigation map,
  * share evidence, PWA install, and bottom navigation
  */
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BUSINESS CONFIG — Edit these 3 values to start earning revenue
+// ═══════════════════════════════════════════════════════════════════════════════
+const CONFIG = {
+  // Amazon Associates affiliate tag
+  // Sign up: https://affiliate-program.amazon.com → get your tag → replace below
+  amazonTag: 'evpmini-20',
+
+  // Gumroad product URL for Pro upgrade
+  // 1. Create account: https://gumroad.com
+  // 2. Create product "EVP-MINI Pro" at $9.99, enable license keys
+  // 3. Replace URL below with your product URL
+  gumroadUrl: 'https://evpmini.gumroad.com/l/pro',
+
+  // Price display (update if you change pricing)
+  proPrice: '$9.99',
+};
 
 // ─── DOM Elements ───────────────────────────────────────────────────────────────
 const video = document.getElementById('video');
@@ -163,17 +181,16 @@ function getProGate() { return window.proGateInstance || null; }
 function isPro() { const pg = getProGate(); return pg ? pg.isPro : false; }
 
 // ─── Gear Shop Data ─────────────────────────────────────────────────────────────
-// Replace ASIN placeholders with real Amazon product ASINs
-// Replace YOUR-TAG with your Amazon Associates affiliate tag
+// Amazon search URLs — work immediately, affiliate tag added from CONFIG
 const GEAR_ITEMS = [
-  { emoji: '\u26A1', name: 'K-II EMF Meter', desc: 'Industry-standard electromagnetic field detector used by professional ghost hunters worldwide.', price: '$24.99', url: 'https://www.amazon.com/dp/B07X6FV2QC?tag=YOUR-TAG' },
-  { emoji: '\uD83D\uDCFB', name: 'Spirit Box SB7', desc: 'Adjustable FM sweep radio for real-time spirit communication. Forward & reverse sweep modes.', price: '$69.99', url: 'https://www.amazon.com/dp/B01N6LIC0C?tag=YOUR-TAG' },
-  { emoji: '\uD83C\uDFA4', name: 'Digital Voice Recorder', desc: 'High-sensitivity voice recorder optimized for EVP capture sessions in quiet environments.', price: '$39.99', url: 'https://www.amazon.com/dp/B09TWT1LGR?tag=YOUR-TAG' },
-  { emoji: '\uD83D\uDCF7', name: 'Full Spectrum Camera', desc: 'Modified camera capturing UV, visible, and infrared light simultaneously.', price: '$189.99', url: 'https://www.amazon.com/dp/B0BQX8Y4TM?tag=YOUR-TAG' },
-  { emoji: '\uD83C\uDF21', name: 'FLIR Thermal Camera', desc: 'Smartphone thermal imaging attachment. Detect cold spots and temperature anomalies.', price: '$199.99', url: 'https://www.amazon.com/dp/B0BX46DQHY?tag=YOUR-TAG' },
-  { emoji: '\uD83D\uDD26', name: 'Infrared Thermometer', desc: 'Non-contact temperature gun for rapid cold spot detection during investigations.', price: '$19.99', url: 'https://www.amazon.com/dp/B00LX7XXMW?tag=YOUR-TAG' },
-  { emoji: '\uD83D\uDEF8', name: 'REM Pod', desc: 'Radiating electromagnetic pod that alerts when the EM field is disturbed near it.', price: '$99.99', url: 'https://www.amazon.com/dp/B07WJFGX8K?tag=YOUR-TAG' },
-  { emoji: '\uD83E\uDDF0', name: 'Complete Investigation Kit', desc: 'Starter ghost hunting kit with EMF meter, flashlight, thermometer, and carrying case.', price: '$149.99', url: 'https://www.amazon.com/dp/B0BLFWWG4T?tag=YOUR-TAG' }
+  { emoji: '\u26A1', name: 'K-II EMF Meter', desc: 'Industry-standard electromagnetic field detector used by professional ghost hunters worldwide.', price: '$24.99', search: 'K-II+EMF+Meter+ghost+hunting' },
+  { emoji: '\uD83D\uDCFB', name: 'Spirit Box SB7', desc: 'Adjustable FM sweep radio for real-time spirit communication. Forward & reverse sweep modes.', price: '$69.99', search: 'Spirit+Box+SB7+ghost+hunting' },
+  { emoji: '\uD83C\uDFA4', name: 'Digital Voice Recorder', desc: 'High-sensitivity voice recorder optimized for EVP capture sessions in quiet environments.', price: '$39.99', search: 'digital+voice+recorder+EVP+ghost+hunting' },
+  { emoji: '\uD83D\uDCF7', name: 'Full Spectrum Camera', desc: 'Modified camera capturing UV, visible, and infrared light simultaneously.', price: '$189.99', search: 'full+spectrum+camera+paranormal+ghost' },
+  { emoji: '\uD83C\uDF21', name: 'FLIR Thermal Camera', desc: 'Smartphone thermal imaging attachment. Detect cold spots and temperature anomalies.', price: '$299.99', search: 'FLIR+ONE+Pro+thermal+camera+smartphone' },
+  { emoji: '\uD83D\uDD26', name: 'Infrared Thermometer', desc: 'Non-contact temperature gun for rapid cold spot detection during investigations.', price: '$14.99', search: 'infrared+thermometer+non+contact+temperature+gun' },
+  { emoji: '\uD83D\uDEF8', name: 'REM Pod', desc: 'Radiating electromagnetic pod that alerts when the EM field is disturbed near it.', price: '$99.99', search: 'REM+Pod+ghost+detection+EMF' },
+  { emoji: '\uD83E\uDDF0', name: 'Complete Investigation Kit', desc: 'Starter ghost hunting kit with EMF meter, flashlight, thermometer, and carrying case.', price: '$59.99', search: 'ghost+hunting+equipment+kit+starter' }
 ];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -225,9 +242,8 @@ function applyProRestrictions() {
 }
 
 function showUpgradePrompt(feature) {
-  // Replace with your Gumroad product URL
-  if (confirm('Upgrade to Pro to unlock ' + feature + '!\n\nPro includes all 4 scan modes, unlimited sessions, investigation tools, history, map, and export.\n\nPrice: $9.99 (lifetime)\n\nOpen purchase page?')) {
-    window.open('https://gumroad.com/l/evp-mini-pro', '_blank');
+  if (confirm('Upgrade to Pro to unlock ' + feature + '!\n\nPro includes all 4 scan modes, unlimited sessions, investigation tools, history, map, and export.\n\nPrice: ' + CONFIG.proPrice + ' (lifetime)\n\nOpen purchase page?')) {
+    window.open(CONFIG.gumroadUrl, '_blank');
   }
 }
 
@@ -412,12 +428,13 @@ function renderGearShop() {
   if (!gearGrid) return;
   let html = '';
   for (const item of GEAR_ITEMS) {
+    const url = 'https://www.amazon.com/s?k=' + item.search + '&tag=' + CONFIG.amazonTag;
     html += '<div class="gear-card">';
     html += '<div class="gear-emoji">' + item.emoji + '</div>';
     html += '<div class="gear-name">' + item.name + '</div>';
     html += '<div class="gear-desc">' + item.desc + '</div>';
     html += '<div class="gear-price">' + item.price + '</div>';
-    html += '<a href="' + item.url + '" target="_blank" rel="noopener" class="gear-buy">View on Amazon</a>';
+    html += '<a href="' + url + '" target="_blank" rel="noopener" class="gear-buy">View on Amazon</a>';
     html += '</div>';
   }
   gearGrid.innerHTML = html;

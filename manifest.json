@@ -1,12 +1,16 @@
 {
-  "name": "EVP-MINI",
+  "name": "EVP-MINI — Professional Paranormal Investigation",
   "short_name": "EVP-MINI",
-  "description": "Paranormal Investigation & EVP Capture Tool — Electronic Voice Phenomena Detection",
+  "description": "Professional paranormal investigation tool with EVP capture, spirit box, thermal imaging, EMF detection, and AI-powered analysis. Free to start.",
   "start_url": "/",
+  "scope": "/",
+  "id": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0a14",
   "theme_color": "#0a0a14",
+  "lang": "en",
+  "categories": ["utilities", "entertainment"],
   "icons": [
     {
       "src": "assets/icon-192.png",
@@ -19,6 +23,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Investigation",
+      "short_name": "Investigate",
+      "url": "/",
+      "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

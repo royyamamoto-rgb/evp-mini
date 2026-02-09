@@ -1,26 +1,29 @@
 /**
  * ProGate — Freemium access control for EVP-MINI
- * Manages Free vs Pro tiers with license code validation.
+ * Manages Free vs Pro tiers with license verification.
  *
- * Free tier: EVP Scan only, 30-second sessions, basic audio analysis, gear shop
+ * Verification order:
+ * 1. Check built-in codes (instant, offline)
+ * 2. Call /api/verify-license (Cloudflare Worker → Gumroad API)
+ * 3. Fall back gracefully if network unavailable
+ *
+ * Free tier: EVP Scan only, 30-second sessions, basic audio, gear shop
  * Pro tier:  All 4 modes, unlimited sessions, all tools, history, map, export
- *
- * For production, replace client-side code validation with a serverless
- * function (Cloudflare Worker) that checks against a database of Gumroad orders.
  */
 class ProGate {
   constructor() {
-    // Valid activation codes — replace with your Gumroad-generated codes
-    // For production: validate via Cloudflare Worker + Gumroad API
-    this._codes = new Set([
+    // Built-in activation codes (work offline, no API needed)
+    // Add your own codes here or rely on Gumroad license keys
+    this._offlineCodes = new Set([
       'EVPMINI-PRO-2024',
       'GHOST-HUNTER-VIP',
       'PARANORMAL-PRO-1',
       'EVP-LAUNCH-2024',
-      'evpmini2024'        // Legacy admin access
+      'evpmini2024'
     ]);
 
     this.isPro = false;
+    this._licenseKey = null;
     this._load();
   }
 
@@ -29,7 +32,10 @@ class ProGate {
       const stored = localStorage.getItem('evpProStatus');
       if (stored) {
         const data = JSON.parse(stored);
-        if (data.pro === true) this.isPro = true;
+        if (data.pro === true) {
+          this.isPro = true;
+          this._licenseKey = data.licenseKey || null;
+        }
       }
     } catch (e) { /* localStorage unavailable */ }
   }
@@ -38,41 +44,60 @@ class ProGate {
     try {
       localStorage.setItem('evpProStatus', JSON.stringify({
         pro: this.isPro,
+        licenseKey: this._licenseKey,
         activatedAt: Date.now()
       }));
     } catch (e) { /* localStorage unavailable */ }
   }
 
-  activate(code) {
+  async activate(code) {
     const c = code.trim();
-    if (this._codes.has(c) || this._codes.has(c.toUpperCase())) {
+    if (!c) return { success: false, error: 'Please enter a license key.' };
+
+    // 1. Check built-in codes (instant, offline)
+    if (this._offlineCodes.has(c) || this._offlineCodes.has(c.toUpperCase())) {
       this.isPro = true;
+      this._licenseKey = c;
       this._save();
       return { success: true };
     }
-    return { success: false, error: 'Invalid code. Check your purchase confirmation email.' };
+
+    // 2. Try online Gumroad verification
+    try {
+      const res = await fetch('/api/verify-license', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ license_key: c })
+      });
+      const data = await res.json();
+      if (data.success) {
+        this.isPro = true;
+        this._licenseKey = c;
+        this._save();
+        return { success: true };
+      }
+      return { success: false, error: data.error || 'Invalid license key.' };
+    } catch (e) {
+      // Network unavailable
+      return { success: false, error: 'Could not verify online. Check connection and try again.' };
+    }
   }
 
-  // Check if a feature is available in current tier
   canUse(feature) {
     if (this.isPro) return true;
-    // Free tier allowed features
     const free = ['evp', 'basic-audio', 'gear'];
     return free.includes(feature);
   }
 
-  // Max session duration in seconds (Infinity for Pro)
   getMaxDuration() {
     return this.isPro ? Infinity : 30;
   }
 
-  // Allowed scan modes
   getAllowedModes() {
     if (this.isPro) return ['evp', 'spiritbox', 'visual', 'fullspectrum'];
     return ['evp'];
   }
 
-  // Feature access map
   getFeatures() {
     return {
       spiritBox: this.isPro,
@@ -83,11 +108,10 @@ class ProGate {
       map: this.isPro,
       export: this.isPro,
       unlimitedDuration: this.isPro,
-      gear: true  // Always available (affiliate revenue from free users)
+      gear: true
     };
   }
 
-  // Restore from localStorage (for returning users)
   restorePurchase() {
     this._load();
     return this.isPro;
@@ -95,6 +119,7 @@ class ProGate {
 
   reset() {
     this.isPro = false;
+    this._licenseKey = null;
     try { localStorage.removeItem('evpProStatus'); } catch (e) {}
   }
 }
