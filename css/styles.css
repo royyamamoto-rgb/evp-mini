@@ -398,3 +398,157 @@ body { background: #0a0a14; color: #e0e0e0; font-family: system-ui, -apple-syste
 ::-webkit-scrollbar-track { background: #0a0a14; }
 ::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #3a3a5a; }
+
+/* ─── EVP Count Badge ───────────────────────────────────────── */
+.evp-count {
+  padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 700;
+  background: rgba(255, 23, 68, 0.15); color: #ff1744; border: 1px solid rgba(255, 23, 68, 0.3);
+  font-family: 'Courier New', monospace; letter-spacing: 0.5px;
+  transition: background 0.3s, transform 0.2s;
+}
+.evp-count.has-evp { background: rgba(255, 23, 68, 0.3); transform: scale(1.05); }
+
+/* ─── Torch Button Active ───────────────────────────────────── */
+.header-controls button.torch-on {
+  background: #ffea00; border-color: #ffea00; color: #0a0a14; font-weight: 700;
+}
+
+/* ─── Record Button Active ──────────────────────────────────── */
+.header-controls button.rec-on {
+  background: #ff1744; border-color: #ff1744; color: #fff;
+  animation: rec-blink 1s ease-in-out infinite;
+}
+@keyframes rec-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ─── Scan Line Animation ───────────────────────────────────── */
+.scan-line {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #00e5ff, transparent);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+  pointer-events: none; opacity: 0; z-index: 2;
+  top: 0;
+}
+.scan-line.active {
+  opacity: 1;
+  animation: scan-sweep 3s linear infinite;
+}
+@keyframes scan-sweep {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+/* ─── Screen Flash on EVP Detection ─────────────────────────── */
+.screen-flash {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  z-index: 3; border-radius: 12px;
+  transition: opacity 0.1s;
+}
+.screen-flash.flash-a {
+  background: rgba(0, 230, 118, 0.3);
+  animation: flash-fade 0.8s ease-out forwards;
+}
+.screen-flash.flash-b {
+  background: rgba(255, 234, 0, 0.25);
+  animation: flash-fade 0.8s ease-out forwards;
+}
+.screen-flash.flash-c {
+  background: rgba(255, 145, 0, 0.2);
+  animation: flash-fade 0.8s ease-out forwards;
+}
+@keyframes flash-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ─── Video Anomaly Border Glow ─────────────────────────────── */
+.video-container.anomaly-border {
+  border-color: #ff1744;
+  box-shadow: 0 0 15px rgba(255, 23, 68, 0.4), inset 0 0 10px rgba(255, 23, 68, 0.1);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* ─── Waveform Section ──────────────────────────────────────── */
+.waveform-section {
+  margin-top: 8px; display: none;
+}
+.waveform-section.visible { display: block; }
+.waveform-section .section-label {
+  font-size: 0.7rem; color: #7c4dff; text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 4px; font-weight: 600;
+}
+.waveform-canvas {
+  width: 100%; height: 60px; border-radius: 8px; background: #000;
+  border: 1px solid #1e1e3a;
+}
+
+/* ─── Spirit Mode Selector ──────────────────────────────────── */
+.spirit-mode-selector {
+  display: flex; gap: 6px; margin-top: 8px;
+}
+.spirit-mode-btn {
+  flex: 1; padding: 6px 4px; border: 1px solid #2a2a4a; border-radius: 6px;
+  background: #0a0a14; color: #9e9ec0; font-size: 0.7rem; font-weight: 600;
+  cursor: pointer; text-transform: uppercase; text-align: center;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.spirit-mode-btn.active {
+  background: #e040fb; border-color: #e040fb; color: #fff;
+}
+
+/* ─── EVP Detection Log ─────────────────────────────────────── */
+.evp-log {
+  margin-top: 12px; padding: 12px; border-radius: 8px;
+  background: #12122a; border: 1px solid #1e1e3a; display: none;
+}
+.evp-log.visible { display: block; }
+.evp-log .panel-title { margin-bottom: 6px; }
+.evp-log-entries { max-height: 200px; overflow-y: auto; }
+.evp-log-entry {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; margin-bottom: 4px; border-radius: 6px;
+  background: #0a0a14; border-left: 3px solid #2a2a4a;
+  animation: log-slide 0.3s ease-out;
+}
+.evp-log-entry.class-a { border-left-color: #00e676; }
+.evp-log-entry.class-b { border-left-color: #ffea00; }
+.evp-log-entry.class-c { border-left-color: #ff9100; }
+.evp-log-entry .log-time {
+  font-size: 0.7rem; color: #9e9ec0; font-family: 'Courier New', monospace; min-width: 40px;
+}
+.evp-log-entry .log-class {
+  font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 3px;
+}
+.evp-log-entry.class-a .log-class { background: #00e676; color: #0a0a14; }
+.evp-log-entry.class-b .log-class { background: #ffea00; color: #0a0a14; }
+.evp-log-entry.class-c .log-class { background: #ff9100; color: #0a0a14; }
+.evp-log-entry .log-detail {
+  font-size: 0.7rem; color: #e0e0e0; flex: 1;
+}
+@keyframes log-slide {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── Panel Fade-In Animation ───────────────────────────────── */
+.audio-panel.visible, .sensor-panel.visible, .spirit-box-panel.visible,
+.visual-info-panel.visible, .evp-log.visible {
+  animation: panel-fade 0.3s ease-out;
+}
+@keyframes panel-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Button Press Feedback ─────────────────────────────────── */
+.btn-start:active, .btn-stop:active,
+.mode-btn:active, .duration-btn:active, .visual-btn:active,
+.spirit-mode-btn:active, .header-controls button:active {
+  transform: scale(0.95);
+}
+
+/* ─── Smoother Meter Transitions ────────────────────────────── */
+.gauge-bar-fill { transition: width 0.15s ease-out; }
+.meter-fill { transition: width 0.08s ease-out; }

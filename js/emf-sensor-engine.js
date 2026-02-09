@@ -36,6 +36,12 @@ class EMFSensorEngine {
     this.dominantVibFreq = 0;
     this.accelSource = 'none'; // 'api', 'motion', 'none'
 
+    // Gyroscope state
+    this.gyroAlpha = 0;
+    this.gyroBeta = 0;
+    this.gyroGamma = 0;
+    this.gyroscopeAvailable = false;
+
     // Barometer state
     this.pressure = 0;
     this.pressureBaseline = 0;
@@ -159,6 +165,15 @@ class EMFSensorEngine {
           if (this.accelBuffer.length > this.accelBufferSize) {
             this.accelBuffer.shift();
           }
+        }
+
+        // Gyroscope from rotationRate
+        const rot = e.rotationRate;
+        if (rot && (rot.alpha !== null || rot.beta !== null || rot.gamma !== null)) {
+          this.gyroAlpha = rot.alpha || 0;
+          this.gyroBeta = rot.beta || 0;
+          this.gyroGamma = rot.gamma || 0;
+          this.gyroscopeAvailable = true;
         }
       };
       window.addEventListener('devicemotion', this._motionHandler);
@@ -361,6 +376,12 @@ class EMFSensorEngine {
         pressure: this.pressure,
         baseline: this.pressureBaseline,
         anomaly: this.pressureAnomaly
+      },
+      gyroscope: {
+        available: this.gyroscopeAvailable,
+        alpha: this.gyroAlpha,
+        beta: this.gyroBeta,
+        gamma: this.gyroGamma
       }
     };
   }

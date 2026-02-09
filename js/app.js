@@ -1,5 +1,5 @@
 /**
- * EVP-MINI — Main Application Controller
+ * EVP-MINI — Main Application Controller v3
  * Orchestrates all engines: audio, visual, sensors, spirit box, classifier, recorder, report
  */
 
@@ -7,11 +7,14 @@
 const video = document.getElementById('video');
 const overlay = document.getElementById('overlay');
 const overlayCtx = overlay ? overlay.getContext('2d') : null;
+const videoContainer = document.getElementById('videoContainer');
 
 const btnStart = document.getElementById('btnStart');
 const btnStop = document.getElementById('btnStop');
 const btnFlipCamera = document.getElementById('btnFlipCamera');
 const btnRecord = document.getElementById('btnRecord');
+const btnTorch = document.getElementById('btnTorch');
+const btnScreenshot = document.getElementById('btnScreenshot');
 const btnNewScan = document.getElementById('btnNewScan');
 const btnExport = document.getElementById('btnExport');
 const btnPlayForward = document.getElementById('btnPlayForward');
@@ -23,10 +26,17 @@ const statusBar = document.getElementById('statusBar');
 const timerDisplay = document.getElementById('timerDisplay');
 const modeBadge = document.getElementById('modeBadge');
 const nirBadge = document.getElementById('nirBadge');
+const evpCountEl = document.getElementById('evpCount');
+const scanLine = document.getElementById('scanLine');
+const screenFlash = document.getElementById('screenFlash');
 
 const spectrogramSection = document.getElementById('spectrogramSection');
 const spectrogramCanvas = document.getElementById('spectrogramCanvas');
 const spectrogramCtx = spectrogramCanvas ? spectrogramCanvas.getContext('2d') : null;
+
+const waveformSection = document.getElementById('waveformSection');
+const waveformCanvas = document.getElementById('waveformCanvas');
+const waveformCtx = waveformCanvas ? waveformCanvas.getContext('2d') : null;
 
 const audioPanel = document.getElementById('audioPanel');
 const sensorPanel = document.getElementById('sensorPanel');
@@ -35,6 +45,8 @@ const visualInfoPanel = document.getElementById('visualInfoPanel');
 const visualModeSelector = document.getElementById('visualModeSelector');
 const playbackSection = document.getElementById('playbackSection');
 const evpAlert = document.getElementById('evpAlert');
+const evpLog = document.getElementById('evpLog');
+const evpLogEntries = document.getElementById('evpLogEntries');
 const liveIndicators = document.getElementById('liveIndicators');
 const resultsPanel = document.getElementById('resultsPanel');
 const reportContent = document.getElementById('reportContent');
@@ -57,13 +69,14 @@ const emfBar = document.getElementById('emfBar');
 const vibrationValue = document.getElementById('vibrationValue');
 const vibrationBar = document.getElementById('vibrationBar');
 const pressureValue = document.getElementById('pressureValue');
+const gyroValue = document.getElementById('gyroValue');
 
 // Spirit box elements
 const sweepFreq = document.getElementById('sweepFreq');
 const sweepSpeed = document.getElementById('sweepSpeed');
 const sweepSpeedVal = document.getElementById('sweepSpeedVal');
 const fragmentCount = document.getElementById('fragmentCount');
-const sweepMode = document.getElementById('sweepMode');
+const sweepModeEl = document.getElementById('sweepMode');
 
 // Visual info elements
 const currentFilter = document.getElementById('currentFilter');
@@ -77,8 +90,8 @@ const evpAlertDetail = document.getElementById('evpAlertDetail');
 let running = false;
 let stream = null;
 let facingMode = 'environment';
-let scanMode = 'evp'; // evp, spiritbox, visual, fullspectrum
-let scanDuration = 'continuous'; // continuous, 30, 60, 120
+let scanMode = 'evp';
+let scanDuration = 'continuous';
 let visualMode = 'normal';
 let scanStartTime = 0;
 let scanTimerInterval = null;
@@ -87,12 +100,15 @@ let frameCount = 0;
 let isRecording = false;
 let audioInitialized = false;
 let sensorsInitialized = false;
+let torchOn = false;
+let evpTotalCount = 0;
 
 // ─── Performance Throttling ─────────────────────────────────────────────────────
 let lastAudioUITime = 0;
 let lastSensorUITime = 0;
 let lastIndicatorTime = 0;
 let lastVisualTime = 0;
+let lastWaveformTime = 0;
 let cachedAssess = null;
 let prevIndicatorHTML = '';
 let overlayCleared = true;
@@ -126,13 +142,13 @@ function formatTimer(ms) {
 async function startCamera() {
   setStatus('Accessing camera and microphone...', '');
 
-  // Stop existing stream
   if (stream) {
     stream.getTracks().forEach(t => t.stop());
     stream = null;
   }
+  torchOn = false;
+  if (btnTorch) btnTorch.classList.remove('torch-on');
 
-  // Audio constraints: disable browser processing to capture faint EVP signals
   const evpAudio = {
     echoCancellation: false,
     noiseSuppression: false,
@@ -141,7 +157,6 @@ async function startCamera() {
     channelCount: 1
   };
 
-  // Progressive constraint fallback
   const constraintSets = [
     { video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: evpAudio },
     { video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: evpAudio },
@@ -165,20 +180,22 @@ async function startCamera() {
         setTimeout(reject, 5000);
       });
 
-      // Size overlay to video
       if (overlay) {
         overlay.width = video.videoWidth;
         overlay.height = video.videoHeight;
       }
 
-      // Size spectrogram canvas
       if (spectrogramCanvas) {
         spectrogramCanvas.width = spectrogramCanvas.offsetWidth * (window.devicePixelRatio || 1);
         spectrogramCanvas.height = 120 * (window.devicePixelRatio || 1);
-        spectroColImg = null; // Reset column buffer on resize
+        spectroColImg = null;
       }
 
-      // Init audio if stream has audio tracks
+      if (waveformCanvas) {
+        waveformCanvas.width = waveformCanvas.offsetWidth * (window.devicePixelRatio || 1);
+        waveformCanvas.height = 60 * (window.devicePixelRatio || 1);
+      }
+
       const hasAudio = stream.getAudioTracks().length > 0;
       if (hasAudio && !audioInitialized) {
         const success = await evpAudioEngine.initAudioContext(stream);
@@ -188,9 +205,7 @@ async function startCamera() {
         }
       }
 
-      // Update NIR badge
       updateNIRBadge();
-
       setStatus('Ready — Select mode and start investigation', 'ready');
       return true;
     } catch (err) {
@@ -210,11 +225,133 @@ function updateNIRBadge() {
   }
 }
 
+// ─── Torch Toggle ───────────────────────────────────────────────────────────────
+async function toggleTorch() {
+  if (!stream) return;
+  const videoTrack = stream.getVideoTracks()[0];
+  if (!videoTrack) return;
+
+  try {
+    const capabilities = videoTrack.getCapabilities();
+    if (!capabilities.torch) {
+      setStatus('Torch not available on this device', '');
+      setTimeout(() => { if (!running) setStatus('Ready — Select mode and start investigation', 'ready'); }, 2000);
+      return;
+    }
+    torchOn = !torchOn;
+    await videoTrack.applyConstraints({ advanced: [{ torch: torchOn }] });
+    if (btnTorch) btnTorch.classList.toggle('torch-on', torchOn);
+  } catch (e) {
+    console.warn('Torch toggle failed:', e);
+    torchOn = false;
+    if (btnTorch) btnTorch.classList.remove('torch-on');
+  }
+}
+
+// ─── Screenshot ─────────────────────────────────────────────────────────────────
+function takeScreenshot() {
+  if (!video || !video.videoWidth) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+
+  // Draw video frame
+  ctx.drawImage(video, 0, 0);
+
+  // Draw overlay on top if active
+  if (overlay && !overlayCleared) {
+    ctx.drawImage(overlay, 0, 0);
+  }
+
+  // Download
+  const link = document.createElement('a');
+  link.download = 'evp-mini-' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) + '.png';
+  link.href = canvas.toDataURL('image/png');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// ─── Screen Flash + Haptic ──────────────────────────────────────────────────────
+function triggerScreenFlash(evpClass) {
+  if (!screenFlash) return;
+
+  // Remove existing flash class
+  screenFlash.className = 'screen-flash';
+  // Force reflow to restart animation
+  void screenFlash.offsetWidth;
+
+  const cls = evpClass.toLowerCase();
+  screenFlash.classList.add('flash-' + cls);
+
+  // Haptic vibration
+  if (navigator.vibrate) {
+    if (cls === 'a') navigator.vibrate([100, 50, 100, 50, 100]);
+    else if (cls === 'b') navigator.vibrate([100, 50, 100]);
+    else navigator.vibrate(100);
+  }
+
+  // Remove class after animation
+  setTimeout(() => {
+    screenFlash.className = 'screen-flash';
+  }, 900);
+}
+
+// ─── EVP Log ────────────────────────────────────────────────────────────────────
+function addEVPLogEntry(classification) {
+  if (!evpLogEntries) return;
+
+  const elapsed = Date.now() - scanStartTime;
+  const timeStr = formatTimer(elapsed);
+  const cls = classification.class.toLowerCase();
+
+  const entry = document.createElement('div');
+  entry.className = 'evp-log-entry class-' + cls;
+  entry.innerHTML =
+    '<span class="log-time">' + timeStr + '</span>' +
+    '<span class="log-class">Class ' + classification.class + '</span>' +
+    '<span class="log-detail">' + classification.confidence + '% | ' +
+    Math.round(classification.spectralCentroid) + 'Hz' +
+    (classification.hasVoicePattern ? ' | Voice' : '') + '</span>';
+
+  evpLogEntries.insertBefore(entry, evpLogEntries.firstChild);
+
+  // Keep log manageable
+  while (evpLogEntries.children.length > 50) {
+    evpLogEntries.removeChild(evpLogEntries.lastChild);
+  }
+}
+
+// ─── EVP Count ──────────────────────────────────────────────────────────────────
+function updateEVPCount() {
+  if (evpCountEl) {
+    evpCountEl.textContent = 'EVP: ' + evpTotalCount;
+    evpCountEl.classList.toggle('has-evp', evpTotalCount > 0);
+  }
+}
+
+// ─── Video Anomaly Border ───────────────────────────────────────────────────────
+let anomalyBorderTimeout = null;
+function setAnomalyBorder(active) {
+  if (!videoContainer) return;
+  if (active) {
+    videoContainer.classList.add('anomaly-border');
+    if (anomalyBorderTimeout) clearTimeout(anomalyBorderTimeout);
+    anomalyBorderTimeout = setTimeout(() => {
+      videoContainer.classList.remove('anomaly-border');
+    }, 2000);
+  }
+}
+
 // ─── Scan Lifecycle ─────────────────────────────────────────────────────────────
 async function startScan() {
   if (running) return;
   running = true;
   frameCount = 0;
+  evpTotalCount = 0;
+  updateEVPCount();
 
   // Init sensors on first scan (requires user gesture for iOS permissions)
   if (!sensorsInitialized) {
@@ -233,6 +370,9 @@ async function startScan() {
   spiritBoxEngine.clearAll();
   evpClassifier.clearAll();
   evidenceReport.clearAll();
+
+  // Clear EVP log
+  if (evpLogEntries) evpLogEntries.innerHTML = '';
 
   // Set visual mode
   visualAnomalyEngine.setMode(
@@ -259,12 +399,14 @@ async function startScan() {
     timerDisplay.classList.add('visible');
   }
 
+  // Scan line
+  if (scanLine) scanLine.classList.add('active');
+
   // Start timer interval
   scanTimerInterval = setInterval(() => {
     const elapsed = Date.now() - scanStartTime;
     if (timerDisplay) timerDisplay.textContent = formatTimer(elapsed);
 
-    // Check duration limit
     if (scanDuration !== 'continuous') {
       const limitMs = parseInt(scanDuration) * 1000;
       if (elapsed >= limitMs) {
@@ -287,15 +429,14 @@ async function startScan() {
   lastSensorUITime = 0;
   lastIndicatorTime = 0;
   lastVisualTime = 0;
+  lastWaveformTime = 0;
   prevIndicatorHTML = '';
   overlayCleared = !(scanMode === 'visual' || scanMode === 'fullspectrum');
 
-  // Clear overlay for non-visual modes
   if (overlayCleared && overlayCtx && overlay) {
     overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
   }
 
-  // Start processing loop
   processFrame();
 }
 
@@ -307,22 +448,20 @@ function completeScan() {
   if (!running) return;
   running = false;
 
-  // Stop timer
   if (scanTimerInterval) {
     clearInterval(scanTimerInterval);
     scanTimerInterval = null;
   }
 
-  // Stop animation frame
   if (animFrameId) {
     cancelAnimationFrame(animFrameId);
     animFrameId = null;
   }
 
-  // Stop spirit box
-  spiritBoxEngine.stop();
+  // Stop scan line
+  if (scanLine) scanLine.classList.remove('active');
 
-  // Stop recording
+  spiritBoxEngine.stop();
   sessionRecorder.stopRecording();
 
   // Generate report
@@ -334,8 +473,6 @@ function completeScan() {
   const recordingData = sessionRecorder.getRecordingState();
 
   evidenceReport.analyze(audioReport, spiritBoxReport, visualReport, sensorReport, evpReport, recordingData);
-
-  // Render report
   renderReport();
 
   // UI state
@@ -346,19 +483,16 @@ function completeScan() {
     playbackSection.classList.add('visible');
   }
 
+  // Remove anomaly border
+  if (videoContainer) videoContainer.classList.remove('anomaly-border');
+
   setStatus('Investigation complete — Review evidence report', 'complete');
 }
 
 function renderReport() {
-  if (reportContent) {
-    reportContent.innerHTML = evidenceReport.renderFriendlyReport();
-  }
-  if (technicalDetail) {
-    technicalDetail.innerHTML = evidenceReport.renderTechnicalDetail();
-  }
-  if (resultsPanel) {
-    resultsPanel.classList.add('visible');
-  }
+  if (reportContent) reportContent.innerHTML = evidenceReport.renderFriendlyReport();
+  if (technicalDetail) technicalDetail.innerHTML = evidenceReport.renderTechnicalDetail();
+  if (resultsPanel) resultsPanel.classList.add('visible');
 }
 
 // ─── Frame Processing Loop ──────────────────────────────────────────────────────
@@ -381,12 +515,23 @@ function processFrame() {
       lastAudioUITime = now;
     }
 
+    // Waveform at ~15fps
+    if (now - lastWaveformTime > 66) {
+      drawWaveform();
+      lastWaveformTime = now;
+    }
+
     // EVP classification (every frame for accurate duration tracking)
     if (scanMode === 'evp' || scanMode === 'spiritbox' || scanMode === 'fullspectrum') {
       const noiseFloor = evpAudioEngine.getNoiseFloor();
       const classification = evpClassifier.processFrame(cachedAssess, noiseFloor);
       if (classification) {
         showEVPAlert(classification);
+        triggerScreenFlash(classification.class);
+        addEVPLogEntry(classification);
+        evpTotalCount++;
+        updateEVPCount();
+        setAnomalyBorder(true);
       }
     }
   }
@@ -399,7 +544,6 @@ function processFrame() {
   // 3. Visual processing
   const isVisualMode = scanMode === 'visual' || scanMode === 'fullspectrum';
   if (isVisualMode) {
-    // Visual filters at ~20fps (pixel processing is expensive)
     if (now - lastVisualTime > 50) {
       const processed = visualAnomalyEngine.processFrame(video);
       if (processed && overlayCtx && overlay && visualMode !== 'normal') {
@@ -412,21 +556,19 @@ function processFrame() {
       lastVisualTime = now;
     }
   } else {
-    // Clear overlay once when not in visual mode
     if (!overlayCleared && overlayCtx && overlay) {
       overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
       overlayCleared = true;
     }
-    // Background motion tracking at ~5fps
     if (frameCount % 6 === 0) {
       visualAnomalyEngine.processFrame(video);
     }
   }
 
-  // 4. Sensor processing (reading cached values — lightweight)
+  // 4. Sensor processing
   emfSensorEngine.processFrame();
 
-  // 5. UI updates at ~10fps (DOM writes are expensive)
+  // 5. UI updates at ~10fps
   if (now - lastSensorUITime > 100) {
     updateSensorUI();
     if (scanMode === 'spiritbox' || scanMode === 'fullspectrum') {
@@ -441,6 +583,12 @@ function processFrame() {
   // 6. Live indicators at ~5fps
   if (now - lastIndicatorTime > 200) {
     updateLiveIndicators();
+
+    // Anomaly border from audio
+    if (cachedAssess && cachedAssess.isAnomaly) {
+      setAnomalyBorder(true);
+    }
+
     lastIndicatorTime = now;
   }
 }
@@ -484,16 +632,13 @@ function drawSpectrogram() {
   const h = spectrogramCanvas.height;
   if (w === 0 || h === 0) return;
 
-  // Scroll left using canvas self-copy (much faster than getImageData/putImageData)
   spectrogramCtx.drawImage(spectrogramCanvas, 1, 0, w - 1, h, 0, 0, w - 1, h);
 
-  // Prepare column ImageData (reuse buffer across frames)
   if (!spectroColImg || spectroColImg.height !== h) {
     spectroColImg = spectrogramCtx.createImageData(1, h);
   }
   const d = spectroColImg.data;
 
-  // Only show up to ~8000Hz (relevant range)
   const maxBin = Math.min(slice.length, Math.ceil(8000 / evpAudioEngine.binResolution));
 
   for (let y = 0; y < h; y++) {
@@ -516,7 +661,6 @@ function drawSpectrogram() {
 }
 
 function spectrogramColorRGB(t) {
-  // Returns [r, g, b] — avoids CSS string allocation per pixel
   if (t < 0.15) {
     const s = t / 0.15;
     return [0, 0, Math.round(s * 100)];
@@ -536,6 +680,46 @@ function spectrogramColorRGB(t) {
     const s = (t - 0.85) / 0.15;
     return [255, Math.round(55 + s * 200), Math.round(s * 255)];
   }
+}
+
+// ─── Waveform Drawing ───────────────────────────────────────────────────────────
+function drawWaveform() {
+  if (!waveformCtx || !waveformCanvas || !evpAudioEngine.timeDomainData) return;
+
+  const w = waveformCanvas.width;
+  const h = waveformCanvas.height;
+  if (w === 0 || h === 0) return;
+
+  const data = evpAudioEngine.timeDomainData;
+  const bufLen = data.length;
+
+  waveformCtx.fillStyle = '#000';
+  waveformCtx.fillRect(0, 0, w, h);
+
+  waveformCtx.lineWidth = 1.5;
+  waveformCtx.strokeStyle = '#00e5ff';
+  waveformCtx.beginPath();
+
+  const sliceWidth = w / bufLen;
+  let x = 0;
+
+  for (let i = 0; i < bufLen; i++) {
+    const v = data[i];
+    const y = (1 - v) * h / 2;
+    if (i === 0) waveformCtx.moveTo(x, y);
+    else waveformCtx.lineTo(x, y);
+    x += sliceWidth;
+  }
+
+  waveformCtx.stroke();
+
+  // Center line
+  waveformCtx.strokeStyle = 'rgba(124, 77, 255, 0.3)';
+  waveformCtx.lineWidth = 0.5;
+  waveformCtx.beginPath();
+  waveformCtx.moveTo(0, h / 2);
+  waveformCtx.lineTo(w, h / 2);
+  waveformCtx.stroke();
 }
 
 // ─── Sensor UI Updates ──────────────────────────────────────────────────────────
@@ -580,6 +764,20 @@ function updateSensorUI() {
     }
   }
 
+  // Gyroscope
+  if (gyroValue) {
+    if (state.gyroscope && state.gyroscope.available) {
+      gyroValue.textContent =
+        'a:' + state.gyroscope.alpha.toFixed(0) +
+        ' b:' + state.gyroscope.beta.toFixed(0) +
+        ' g:' + state.gyroscope.gamma.toFixed(0) + ' °/s';
+      gyroValue.className = 'gauge-value';
+    } else {
+      gyroValue.textContent = 'Unavailable';
+      gyroValue.className = 'gauge-value unavailable';
+    }
+  }
+
   // Pressure
   if (pressureValue) {
     if (state.barometer.available) {
@@ -597,7 +795,7 @@ function updateSpiritBoxUI() {
   const state = spiritBoxEngine.getCurrentState();
   if (sweepFreq) sweepFreq.textContent = state.currentFreqDisplay;
   if (fragmentCount) fragmentCount.textContent = state.fragmentCount;
-  if (sweepMode) sweepMode.textContent = state.mode === 'sweep' ? 'Sweep' : state.mode === 'white-noise' ? 'White' : 'Pink';
+  if (sweepModeEl) sweepModeEl.textContent = state.mode === 'sweep' ? 'Sweep' : state.mode === 'white-noise' ? 'White' : 'Pink';
 }
 
 // ─── Visual UI ──────────────────────────────────────────────────────────────────
@@ -618,12 +816,11 @@ function showEVPAlert(classification) {
   }
   if (evpAlertDetail) {
     evpAlertDetail.textContent =
-      `Confidence: ${classification.confidence}% | Duration: ${classification.duration}s | ` +
-      `Centroid: ${classification.spectralCentroid}Hz | HNR: ${classification.hnr}dB` +
+      'Confidence: ' + classification.confidence + '% | Duration: ' + classification.duration + 's | ' +
+      'Centroid: ' + classification.spectralCentroid + 'Hz | HNR: ' + classification.hnr + 'dB' +
       (classification.hasVoicePattern ? ' | Voice pattern detected' : '');
   }
 
-  // Auto-hide after 5 seconds
   if (evpAlertTimeout) clearTimeout(evpAlertTimeout);
   evpAlertTimeout = setTimeout(() => {
     if (evpAlert) evpAlert.classList.remove('visible');
@@ -635,29 +832,24 @@ function updateLiveIndicators() {
   if (!liveIndicators) return;
   const chips = [];
 
-  // Audio anomaly
   if (evpAudioEngine.isAnomaly) {
     chips.push('<span class="indicator-chip anomaly">AUDIO ANOMALY</span>');
   }
 
-  // Voice pattern
   const formants = evpAudioEngine.getFormantAnalysis();
   if (formants && formants.hasVoicePattern) {
     chips.push('<span class="indicator-chip voice">VOICE PATTERN</span>');
   }
 
-  // EMF
   const emfState = emfSensorEngine.getEMFAnomaly();
   if (emfState.isAnomaly) {
     chips.push('<span class="indicator-chip emf">EMF SPIKE +' + emfState.deviationMicroTesla.toFixed(1) + 'uT</span>');
   }
 
-  // Motion
   if (visualAnomalyEngine.getMotionLevel() > 10) {
     chips.push('<span class="indicator-chip motion">MOTION ' + visualAnomalyEngine.getMotionLevel().toFixed(0) + '%</span>');
   }
 
-  // Infrasound
   const vibState = emfSensorEngine.getVibrationAnalysis();
   if (vibState.fearFreqAlert) {
     chips.push('<span class="indicator-chip infrasound">FEAR FREQ 18.98Hz</span>');
@@ -665,7 +857,6 @@ function updateLiveIndicators() {
     chips.push('<span class="indicator-chip infrasound">INFRASOUND ' + vibState.dominantFreqHz.toFixed(1) + 'Hz</span>');
   }
 
-  // Only update DOM if content actually changed
   const html = chips.join('');
   if (html !== prevIndicatorHTML) {
     liveIndicators.innerHTML = html;
@@ -675,24 +866,18 @@ function updateLiveIndicators() {
 
 // ─── Panel Visibility ───────────────────────────────────────────────────────────
 function showPanelsForMode() {
-  // Audio panel — always shown when scanning
   if (audioPanel) audioPanel.classList.add('visible');
   if (spectrogramSection) spectrogramSection.classList.add('visible');
-
-  // Sensor panel — always shown
+  if (waveformSection) waveformSection.classList.add('visible');
   if (sensorPanel) sensorPanel.classList.add('visible');
+  if (evpLog) evpLog.classList.add('visible');
 
-  // Spirit box panel
   if (spiritBoxPanel) {
     spiritBoxPanel.classList.toggle('visible', scanMode === 'spiritbox' || scanMode === 'fullspectrum');
   }
-
-  // Visual info panel
   if (visualInfoPanel) {
     visualInfoPanel.classList.toggle('visible', scanMode === 'visual' || scanMode === 'fullspectrum');
   }
-
-  // Visual mode selector
   if (visualModeSelector) {
     visualModeSelector.style.display = (scanMode === 'visual' || scanMode === 'fullspectrum') ? 'flex' : 'none';
   }
@@ -701,10 +886,12 @@ function showPanelsForMode() {
 function hidePanels() {
   if (audioPanel) audioPanel.classList.remove('visible');
   if (spectrogramSection) spectrogramSection.classList.remove('visible');
+  if (waveformSection) waveformSection.classList.remove('visible');
   if (sensorPanel) sensorPanel.classList.remove('visible');
   if (spiritBoxPanel) spiritBoxPanel.classList.remove('visible');
   if (visualInfoPanel) visualInfoPanel.classList.remove('visible');
   if (evpAlert) evpAlert.classList.remove('visible');
+  if (evpLog) evpLog.classList.remove('visible');
 }
 
 // ─── Event Listeners ────────────────────────────────────────────────────────────
@@ -713,6 +900,12 @@ function hidePanels() {
 if (btnStart) btnStart.addEventListener('click', startScan);
 if (btnStop) btnStop.addEventListener('click', stopScan);
 
+// Torch
+if (btnTorch) btnTorch.addEventListener('click', toggleTorch);
+
+// Screenshot
+if (btnScreenshot) btnScreenshot.addEventListener('click', takeScreenshot);
+
 // New Scan
 if (btnNewScan) {
   btnNewScan.addEventListener('click', () => {
@@ -720,6 +913,8 @@ if (btnNewScan) {
     if (playbackSection) playbackSection.classList.remove('visible');
     hidePanels();
     sessionRecorder.clearAll();
+    evpTotalCount = 0;
+    updateEVPCount();
     setStatus('Ready — Select mode and start investigation', 'ready');
   });
 }
@@ -736,7 +931,7 @@ if (btnFlipCamera) {
 if (btnRecord) {
   btnRecord.addEventListener('click', () => {
     isRecording = !isRecording;
-    btnRecord.classList.toggle('active', isRecording);
+    btnRecord.classList.toggle('rec-on', isRecording);
     btnRecord.textContent = isRecording ? 'REC ON' : 'REC';
   });
 }
@@ -751,7 +946,6 @@ document.querySelectorAll('.mode-btn').forEach(btn => {
       const labels = { evp: 'EVP SCAN', spiritbox: 'SPIRIT BOX', visual: 'VISUAL', fullspectrum: 'FULL SPECTRUM' };
       modeBadge.textContent = labels[scanMode] || scanMode.toUpperCase();
     }
-    // Show/hide visual mode selector
     if (visualModeSelector) {
       visualModeSelector.style.display = (scanMode === 'visual' || scanMode === 'fullspectrum') ? 'flex' : 'none';
     }
@@ -774,7 +968,6 @@ document.querySelectorAll('.visual-btn').forEach(btn => {
     btn.classList.add('active');
     visualMode = btn.dataset.visual;
     visualAnomalyEngine.setMode(visualMode);
-    // Reset overlay state when switching visual modes
     if (visualMode === 'normal') {
       if (overlayCtx && overlay) {
         overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
@@ -783,6 +976,16 @@ document.querySelectorAll('.visual-btn').forEach(btn => {
     } else {
       overlayCleared = false;
     }
+  });
+});
+
+// Spirit box mode buttons
+document.querySelectorAll('.spirit-mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.spirit-mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const mode = btn.dataset.spiritmode;
+    spiritBoxEngine.setMode(mode);
   });
 });
 
@@ -826,7 +1029,7 @@ if (btnExport) {
 
     text += 'TIMELINE:\n';
     for (const e of timeline) {
-      text += `[${formatTimer(e.time * 1000)}] ${e.type.toUpperCase()}: ${e.detail}\n`;
+      text += '[' + formatTimer(e.time * 1000) + '] ' + e.type.toUpperCase() + ': ' + e.detail + '\n';
     }
 
     text += '\nDISCLAIMER: This app uses real sensor data but cannot verify paranormal phenomena.\n';
@@ -843,7 +1046,6 @@ if (btnExport) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    // Also download recording if available
     sessionRecorder.downloadRecording();
   });
 }
@@ -870,12 +1072,10 @@ async function init() {
   }
 }
 
-// Only init if authenticated
 if (document.getElementById('appWrapper') &&
     document.getElementById('appWrapper').classList.contains('authenticated')) {
   init();
 } else {
-  // Watch for authentication
   const observer = new MutationObserver((mutations) => {
     for (const m of mutations) {
       if (m.target.classList && m.target.classList.contains('authenticated')) {
