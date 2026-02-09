@@ -129,11 +129,10 @@
       <!-- CTA Buttons -->
       <div class="landing-ctas">
         <button class="cta-btn cta-free" id="ctaFree">Start Free Investigation</button>
-        <a class="cta-btn cta-pro gumroad-button" id="ctaPro"
-           href="https://lumina888.gumroad.com/l/pptpp">
+        <button class="cta-btn cta-pro" id="ctaPro">
           Unlock Pro &mdash; $4.99
           <span class="cta-sub">All features. Lifetime access.</span>
-        </a>
+        </button>
       </div>
 
       <!-- Pro Code Entry -->
@@ -581,7 +580,7 @@
        SCRIPTS
        ═══════════════════════════════════════════════════════════════ -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://gumroad.com/js/gumroad.js"></script>
+  <script src="https://gumroad.com/js/gumroad.js" async></script>
   <script src="js/pro-gate.js?v=7"></script>
   <script src="js/evp-audio-engine.js?v=7"></script>
   <script src="js/visual-anomaly-engine.js?v=7"></script>
@@ -600,6 +599,7 @@
   <!-- Landing Page Logic -->
   <script>
     (function() {
+      try {
       var proGate = new ProGate();
       window.proGateInstance = proGate;
 
@@ -623,9 +623,10 @@
         enterApp();
       });
 
-      // Buy Pro — Gumroad overlay handles checkout automatically via gumroad.js
-      // The <a> with class="gumroad-button" is intercepted by Gumroad's SDK.
-      // After purchase, user enters the license key from their confirmation email below.
+      // Buy Pro — open Gumroad checkout
+      document.getElementById('ctaPro').addEventListener('click', function() {
+        window.open('https://lumina888.gumroad.com/l/pptpp', '_blank');
+      });
 
       // Activate Pro Code (async — supports online Gumroad verification)
       document.getElementById('proCodeSubmit').addEventListener('click', async function() {
@@ -654,6 +655,7 @@
       document.getElementById('proCodeInput').addEventListener('keydown', function(e) {
         if (e.key === 'Enter') document.getElementById('proCodeSubmit').click();
       });
+      } catch (err) { console.warn('Landing page init error:', err); }
     })();
   </script>
 
