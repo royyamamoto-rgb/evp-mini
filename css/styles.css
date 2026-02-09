@@ -374,11 +374,11 @@ body { background: #0a0a14; color: #e0e0e0; font-family: system-ui, -apple-syste
 
 @media (max-width: 600px) {
   .app-header { padding: 8px 10px; gap: 6px; }
-  .app-header h1 { font-size: 1rem; }
+  .app-header h1 { font-size: 1rem; margin-right: 0; }
   .app-header .mode-badge { padding: 3px 8px; font-size: 0.6rem; }
   .app-header .evp-count { font-size: 0.6rem; padding: 2px 8px; }
-  .header-controls { gap: 4px; }
-  .header-controls button { padding: 4px 7px; font-size: 0.65rem; }
+  .header-controls { flex-basis: 100%; order: 10; justify-content: space-between; }
+  .header-controls button { padding: 5px 10px; font-size: 0.7rem; flex: 1; }
   .reading-grid { grid-template-columns: 1fr; }
   .mode-selector { gap: 4px; }
   .mode-btn, .duration-btn, .visual-btn { min-width: 60px; font-size: 0.65rem; padding: 6px 2px; }
