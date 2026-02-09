@@ -10,7 +10,7 @@
 const CONFIG = {
   // Amazon Associates affiliate tag
   // Sign up: https://affiliate-program.amazon.com → get your tag → replace below
-  amazonTag: 'evpmini-20',
+  amazonTag: 'anime88801-20',
 
   // Gumroad product URL for Pro upgrade
   // 1. Create account: https://gumroad.com
