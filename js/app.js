@@ -293,20 +293,39 @@ function activateProInApp() {
     btn.textContent = 'Activate'; btn.disabled = false;
     return;
   }
-  if (window.proGateInstance) {
-    window.proGateInstance.activate(code).then(function(result) {
-      if (result.success) { closeUpgradeModal(); onProActivated(); }
-      else { error.textContent = result.error || 'Invalid key.'; input.value = ''; input.focus(); }
-      btn.textContent = 'Activate'; btn.disabled = false;
+  // Try Stripe verification first, then fall back to Gumroad
+  fetch('/api/verify-license-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ license_key: code }) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        try { localStorage.setItem('evpProStatus', JSON.stringify({ pro: true, email: data.email, stripeCustomer: data.customer_id, activatedAt: Date.now() })); } catch(e) {}
+        closeUpgradeModal(); onProActivated();
+        btn.textContent = 'Activate'; btn.disabled = false;
+        return;
+      }
+      // Stripe failed — try Gumroad
+      if (window.proGateInstance) {
+        window.proGateInstance.activate(code).then(function(result) {
+          if (result.success) { closeUpgradeModal(); onProActivated(); }
+          else { error.textContent = result.error || data.error || 'Invalid key or email.'; input.value = ''; input.focus(); }
+          btn.textContent = 'Activate'; btn.disabled = false;
+        }).catch(function() { error.textContent = 'Verification failed.'; btn.textContent = 'Activate'; btn.disabled = false; });
+      } else {
+        error.textContent = data.error || 'Invalid key or email.';
+        btn.textContent = 'Activate'; btn.disabled = false; input.value = ''; input.focus();
+      }
     }).catch(function() {
-      error.textContent = 'Verification failed. Try again.';
-      btn.textContent = 'Activate'; btn.disabled = false;
+      // Network error — Gumroad only
+      if (window.proGateInstance) {
+        window.proGateInstance.activate(code).then(function(result) {
+          if (result.success) { closeUpgradeModal(); onProActivated(); }
+          else { error.textContent = result.error || 'Invalid key.'; input.value = ''; input.focus(); }
+          btn.textContent = 'Activate'; btn.disabled = false;
+        }).catch(function() { error.textContent = 'Verification failed.'; btn.textContent = 'Activate'; btn.disabled = false; });
+      } else {
+        error.textContent = 'Invalid license key.'; btn.textContent = 'Activate'; btn.disabled = false; input.value = ''; input.focus();
+      }
     });
-  } else {
-    error.textContent = 'Invalid license key.';
-    btn.textContent = 'Activate'; btn.disabled = false;
-    input.value = ''; input.focus();
-  }
 }
 
 function onProActivated() {
@@ -320,6 +339,17 @@ function onProActivated() {
 if (btnCloseUpgrade) btnCloseUpgrade.addEventListener('click', closeUpgradeModal);
 if (upgradeModal) upgradeModal.addEventListener('click', function(e) { if (e.target === upgradeModal) closeUpgradeModal(); });
 if (btnBuyPro) btnBuyPro.addEventListener('click', function() { window.open(CONFIG.gumroadUrl, '_blank'); });
+const btnBuyProStripe = document.getElementById('btnBuyProStripe');
+if (btnBuyProStripe) btnBuyProStripe.addEventListener('click', function() {
+  btnBuyProStripe.textContent = 'Redirecting...'; btnBuyProStripe.disabled = true;
+  fetch('/api/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.url) { window.location.href = data.url; }
+      else { alert(data.error || 'Payment unavailable. Try Gumroad.'); btnBuyProStripe.textContent = 'Pay with Card (Stripe)'; btnBuyProStripe.disabled = false; }
+    })
+    .catch(function() { alert('Payment service unavailable. Try Gumroad.'); btnBuyProStripe.textContent = 'Pay with Card (Stripe)'; btnBuyProStripe.disabled = false; });
+});
 if (appProCodeSubmit) appProCodeSubmit.addEventListener('click', activateProInApp);
 if (appProCodeInput) appProCodeInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') activateProInApp(); });
 

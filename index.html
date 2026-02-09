@@ -10,7 +10,12 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <meta name="description" content="Professional paranormal investigation tool with EVP capture, spirit box, thermal imaging, EMF detection, and AI analysis. Free to start.">
+  <meta name="google-adsense-account" content="ca-pub-2599493016668494">
   <title>EVP-MINI | Professional Paranormal Investigation</title>
+
+  <!-- Bing / Yahoo / Edge Webmaster Verification -->
+  <meta name="msvalidate.01" content="YOUR_BING_VERIFICATION_CODE">
+  <meta name="yandex-verification" content="YOUR_YANDEX_CODE">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
@@ -25,12 +30,15 @@
   <meta name="twitter:description" content="Professional EVP capture, spirit box, thermal imaging, EMF detection. Turn your phone into a ghost hunting tool.">
   <meta name="twitter:image" content="https://evp-mini.pages.dev/assets/og-image.png">
 
-  <!-- SEO -->
-  <meta name="keywords" content="EVP, electronic voice phenomena, ghost hunting app, paranormal investigation, spirit box, EMF detector, thermal camera, ghost detector">
+  <!-- SEO — All Search Engines -->
+  <meta name="keywords" content="EVP, electronic voice phenomena, ghost hunting app, paranormal investigation, spirit box, EMF detector, thermal camera, ghost detector, ghost hunting equipment, paranormal activity detector, haunted investigation tool, EVP recorder app, spirit communication app">
   <meta name="author" content="EVP-MINI">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow">
+  <meta name="bingbot" content="index, follow">
   <link rel="canonical" href="https://evp-mini.pages.dev">
 
-  <!-- JSON-LD Structured Data -->
+  <!-- JSON-LD Structured Data (Google, Bing, Yahoo, Edge) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -40,15 +48,48 @@
     "url": "https://evp-mini.pages.dev",
     "applicationCategory": "UtilitiesApplication",
     "operatingSystem": "iOS, Android, Web",
+    "screenshot": "https://evp-mini.pages.dev/assets/og-image.png",
+    "softwareVersion": "2.0",
     "offers": [
-      { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free tier with EVP scan" },
-      { "@type": "Offer", "price": "4.99", "priceCurrency": "USD", "description": "Pro tier with all features" }
+      { "@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free tier with EVP scan", "availability": "https://schema.org/InStock" },
+      { "@type": "Offer", "price": "4.99", "priceCurrency": "USD", "description": "Pro tier with all features", "availability": "https://schema.org/InStock" }
     ],
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "4.8",
-      "ratingCount": "127"
+      "ratingCount": "127",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "creator": {
+      "@type": "Organization",
+      "name": "EVP-MINI"
     }
+  }
+  </script>
+
+  <!-- FAQ Schema for rich search results -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is EVP-MINI?",
+        "acceptedAnswer": { "@type": "Answer", "text": "EVP-MINI is a professional paranormal investigation PWA that uses your phone's real sensors — magnetometer, accelerometer, microphone, and camera — to detect and analyze environmental anomalies during ghost hunting investigations." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is EVP-MINI free?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes, EVP-MINI has a free tier with EVP Scan mode and 30-second sessions. The Pro upgrade ($4.99 one-time) unlocks Spirit Box, Visual Scan, Full Spectrum, Geiger Counter, Dowsing Rods, Word Detection, and unlimited sessions." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does EVP-MINI use real sensors?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. EVP-MINI uses your device's real magnetometer (EMF), accelerometer (vibration/infrasound), gyroscope, barometer, microphone (FFT audio analysis), and camera (visual filters). Nothing is simulated." }
+      }
+    ]
   }
   </script>
 
@@ -56,6 +97,10 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
   -->
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2599493016668494" crossorigin="anonymous"></script>
+
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -88,6 +133,34 @@
     function evpBuyPro() {
       window.open('https://lumina888.gumroad.com/l/pptpp', '_blank');
     }
+    function evpBuyStripe() {
+      var btn = document.getElementById('ctaStripe');
+      if (btn) { btn.textContent = 'Redirecting...'; btn.disabled = true; }
+      fetch('/api/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.url) { window.location.href = data.url; }
+          else { alert(data.error || 'Payment unavailable. Try Gumroad instead.'); if (btn) { btn.textContent = 'Pay with Card \u2014 $4.99'; btn.disabled = false; } }
+        })
+        .catch(function() { alert('Payment service unavailable. Try Gumroad instead.'); if (btn) { btn.textContent = 'Pay with Card \u2014 $4.99'; btn.disabled = false; } });
+    }
+    // Handle Stripe return with session_id
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var sessionId = params.get('session_id');
+      if (sessionId) {
+        fetch('/api/verify-license-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ license_key: sessionId }) })
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data.success) {
+              try { localStorage.setItem('evpProStatus', JSON.stringify({ pro: true, email: data.email, stripeCustomer: data.customer_id, activatedAt: Date.now() })); } catch(e) {}
+              if (window.proGateInstance) { window.proGateInstance.isPro = true; }
+              window.history.replaceState({}, '', '/');
+              evpEnterApp();
+            }
+          }).catch(function() {});
+      }
+    })();
     // Auto-enter if returning user
     if (sessionStorage.getItem('evpFreeAccess') === '1') {
       document.addEventListener('DOMContentLoaded', evpEnterApp);
@@ -115,22 +188,49 @@
         if (window.proGateInstance) { window.proGateInstance.isPro = true; }
         evpEnterApp(); return;
       }
-      // Try online verification
-      if (window.proGateInstance) {
-        window.proGateInstance.activate(code).then(function(result) {
-          if (result.success) { evpEnterApp(); return; }
-          error.textContent = result.error;
-          btn.textContent = 'Activate'; btn.disabled = false;
-          input.value = ''; input.focus();
+      // Try Stripe verification first (email or session ID)
+      fetch('/api/verify-license-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ license_key: code }) })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success) {
+            try { localStorage.setItem('evpProStatus', JSON.stringify({ pro: true, email: data.email, stripeCustomer: data.customer_id, activatedAt: Date.now() })); } catch(e) {}
+            if (window.proGateInstance) { window.proGateInstance.isPro = true; }
+            evpEnterApp(); return;
+          }
+          // If Stripe fails, try Gumroad verification
+          if (window.proGateInstance) {
+            window.proGateInstance.activate(code).then(function(result) {
+              if (result.success) { evpEnterApp(); return; }
+              error.textContent = result.error || data.error || 'Invalid key or email.';
+              btn.textContent = 'Activate'; btn.disabled = false;
+              input.value = ''; input.focus();
+            }).catch(function() {
+              error.textContent = data.error || 'Verification failed. Try again.';
+              btn.textContent = 'Activate'; btn.disabled = false;
+            });
+          } else {
+            error.textContent = data.error || 'Invalid key or email. Check your purchase confirmation.';
+            btn.textContent = 'Activate'; btn.disabled = false;
+            input.value = ''; input.focus();
+          }
         }).catch(function() {
-          error.textContent = 'Verification failed. Try again.';
-          btn.textContent = 'Activate'; btn.disabled = false;
+          // Network error — fall back to Gumroad only
+          if (window.proGateInstance) {
+            window.proGateInstance.activate(code).then(function(result) {
+              if (result.success) { evpEnterApp(); return; }
+              error.textContent = result.error || 'Invalid key.';
+              btn.textContent = 'Activate'; btn.disabled = false;
+              input.value = ''; input.focus();
+            }).catch(function() {
+              error.textContent = 'Verification failed. Try again.';
+              btn.textContent = 'Activate'; btn.disabled = false;
+            });
+          } else {
+            error.textContent = 'Invalid license key. Check your purchase email.';
+            btn.textContent = 'Activate'; btn.disabled = false;
+            input.value = ''; input.focus();
+          }
         });
-      } else {
-        error.textContent = 'Invalid license key. Check your purchase email.';
-        btn.textContent = 'Activate'; btn.disabled = false;
-        input.value = ''; input.focus();
-      }
     }
     // Enter key on license input
     document.addEventListener('DOMContentLoaded', function() {
@@ -173,6 +273,10 @@
         <button class="cta-btn cta-pro" id="ctaPro" onclick="evpBuyPro()">
           Unlock Pro &mdash; $4.99
           <span class="cta-sub">All features. Lifetime access. One-time purchase.</span>
+        </button>
+        <button class="cta-btn cta-stripe" id="ctaStripe" onclick="evpBuyStripe()">
+          Pay with Card &mdash; $4.99
+          <span class="cta-sub">Secure checkout via Stripe. Instant access.</span>
         </button>
       </div>
 
@@ -237,7 +341,7 @@
       <!-- Already Purchased — License Key Entry -->
       <div class="pro-code-section">
         <div class="pro-code-title">Already purchased Pro?</div>
-        <div class="pro-code-label">Enter the license key from your Gumroad confirmation email:</div>
+        <div class="pro-code-label">Enter your Gumroad license key or Stripe purchase email:</div>
         <div class="pro-code-row">
           <input type="text" id="proCodeInput" placeholder="Enter license key" autocomplete="off">
           <button id="proCodeSubmit" onclick="evpActivateCode()">Activate</button>
@@ -298,6 +402,12 @@
         </div>
       </div>
 
+      <!-- AdSense — Landing Page Unit -->
+      <div class="ad-slot" style="margin-bottom:20px;">
+        <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2599493016668494" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      </div>
+
       <div class="landing-footer">
         Real device sensors. Real audio analysis. Science-grounded methodology.
       </div>
@@ -323,6 +433,7 @@
         <div class="upgrade-modal-price" id="upgradePrice">$4.99 &mdash; Lifetime Access</div>
         <div class="upgrade-modal-features">All 4 scan modes &bull; Unlimited sessions &bull; Spirit Box &bull; Visual filters &bull; Geiger &bull; Dowsing &bull; Word Detection &bull; History &bull; Map &bull; Export</div>
         <button class="upgrade-modal-buy" id="btnBuyPro">Purchase on Gumroad</button>
+        <button class="upgrade-modal-stripe" id="btnBuyProStripe">Pay with Card (Stripe)</button>
         <div class="upgrade-modal-divider"><span>Already have a key?</span></div>
         <div class="upgrade-modal-code-row">
           <input type="text" id="appProCodeInput" placeholder="Enter license key" autocomplete="off">
@@ -667,6 +778,12 @@
           <button id="btnShare">Share Evidence</button>
           <button id="btnNewScan">New Investigation</button>
           <button class="btn-export" id="btnExport">Export Evidence</button>
+        </div>
+
+        <!-- AdSense — In-App Report Unit -->
+        <div class="ad-slot" style="margin-top:16px;">
+          <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2599493016668494" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+          <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
         </div>
       </div>
 

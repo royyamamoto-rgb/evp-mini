@@ -124,6 +124,22 @@ a.cta-pro.gumroad-button:hover {
 .cta-sub {
   display: block; font-size: 0.65rem; font-weight: 400; opacity: 0.85; margin-top: 2px;
 }
+.cta-stripe {
+  background: #635bff; color: #fff; position: relative;
+}
+.cta-stripe:hover { box-shadow: 0 0 25px rgba(99, 91, 255, 0.5); transform: scale(1.02); }
+
+/* Upgrade Modal Stripe Button */
+.upgrade-modal-stripe {
+  display: block; width: 100%; padding: 12px; border: 2px solid #635bff; border-radius: 10px;
+  background: transparent; color: #635bff; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer; margin-bottom: 18px; letter-spacing: 0.5px; transition: all 0.2s;
+}
+.upgrade-modal-stripe:hover { background: #635bff; color: #fff; }
+.upgrade-modal-stripe:active { opacity: 0.85; }
+
+/* AdSense Slots */
+.ad-slot { border-radius: 8px; overflow: hidden; min-height: 50px; }
 
 /* Pro Code Section */
 .pro-code-section {
